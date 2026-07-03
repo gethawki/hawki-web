@@ -21,15 +21,15 @@ const options = {
   maintainAspectRatio: false,
   plugins: {
     legend: {
-      position: 'right',
-      labels: { color: '#b0b0b0', boxWidth: 12, padding: 16 },
+      position: 'bottom',
+      labels: { color: '#b0b0b0', boxWidth: 10, padding: 14, font: { size: 11 } },
     },
   },
 }
 
 export default function SeverityChart() {
   return (
-    <div className="h-44">
+    <div className="h-56 w-full min-w-0">
       <Doughnut data={data} options={options} />
     </div>
   )

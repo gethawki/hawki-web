@@ -24,6 +24,14 @@ export default function DocsLayout({
     window.scrollTo({ top: 0 })
   }, [activeId])
 
+  // lock body scroll while the mobile drawer is open
+  useEffect(() => {
+    document.body.style.overflow = sidebarOpen ? 'hidden' : ''
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [sidebarOpen])
+
   // build an in-page mini TOC from this section's own h3 subheadings
   useEffect(() => {
     const el = contentRef.current
@@ -42,10 +50,20 @@ export default function DocsLayout({
 
   return (
     <>
-      <div className={`menu-overlay ${sidebarOpen ? 'open' : ''}`} onClick={() => setSidebarOpen(false)} />
+      {/* mobile overlay — only exists in the DOM while open, so there's nothing to mis-hide */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
 
-      {/* left sidebar */}
-      <aside className={`docs-sidebar ${sidebarOpen ? 'open' : ''}`}>
+      {/* left sidebar — off-canvas drawer on mobile, permanently docked from md: up */}
+      <aside
+        className={`docs-sidebar fixed inset-y-0 left-0 z-50 w-72 transition-transform duration-300 ease-out md:translate-x-0 ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
         <Link to="/" className="p-5 flex items-center gap-2 border-b border-[#1a1a1a]">
           <span className="w-2 h-2 rounded-full bg-[#687F97]" />
           <span className="font-display text-2xl text-white">
@@ -73,8 +91,8 @@ export default function DocsLayout({
         </div>
       </aside>
 
-      {/* right sidebar — in-page TOC, or nearby links if this page has no subheadings */}
-      <aside className="docs-right-sidebar">
+      {/* right sidebar — in-page TOC, or nearby links if this page has no subheadings. lg: and up only */}
+      <aside className="docs-right-sidebar hidden lg:block fixed inset-y-0 right-0 z-30 w-64">
         {inPageToc.length > 0 ? (
           <>
             <div className="toc-title">On this page</div>
@@ -102,7 +120,7 @@ export default function DocsLayout({
       </aside>
 
       {/* main content */}
-      <main className="docs-main">
+      <main className="docs-main relative px-6 py-10 md:ml-72 md:px-12 md:py-16 lg:mr-64">
         <div className="flex items-center gap-3 mb-8 md:hidden">
           <button onClick={() => setSidebarOpen((v) => !v)} className="text-[#687F97] p-1 -ml-1" aria-label="Toggle menu">
             {sidebarOpen ? <X size={22} /> : <Menu size={22} />}

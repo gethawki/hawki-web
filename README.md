@@ -1,6 +1,6 @@
-# Hawk‑i — Web Frontend
+# Hawk‑i - Web Frontend
 
-A React 19.2 single-page application for the Hawk‑i security intelligence platform,
+A React 19.x single-page application for the Hawk‑i security intelligence platform,
 rebuilt from the original static HTML site (`index.html`, `docs.html`, `changelog.html`).
 
 Everything now runs as real, modular React components — no CDN scripts, no inline
@@ -9,7 +9,7 @@ proper npm dependencies and imported through the build pipeline.
 
 ## Stack
 
-- **React 19.2** + **React Router 6** (client-side routing)
+- **React 19.x** + **React Router 6** (client-side routing)
 - **Vite** (build tool / dev server)
 - **Tailwind CSS v4** (via `@tailwindcss/vite`) — brand palette defined as design tokens
 - **Framer Motion** — scroll-reveal animations
