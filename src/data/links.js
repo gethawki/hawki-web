@@ -4,7 +4,7 @@ export const LINKS = {
   githubReadme: 'https://github.com/gethawki/hawki/blob/main/README.md',
   githubRules: 'https://github.com/gethawki/hawki/tree/main/hawki/core/static_rule_engine/rules',
   pypi: 'https://pypi.org/project/hawki/',
-  docker: 'https://hub.docker.com/r/0xsemantic/hawki',
+  docker: 'https://hub.docker.com/r/levichinecherem/hawki',
   linkedin: 'https://linkedin.com/company/0xSemantic',
   facebook: 'https://facebook.com/0xSemantic',
   x: 'https://x.com/0xSemantic',

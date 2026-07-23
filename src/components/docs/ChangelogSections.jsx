@@ -127,7 +127,7 @@ const sec_install_upgrade = (
                     <p>Optional extras add HTML and PDF reporting:</p>
                     <CodeBlock code={`$ pip install "hawki[all]"`} />
                     <p>Or pull the Docker image:</p>
-                    <CodeBlock code={`$ docker pull 0xsemantic/hawki:latest`} />
+                    <CodeBlock code={`$ docker pull levichinecherem/hawki:latest`} />
                     <p>After upgrading, run <code>hawki doctor</code> to confirm your environment is ready.</p>
 
   </>

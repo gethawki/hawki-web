@@ -50,9 +50,9 @@ $ cd hawki
 $ pip install -e .`} />
 
                     <h3>Docker image</h3>
-                    <CodeBlock code={`$ docker pull 0xsemantic/hawki:latest
-$ docker run --rm -v $(pwd):/repo 0xsemantic/hawki scan /repo`} />
-                    <p className="text-sm text-grey">Docker Hub: <a href="https://hub.docker.com/r/0xsemantic/hawki" target="_blank" rel="noreferrer" className="text-steel underline">hub.docker.com/r/0xsemantic/hawki</a></p>
+                    <CodeBlock code={`$ docker pull levichinecherem/hawki:latest
+$ docker run --rm -v $(pwd):/repo levichinecherem/hawki scan /repo`} />
+                    <p className="text-sm text-grey">Docker Hub: <a href="https://hub.docker.com/r/levichinecherem/hawki" target="_blank" rel="noreferrer" className="text-steel underline">hub.docker.com/r/levichinecherem/hawki</a></p>
 
                     <h3>Verify your setup</h3>
                     <p>Run the preflight health check to confirm Docker, LLM keys, and toolchains are wired up:</p>
