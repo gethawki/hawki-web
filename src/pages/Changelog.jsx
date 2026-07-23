@@ -20,15 +20,15 @@ export default function Changelog() {
 
   return (
     <>
-      <Helmet title={`Hawk‑i Changelog · ${current.label}`} />
+      <Helmet title={`Hawk-i Changelog · ${current.label}`} />
       <DocsLayout
         nav={CHANGELOG_NAV}
         basePath="/changelog"
         activeId={slug}
         eyebrow="Changelog"
         content={CHANGELOG_SECTIONS[slug]}
-        footerNote="Evolution report · v0.7.0"
-        mobileTitle="Hawk‑i Changelog"
+        footerNote="Release notes · v1.0.0"
+        mobileTitle="Hawk-i Changelog"
         prev={prev}
         next={next}
       />

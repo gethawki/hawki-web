@@ -1,18 +1,19 @@
-const CHAINS = ['Ethereum', 'BNB Chain', 'Polygon', 'Arbitrum', 'Optimism', 'Avalanche', 'Fantom', 'Gnosis']
-const TOOLS = ['Slither', 'Mythril', 'Foundry', 'Hardhat', 'Echidna']
+import { Radar, Terminal } from 'lucide-react'
+import { ALL_CHAINS, MODULES } from '../../data/product.js'
 
 function TickerItems() {
   return (
     <>
-      {CHAINS.map((c) => (
+      {ALL_CHAINS.map((c) => (
         <span className="ticker-item" key={c}>
-          <i className="fas fa-link" /> {c}
+          <Radar size={13} className="inline align-[-2px]" /> {c}
         </span>
       ))}
       <span className="ticker-item text-[#333]">/</span>
-      {TOOLS.map((t) => (
-        <span className="ticker-item" key={t}>
-          <i className="fas fa-shield-alt" /> {t}
+      {MODULES.map((m) => (
+        <span className="ticker-item" key={m}>
+          <Terminal size={13} className="inline align-[-2px] risk-low" />{' '}
+          <span className="font-mono text-grey">hawki {m}</span>
         </span>
       ))}
     </>

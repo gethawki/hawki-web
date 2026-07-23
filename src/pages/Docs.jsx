@@ -20,15 +20,15 @@ export default function Docs() {
 
   return (
     <>
-      <Helmet title={`Hawk‑i Docs · ${current.label}`} />
+      <Helmet title={`Hawk-i Docs · ${current.label}`} />
       <DocsLayout
         nav={DOCS_NAV}
         basePath="/docs"
         activeId={slug}
         eyebrow="Documentation"
         content={DOCS_SECTIONS[slug]}
-        footerNote="Security public good · v0.7.0"
-        mobileTitle="Hawk‑i Docs"
+        footerNote="MIT licensed · v1.0.0"
+        mobileTitle="Hawk-i Docs"
         prev={prev}
         next={next}
       />

@@ -5,30 +5,30 @@ import Reveal from '../common/Reveal.jsx'
 const AUDIENCES = [
   {
     key: 'developers',
-    title: 'Developers',
-    lead: 'Catch vulnerabilities before deployment.',
-    body: 'Understand security issues while writing code instead of after release, Hawk‑i fits into the loop you already have.',
+    title: 'Protocol Developers',
+    lead: 'Catch the exploit before you deploy.',
+    body: 'Scan contracts while you write them, in the toolchain you already run. Foundry and Hardhat proofs land next to the finding, so a fix is obvious.',
     stat: '01',
   },
   {
     key: 'security',
-    title: 'Security Engineers',
-    lead: 'Investigate with richer context.',
-    body: 'Explore vulnerabilities with evidence and reproducible analysis, not just alerts and severity labels.',
+    title: 'Security Researchers',
+    lead: 'Hunt with an autonomous ally.',
+    body: 'Turn the Deep agent loose to invent novel attack paths, then read reproducible PoCs instead of triaging bare severity labels.',
     stat: '02',
   },
   {
     key: 'audit',
     title: 'Audit Teams',
-    lead: 'Generate consistent reports.',
-    body: 'Supporting evidence that improves review quality and communication across every engagement.',
+    lead: 'Ship audit-grade reports faster.',
+    body: 'A deterministic score and a full report per engagement. Re-render an audit or Immunefi submission from the saved findings JSON at any time.',
     stat: '03',
   },
   {
-    key: 'org',
-    title: 'Organizations',
-    lead: 'Adopt continuous security.',
-    body: 'Move past one-time assessments toward an ongoing security practice built into how you ship.',
+    key: 'hunters',
+    title: 'Bug-Bounty Hunters',
+    lead: 'Scan any live address.',
+    body: 'Point Hawk-i at a deployed contract across the EVM chain set, pull verified source from the explorer, and file an Immunefi-style submission with proof attached.',
     stat: '04',
   },
 ]
@@ -40,8 +40,8 @@ export default function AudienceGrid() {
   return (
     <section className="relative z-10 max-w-7xl mx-auto px-6 py-20 md:py-28">
       <Reveal className="mb-14">
-        <span className="text-xs font-mono tracking-[0.2em] text-[#77746C] uppercase">02: Built for every role</span>
-        <h2 className="font-display text-3xl md:text-4xl text-white mt-4">One platform, every security seat at the table</h2>
+        <span className="text-xs font-mono tracking-[0.2em] text-[#77746C] uppercase">07: Built for the people who ship Web3</span>
+        <h2 className="font-display text-3xl md:text-4xl text-white mt-4">One console, every seat on the security team</h2>
       </Reveal>
 
       <Reveal delay={0.1}>

@@ -50,7 +50,7 @@ export default function DocsLayout({
 
   return (
     <>
-      {/* mobile overlay — only exists in the DOM while open, so there's nothing to mis-hide */}
+      {/* mobile overlay, only exists in the DOM while open, so there's nothing to mis-hide */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
@@ -58,7 +58,7 @@ export default function DocsLayout({
         />
       )}
 
-      {/* left sidebar — off-canvas drawer on mobile, permanently docked from md: up */}
+      {/* left sidebar, off-canvas drawer on mobile, permanently docked from md: up */}
       <aside
         className={`docs-sidebar fixed inset-y-0 left-0 z-50 w-72 transition-transform duration-300 ease-out md:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
@@ -91,7 +91,7 @@ export default function DocsLayout({
         </div>
       </aside>
 
-      {/* right sidebar — in-page TOC, or nearby links if this page has no subheadings. lg: and up only */}
+      {/* right sidebar, in-page TOC, or nearby links if this page has no subheadings. lg: and up only */}
       <aside className="docs-right-sidebar hidden lg:block fixed inset-y-0 right-0 z-30 w-64">
         {inPageToc.length > 0 ? (
           <>

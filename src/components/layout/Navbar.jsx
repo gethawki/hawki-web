@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { Menu, X } from 'lucide-react'
-import { LINKS } from '../../data/links.js'
+import { LINKS, VERSION } from '../../data/links.js'
 
 const NAV_ITEMS = [
   { to: '/docs', label: 'Docs' },
@@ -18,6 +18,9 @@ export default function Navbar() {
           <span className="w-2 h-2 rounded-full bg-[#687F97]" />
           <span className="font-display text-xl text-white tracking-tight">
             Hawk<span className="text-[#687F97] italic">i</span>
+          </span>
+          <span className="hidden sm:inline-flex items-center gap-1 font-mono text-[0.6rem] tracking-wider text-[#77746C] border border-[#2a2a2a] rounded-full px-1.5 py-0.5">
+            v{VERSION}
           </span>
         </Link>
 
@@ -40,6 +43,7 @@ export default function Navbar() {
           <a href={LINKS.github} target="_blank" rel="noreferrer" className="text-[#9a9a9a] hover:text-white transition">
             GitHub
           </a>
+          <span className="font-mono text-[0.65rem] tracking-wider text-[#77746C] uppercase">MIT</span>
           <a
             href={LINKS.pypi}
             target="_blank"

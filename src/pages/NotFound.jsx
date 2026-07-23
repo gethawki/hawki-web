@@ -7,7 +7,7 @@ import { Helmet } from '../components/common/Helmet.jsx'
 export default function NotFound() {
   return (
     <div className="min-h-screen flex flex-col">
-      <Helmet title="Hawk‑i · Page not found" />
+      <Helmet title="Hawk-i · Page not found" />
       <Navbar />
       <div className="flex-1 flex flex-col items-center justify-center text-center px-6 py-32">
         <ShieldAlert className="text-[#986C67] mb-6" size={48} strokeWidth={1.5} />

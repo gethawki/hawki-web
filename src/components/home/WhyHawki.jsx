@@ -1,28 +1,66 @@
-import Reveal from '../common/Reveal.jsx'
+import { motion } from 'framer-motion'
+import { Bot, Gauge, FileSearch, ScrollText, HardDrive } from 'lucide-react'
+import Section from '../common/Section.jsx'
+
+const PILLARS = [
+  {
+    icon: Bot,
+    title: 'Autonomous',
+    body: 'The Deep agent invents novel attacks and proves them: on real incident code it invented and landed a live reentrancy drain in the sandbox.',
+  },
+  {
+    icon: Gauge,
+    title: 'Deterministic',
+    body: 'A 0 to 100 score with fixed risk bands. The same findings always produce the same number.',
+  },
+  {
+    icon: FileSearch,
+    title: 'Evidence, not alerts',
+    body: 'Every finding ships with a location, an explanation, a fix, and, where it counts, a runnable exploit.',
+  },
+  {
+    icon: ScrollText,
+    title: 'MIT, no telemetry',
+    body: '100% open source under MIT. No account, no phone-home, no usage data leaving your machine. Ever.',
+  },
+  {
+    icon: HardDrive,
+    title: 'Local first',
+    body: 'Everything runs on your box. Bring your own LLM key, or stay fully offline with a local model.',
+  },
+]
+
+const container = { hidden: {}, show: { transition: { staggerChildren: 0.07 } } }
+const item = {
+  hidden: { opacity: 0, y: 18 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } },
+}
 
 export default function WhyHawki() {
   return (
-    <section className="relative z-10 max-w-7xl mx-auto px-6 py-20 md:py-28">
-      <div className="hairline mb-16 md:mb-20" />
-      <div className="grid lg:grid-cols-12 gap-10 lg:gap-16">
-        <Reveal className="lg:col-span-5">
-          <span className="text-xs font-mono tracking-[0.2em] text-[#77746C] uppercase">01: Why Hawk‑i</span>
-          <h2 className="font-display text-3xl md:text-4xl text-white mt-4 leading-[1.2]">
-            Security tools often answer one question. Hawk‑i answers{' '}
-            <em className="italic text-[#687F97] font-medium">many</em>.
-          </h2>
-        </Reveal>
-        <Reveal delay={0.1} className="lg:col-span-6 lg:col-start-7 flex flex-col justify-center">
-          <p className="text-[#b0b0b0] text-lg leading-relaxed">
-            Instead of only reporting vulnerabilities, Hawk‑i helps you understand how they happen, where they
-            originate, how they affect the rest of your project, and what evidence supports every finding.
-          </p>
-          <p className="text-[#77746C] mt-4 leading-relaxed">
-            Whether you're reviewing a smart contract, a software repository, or preparing for an external audit,
-            Hawk‑i brings security intelligence into a single workflow.
-          </p>
-        </Reveal>
-      </div>
-    </section>
+    <Section
+      id="why"
+      num="06"
+      kicker="Why Hawk-i"
+      title="An instrument, not another black box"
+      intro="Hawk-i is built to be understood. It shows its work, it stays on your machine, and it never asks you to trust a number you cannot check."
+      width="wide"
+    >
+      <motion.div
+        variants={container}
+        initial="hidden"
+        whileInView="show"
+        viewport={{ once: true, margin: '-60px' }}
+        className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4"
+      >
+        {PILLARS.map((p) => (
+          <motion.div key={p.title} variants={item} className="panel p-5">
+            <p.icon size={20} className="text-steel" />
+            <h3 className="text-white font-medium mt-4 mb-2">{p.title}</h3>
+            <p className="text-[#8a8a8a] text-sm leading-relaxed">{p.body}</p>
+          </motion.div>
+        ))}
+      </motion.div>
+    </Section>
   )
 }

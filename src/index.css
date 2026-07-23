@@ -5,7 +5,7 @@
   --font-display: "Fraunces", "Iowan Old Style", Georgia, serif;
   --font-mono: "Fira Code", ui-monospace, SFMono-Regular, monospace;
 
-  /* Hawk-i brand palette — do not change without updating docs */
+  /* Hawk-i brand palette - do not change without updating docs */
   --color-steel: #687f97;
   --color-steel-light: #7a94af;
   --color-steel-dark: #3a4d5e;
@@ -17,6 +17,11 @@
   --color-ink-soft: #0f0f0f;
   --color-panel: #141414;
   --color-panel-border: #2a2a2a;
+
+  /* risk system: Low = grey, Medium = steel, High/Critical = copper */
+  --color-risk-low: #77746c;
+  --color-risk-med: #687f97;
+  --color-risk-high: #986c67;
 }
 
 html {
@@ -332,7 +337,7 @@ th {
 }
 
 /* ============================================================
-   Editorial design language — landing page v2
+   Editorial design language - landing page
    ============================================================ */
 
 .font-display { font-family: var(--font-display); }
@@ -413,4 +418,136 @@ th {
   font-weight: 500;
   color: var(--color-steel);
   opacity: 0.55;
+}
+
+/* ============================================================
+   Watcher's Console - risk system + instrument motion
+   ============================================================ */
+
+/* the standard instrument surface - a calm paneled card */
+.panel {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.006));
+  border: 1px solid var(--color-panel-border);
+  border-radius: 1rem;
+  transition: border-color 0.25s ease;
+}
+.panel:hover { border-color: #333; }
+
+/* risk color helpers - the reusable grammar of the site */
+.risk-low  { color: var(--color-risk-low); }
+.risk-med  { color: var(--color-risk-med); }
+.risk-high { color: var(--color-risk-high); }
+.risk-dot-low  { background: var(--color-risk-low); }
+.risk-dot-med  { background: var(--color-risk-med); }
+.risk-dot-high { background: var(--color-risk-high); }
+
+.risk-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  border: 1px solid currentColor;
+  line-height: 1;
+}
+.risk-badge .dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 9999px;
+  background: currentColor;
+}
+
+/* trust chips under the hero */
+.trust-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  color: #9a9a9a;
+  border: 1px solid var(--color-panel-border);
+  border-radius: 9999px;
+  padding: 0.35rem 0.8rem;
+  background: rgba(255, 255, 255, 0.015);
+}
+.trust-chip svg { color: var(--color-steel); }
+
+/* section kicker label, e.g. "02 / The Deep agent" */
+.kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-grey);
+}
+.kicker .kicker-num { color: var(--color-steel); }
+.kicker::before {
+  content: '';
+  width: 1.6rem;
+  height: 1px;
+  background: var(--color-steel);
+  opacity: 0.7;
+}
+
+/* terminal surface */
+.terminal {
+  background: #0c0c0d;
+  border: 1px solid #222;
+  border-radius: 0.9rem;
+  box-shadow: 0 30px 60px -25px rgba(0, 0, 0, 0.9);
+  overflow: hidden;
+}
+.terminal-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid #1c1c1c;
+  background: #101011;
+}
+.terminal-dot { width: 9px; height: 9px; border-radius: 9999px; }
+.caret {
+  display: inline-block;
+  width: 8px;
+  height: 1.05em;
+  vertical-align: -0.15em;
+  background: var(--color-steel);
+  margin-left: 2px;
+  animation: caret-blink 1.05s steps(1) infinite;
+}
+@keyframes caret-blink { 0%, 50% { opacity: 1; } 50.01%, 100% { opacity: 0; } }
+
+/* radar blip settle */
+@keyframes blip-in {
+  0% { transform: scale(0); opacity: 0; }
+  60% { transform: scale(1.6); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* meter shimmer removed for calm; bars fill via framer springs */
+
+/* respect users who ask for less motion */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .radar-sweep,
+  .ticker-move,
+  .animate-drift,
+  .radar-ping,
+  .caret { animation: none !important; }
 }

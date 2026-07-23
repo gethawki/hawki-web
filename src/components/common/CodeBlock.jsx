@@ -53,7 +53,7 @@ export default function CodeBlock({ code }) {
       setCopied(true)
       setTimeout(() => setCopied(false), 1500)
     } catch {
-      /* clipboard unavailable — silently ignore */
+      /* clipboard unavailable, silently ignore */
     }
   }
 

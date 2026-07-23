@@ -1,66 +1,42 @@
 export const CHANGELOG_NAV = [
   {
-    "title": "RELEASE",
+    "title": "HAWK-I v1.0.0",
     "links": [
       {
-        "href": "executive-summary",
-        "label": "1. Executive Summary"
+        "href": "highlights",
+        "label": "1. Highlights"
       },
       {
-        "href": "architectural-comparison",
-        "label": "2. Architectural Comparison"
+        "href": "deep-agent",
+        "label": "2. The Deep Agent"
       },
       {
-        "href": "detection-engine-evolution",
-        "label": "3. Detection Engine Evolution"
+        "href": "deployed-scanning",
+        "label": "3. Deployed & Multi-Chain Scanning"
       },
       {
-        "href": "risk-scoring-system",
-        "label": "4. Risk Scoring System"
+        "href": "security-modules",
+        "label": "4. Security Modules"
       },
       {
-        "href": "reporting-system-evolution",
-        "label": "5. Reporting System (ARS v2)"
+        "href": "reporting",
+        "label": "5. Reporting & JSON Export"
       },
       {
-        "href": "vulnerability-coverage",
-        "label": "6. Vulnerability Coverage"
+        "href": "security-score",
+        "label": "6. Security Score"
       },
       {
-        "href": "remediation-engine",
-        "label": "7. Remediation Engine"
+        "href": "registry-doctor",
+        "label": "7. Registry & Doctor"
       },
       {
-        "href": "exploit-sandbox-evolution",
-        "label": "8. Exploit Sandbox"
+        "href": "licensing",
+        "label": "8. MIT License, No Telemetry"
       },
       {
-        "href": "telemetry-system",
-        "label": "9. Telemetry System"
-      },
-      {
-        "href": "cli-evolution",
-        "label": "10. CLI Evolution"
-      },
-      {
-        "href": "data-layer-evolution",
-        "label": "11. Data Layer Evolution"
-      },
-      {
-        "href": "maturity-level-comparison",
-        "label": "12. Maturity Level Comparison"
-      },
-      {
-        "href": "philosophical-shift",
-        "label": "13. Philosophical Shift"
-      },
-      {
-        "href": "breaking-changes",
-        "label": "14. Breaking Changes"
-      },
-      {
-        "href": "strategic-positioning",
-        "label": "15. Strategic Positioning"
+        "href": "install-upgrade",
+        "label": "9. Install & Upgrade"
       }
     ]
   }

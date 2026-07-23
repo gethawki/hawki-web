@@ -1,3 +1,4 @@
+import { ArrowUpRight } from 'lucide-react'
 import Reveal from '../common/Reveal.jsx'
 import { LINKS } from '../../data/links.js'
 
@@ -11,14 +12,14 @@ export default function OpenSourceBanner() {
       />
       <div className="max-w-4xl mx-auto px-6 text-center">
         <Reveal>
-          <span className="text-xs font-mono tracking-[0.2em] text-[#77746C] uppercase">Open source first</span>
+          <span className="text-xs font-mono tracking-[0.2em] text-[#77746C] uppercase">MIT. No telemetry.</span>
           <p className="font-display text-3xl md:text-5xl text-white mt-6 leading-[1.25]">
-            The open-source edition will{' '}
-            <em className="italic text-gradient font-medium">always remain</em> the foundation of the platform.
+            Open source, and <em className="italic text-gradient font-medium">yours forever</em>.
           </p>
           <p className="text-[#8a8a8a] mt-8 max-w-2xl mx-auto leading-relaxed">
-            Optional cloud services will one day add collaboration, orchestration, and large-scale intelligence,
-            while the open-source core stays available to everyone, forever.
+            Hawk-i v1.0.0 is a finished tool released under the MIT license. No account, no
+            cloud requirement, and no usage data ever leaves your machine. Everything it
+            remembers lives in plain files under <span className="font-mono text-[#c0c0c0]">~/.hawki/</span>.
           </p>
           <a
             href={LINKS.github}
@@ -26,7 +27,8 @@ export default function OpenSourceBanner() {
             rel="noreferrer"
             className="inline-flex items-center gap-2 mt-10 text-white border-b border-[#3a3a3a] hover:border-[#687F97] pb-1 transition text-sm font-medium"
           >
-            <i className="fab fa-github" /> Explore the repository
+            Explore the repository
+            <ArrowUpRight size={15} className="text-[#77746C]" />
           </a>
         </Reveal>
       </div>

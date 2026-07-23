@@ -2,10 +2,18 @@ import { Link } from 'react-router-dom'
 import { ArrowRight, BookOpen } from 'lucide-react'
 import Reveal from '../common/Reveal.jsx'
 
+// Real docsNav destinations, deep-linked.
 const DOC_LINKS = [
-  'Installation', 'Quick Start', 'CLI', 'Configuration',
-  'AI Providers', 'Integrations', 'Reporting', 'Guides',
-  'API Reference', 'Examples',
+  { label: 'Introduction', href: 'introduction' },
+  { label: 'Installation', href: 'installation' },
+  { label: 'Quickstart', href: 'quickstart' },
+  { label: 'CLI Reference', href: 'cli-reference' },
+  { label: 'The Deep Agent', href: 'deep-agent' },
+  { label: 'Security Modules', href: 'security-modules' },
+  { label: 'Scanning', href: 'scanning' },
+  { label: 'Audit-Grade Reporting', href: 'reporting' },
+  { label: 'Doctor', href: 'doctor' },
+  { label: 'Privacy Promise', href: 'privacy' },
 ]
 
 export default function DocsPreview() {
@@ -14,7 +22,7 @@ export default function DocsPreview() {
       <div className="grid lg:grid-cols-12 gap-10 lg:gap-16">
         <Reveal className="lg:col-span-4">
           <span className="text-xs font-mono tracking-[0.2em] text-[#77746C] uppercase">Documentation</span>
-          <h2 className="font-display text-3xl md:text-4xl text-white mt-4">Everything you need to get started.</h2>
+          <h2 className="font-display text-3xl md:text-4xl text-white mt-4">Everything, documented for v1.0.0.</h2>
           <Link
             to="/docs"
             className="inline-flex items-center gap-2 mt-7 text-white border-b border-[#3a3a3a] hover:border-[#687F97] pb-1 transition text-sm font-medium"
@@ -26,11 +34,11 @@ export default function DocsPreview() {
           <div className="grid sm:grid-cols-2">
             {DOC_LINKS.map((d) => (
               <Link
-                key={d}
-                to="/docs"
+                key={d.href}
+                to={`/docs/${d.href}`}
                 className="group flex items-center justify-between py-4 border-b border-[#1a1a1a] text-[#9a9a9a] hover:text-white transition text-sm pr-4"
               >
-                {d}
+                {d.label}
                 <ArrowRight size={14} className="text-[#3a3a3a] group-hover:text-[#687F97] group-hover:translate-x-0.5 transition" />
               </Link>
             ))}

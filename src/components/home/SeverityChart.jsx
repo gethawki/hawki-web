@@ -3,13 +3,15 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js'
 
 ChartJS.register(ArcElement, Tooltip, Legend)
 
+// risk palette (mirrors index.css tokens): copper = high/critical, steel = medium, grey = low.
+// copper-light (#a05242) is the sanctioned 4th tint separating Critical from High.
 const data = {
   labels: ['Critical', 'High', 'Medium', 'Low'],
   datasets: [
     {
       data: [2, 7, 15, 23],
-      backgroundColor: ['#986C67', '#a05242', '#687F97', '#77746C'],
-      borderColor: '#151515',
+      backgroundColor: ['#986c67', '#a05242', '#687f97', '#77746c'],
+      borderColor: '#111',
       borderWidth: 2,
       hoverOffset: 6,
     },
@@ -19,6 +21,7 @@ const data = {
 const options = {
   responsive: true,
   maintainAspectRatio: false,
+  cutout: '62%',
   plugins: {
     legend: {
       position: 'bottom',

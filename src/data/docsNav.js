@@ -17,35 +17,54 @@ export const DOCS_NAV = [
     ]
   },
   {
-    "title": "USAGE",
+    "title": "CORE WORKFLOW",
     "links": [
       {
         "href": "cli-reference",
         "label": "CLI Reference"
       },
       {
-        "href": "operational-modes",
-        "label": "Operational Modes"
-      },
-      {
-        "href": "reporting",
-        "label": "Audit\u2011Grade Reporting"
+        "href": "scanning",
+        "label": "Scanning"
       },
       {
         "href": "security-score",
         "label": "Security Score"
       },
       {
-        "href": "remediation",
-        "label": "Guided Remediation"
+        "href": "reporting",
+        "label": "Audit-Grade Reporting"
+      }
+    ]
+  },
+  {
+    "title": "HAWK-I DEEP",
+    "links": [
+      {
+        "href": "deep-agent",
+        "label": "Deep Agent"
+      }
+    ]
+  },
+  {
+    "title": "SECURITY MODULES",
+    "links": [
+      {
+        "href": "security-modules",
+        "label": "Verify, Deps, Upgrade, Prove"
+      }
+    ]
+  },
+  {
+    "title": "OPERATIONS",
+    "links": [
+      {
+        "href": "registry",
+        "label": "Contract Registry"
       },
       {
-        "href": "telemetry",
-        "label": "Telemetry"
-      },
-      {
-        "href": "configuration",
-        "label": "Configuration"
+        "href": "doctor",
+        "label": "Doctor"
       },
       {
         "href": "monitoring",
@@ -61,42 +80,25 @@ export const DOCS_NAV = [
         "label": "Architecture"
       },
       {
-        "href": "subsystems",
-        "label": "Subsystems"
+        "href": "vulnerability-library",
+        "label": "Vulnerability Library"
       },
       {
         "href": "ai-integration",
         "label": "AI Integration"
-      },
-      {
-        "href": "vulnerability-library",
-        "label": "Vulnerability Library"
       }
     ]
   },
   {
-    "title": "DEPLOYMENT",
+    "title": "PROJECT",
     "links": [
-      {
-        "href": "deployment",
-        "label": "Deployment modes"
-      },
       {
         "href": "privacy",
-        "label": "Privacy & Security"
-      }
-    ]
-  },
-  {
-    "title": "COMMUNITY",
-    "links": [
+        "label": "Privacy Promise"
+      },
       {
         "href": "contributing",
         "label": "Contributing"
-      },
-      {
-        "href": "roadmap",
-        "label": "Roadmap"
       }
     ]
   }

@@ -2,272 +2,146 @@ import CodeBlock from '../common/CodeBlock.jsx'
 
 const sec_title = (
   <>
-                    <h1 className="text-4xl font-bold text-white mb-2">🦅 Hawk‑i · v0.6.0 → v0.7.0 Evolution Report</h1>
-                    <p className="text-grey">Document: <code>v0_6_0_to_v0_7_0_diff.md</code><br />
-                    Purpose: Precisely define architectural, operational, and capability differences between v0.6.0 and v0.7.0. This document serves as a comprehensive reference for developers, contributors, and stakeholders to understand the maturity leap.</p>
-        
+                    <h1 className="text-4xl font-bold text-white mb-2">Hawk-i v1.0.0</h1>
+                    <p className="text-grey">The first stable release of Hawk-i: a finished, local-first, open-source security-intelligence platform for Solidity and Web3 smart contracts. MIT licensed, no telemetry, no cloud requirement. This note walks through what ships in v1.0.0.</p>
+
   </>
 )
 
-const sec_executive_summary = (
+const sec_highlights = (
   <>
-                    <h2>1️⃣ Executive Summary</h2>
-                    <p><strong>v0.6.0</strong> was a <strong>functional security scanner</strong> – it could ingest repositories, run static rules, optionally invoke AI reasoning, and optionally simulate exploits in a sandbox. Reports were basic markdown lists of findings.</p>
-                    <p><strong>v0.7.0</strong> transforms Hawk‑i into an <strong>audit‑grade security intelligence system</strong>. It introduces professional reporting (ARS v2), a deterministic security score, guided remediation snippets, an expanded vulnerability library (30 rules), opt‑in telemetry, and deep integration between sandbox results and risk quantification. The system now answers not just <em>“what vulnerabilities exist?”</em> but also <em>“how severe are they, can they be exploited, what is the quantified risk, and how do we fix them?”</em>.</p>
-                    <p>This is <strong>not a patch release</strong>; it is a <strong>maturity milestone</strong>. All enhancements are <strong>additive and backward‑compatible</strong> – existing CLI commands and workflows continue to work unchanged.</p>
-        
+                    <h2>1. Highlights</h2>
+                    <p>Hawk-i v1.0.0 is a complete smart-contract security toolkit that runs entirely on your machine. The headline capabilities:</p>
+                    <ul className="list-disc list-inside mb-4">
+                        <li><strong>The Deep agent</strong> - an autonomous loop that invents novel exploits and proves them with a runnable Hardhat or Foundry proof-of-concept.</li>
+                        <li><strong>50 static rules that actually run</strong> - every rule is verified by a liveness test that proves it fires through the real scan pipeline; there are no dead rules.</li>
+                        <li><strong>Tested on real code</strong> - run against Trail of Bits' not-so-smart-contracts, Damn Vulnerable DeFi, PancakeSwap's audited BNB Chain farming contracts (zero false criticals on production code), and DeFiVulnLabs' incident reproductions.</li>
+                        <li><strong>Deployed-contract scanning</strong> across the major EVM chains, pulling verified source from block explorers.</li>
+                        <li><strong>Four focused security modules</strong> - verify, deps, upgrade, and prove.</li>
+                        <li><strong>Audit-grade reporting</strong> with an audit style and an Immunefi bug-bounty style, plus first-class JSON export.</li>
+                        <li><strong>A deterministic security score</strong> that maps findings to a clear risk band.</li>
+                        <li><strong>MIT license and a firm no-telemetry promise.</strong></li>
+                    </ul>
+                    <div className="flex flex-wrap gap-3 mt-4">
+                        <span className="badge">Open source</span>
+                        <span className="badge">MIT licensed</span>
+                        <span className="badge">Local-first</span>
+                        <span className="badge">v1.0.0</span>
+                    </div>
+
   </>
 )
 
-const sec_architectural_comparison = (
+const sec_deep_agent = (
   <>
-                    <h2>2️⃣ High‑Level Architectural Comparison</h2>
+                    <h2>2. The Deep Agent</h2>
+                    <p>The flagship of v1.0.0 is <code>hawki deep</code>, an autonomous exploit-hunting agent. It runs an asynchronous loop, gated by a budget manager:</p>
+                    <CodeBlock code={`Planner.next_attack  ->  Executor.execute  ->  memory.record  ->  budget.consume`} />
+                    <p>Planners escalate in creativity: RulePlanner drains the known attack scripts, HybridPlanner blends known patterns with contract context, and LLMPlanner invents novel attacks the rules never encoded. For a novel attack, the NovelExecutor uses an LLM code generator to synthesize a Hardhat or Foundry proof-of-concept and runs it in the Docker sandbox, so the result is a reproducible PoC rather than a bare claim.</p>
+                    <p>Agent memory is pluggable: a SQLite store (default, at <code>~/.hawki/deep_memory.db</code>) or a JSON store. The budget is a dual limit on <code>max_attempts</code> and <code>max_tokens</code>, both defaulting to unlimited. Continuous mode and a target-contract focus round out the agent.</p>
+                    <p>The agent has been exercised on real incident code: against DeFiVulnLabs' reproductions, it invented and landed a live reentrancy drain in the sandbox, growing the attacker balance from 1 ETH to 2 ETH.</p>
+                    <CodeBlock code={`$ hawki deep ./contracts --sandbox --max-attempts 25`} />
+
+  </>
+)
+
+const sec_deployed_scanning = (
+  <>
+                    <h2>3. Deployed-Contract and Multi-Chain Scanning</h2>
+                    <p>Hawk-i scans live contracts by address, not just local source. Pass an address and a chain and it pulls verified source from the chain's block explorer (Etherscan-family), falling back to web3 and raw bytecode when source is not published.</p>
+                    <CodeBlock code={`$ hawki scan --address 0xYourContract --chain ethereum`} />
+                    <p>Per-chain RPC and explorer endpoints ship built in for seven EVM mainnets (Ethereum, Polygon, Arbitrum, Optimism, Base, BNB Chain, and Avalanche), plus the Sepolia testnet and a local node. Override the RPC with <code>--rpc-url</code> and supply an explorer API key with <code>--explorer-key</code>.</p>
+
+  </>
+)
+
+const sec_security_modules = (
+  <>
+                    <h2>4. Security Modules</h2>
+                    <p>v1.0.0 ships four standalone security modules alongside the scan pipeline:</p>
+                    <ul className="list-disc list-inside">
+                        <li><strong>verify</strong> - compare deployed on-chain bytecode against local source, to catch source that does not match what is running.</li>
+                        <li><strong>deps</strong> - dependency vulnerability scanning for known-vulnerable library and package versions.</li>
+                        <li><strong>upgrade</strong> - proxy storage-collision safety, checking that a new implementation is storage-layout compatible with the old one.</li>
+                        <li><strong>prove</strong> - formal verification via SMTChecker, with auto-discovered engines selected by <code>--engine</code>.</li>
+                    </ul>
+
+  </>
+)
+
+const sec_reporting = (
+  <>
+                    <h2>5. Reporting and JSON Export</h2>
+                    <p>Reports are audit-grade and come in two styles: <code>audit</code> (a full security-audit layout) and <code>immunefi</code> (an Immunefi-style bug-bounty submission). Formats are Markdown, JSON, HTML, and PDF; HTML and PDF need the <code>reports</code> and <code>pdf</code> extras.</p>
+                    <p>Every scan writes structured JSON to <code>./hawki_reports/</code> as its canonical record. Re-render any report or recompute the score from that file at any time:</p>
+                    <CodeBlock code={`$ hawki report --input findings.json --style immunefi --format md
+$ hawki score findings.json`} />
+                    <p>A dedicated <code>hawki export</code> command handles pushing findings into other structured formats.</p>
+
+  </>
+)
+
+const sec_security_score = (
+  <>
+                    <h2>6. Security Score</h2>
+                    <p>Every scan produces a deterministic 0-100 security score. It starts at 100 and subtracts severity-weighted deductions per finding (Critical -15, High -8, Medium -4, Low -1) plus flat penalties, then clamps to the 0 to 100 range and maps to a risk band.</p>
                     <table>
-                        <thead><tr><th>Category</th><th>v0.6.0</th><th>v0.7.0</th></tr></thead>
+                        <thead><tr><th>Score</th><th>Risk band</th></tr></thead>
                         <tbody>
-                            <tr><td><strong>Static Rules</strong></td><td>Dynamic discovery, ~15–20 rules</td><td>Expanded to <strong>30 rules</strong>, each with explanation, impact, fix templates</td></tr>
-                            <tr><td><strong>AI Engine</strong></td><td>Optional reasoning, no scoring integration</td><td>Integrated with scoring & fallback explanation logic</td></tr>
-                            <tr><td><strong>Exploit Sandbox</strong></td><td>Optional simulation, basic success flag</td><td>Structured metrics (balances, gas, tx hash), integrated into score & report</td></tr>
-                            <tr><td><strong>Reporting</strong></td><td>Basic markdown list of findings</td><td><strong>Audit‑Grade Report System (ARS v2)</strong> – executive summary, score, charts, per‑finding remediation</td></tr>
-                            <tr><td><strong>Risk Score</strong></td><td>❌ Not available</td><td>✅ <strong>0–100 deterministic scoring</strong> with severity deductions & simulation penalties</td></tr>
-                            <tr><td><strong>Severity Charts</strong></td><td>❌</td><td>✅ Auto‑generated pie/bar charts (with table fallback)</td></tr>
-                            <tr><td><strong>Guided Fix Snippets</strong></td><td>Ad‑hoc, inconsistent</td><td>✅ <strong>Remediation Engine</strong> with template‑based, context‑aware fixes</td></tr>
-                            <tr><td><strong>Telemetry</strong></td><td>❌</td><td>✅ <strong>Opt‑in anonymous metrics</strong> (scans, findings, version)</td></tr>
-                            <tr><td><strong>CLI Commands</strong></td><td><code>hawki scan</code> only</td><td><code>hawki scan</code>, <code>hawki report</code>, <code>hawki score</code>, <code>hawki metrics</code></td></tr>
-                            <tr><td><strong>Output Formats</strong></td><td>Markdown</td><td>Markdown, JSON, PDF (optional)</td></tr>
-                            <tr><td><strong>Data Layer</strong></td><td><code>ReportManager</code> (single)</td><td><code>reporting/</code> subsystem with versioned generators</td></tr>
-                            <tr><td><strong>Exploit Metrics</strong></td><td>Success flag only</td><td>Balance delta, gas used, transaction hash, logs</td></tr>
-                            <tr><td><strong>Grant Readiness</strong></td><td>Early‑stage</td><td><strong>Audit‑grade infrastructure</strong> – quantifiable, demonstrable</td></tr>
+                            <tr><td>90-100</td><td>Secure</td></tr>
+                            <tr><td>75-89</td><td>Minor Risk</td></tr>
+                            <tr><td>50-74</td><td>Moderate Risk</td></tr>
+                            <tr><td>25-49</td><td>High Risk</td></tr>
+                            <tr><td>0-24</td><td>Critical Risk</td></tr>
                         </tbody>
                     </table>
-        
+
   </>
 )
 
-const sec_detection_engine_evolution = (
+const sec_registry_doctor = (
   <>
-                    <h2>3️⃣ Detection Engine Evolution</h2>
-                    <h3>v0.6.0</h3>
-                    <p>Rules were Python files in <code>static_rule_engine/rules/</code> discovered dynamically. Each rule defined a <code>run_check()</code> method and a <code>severity</code> attribute. AI reasoning was optional; if enabled, the <code>ReasoningAgent</code> added explanations. There was <strong>no enforced schema</strong> for findings – fields varied across rules. Exploit pairing was not mandatory; some rules lacked corresponding attack scripts. No standardised explanation or impact fields – reports relied on AI or rule comments.</p>
-                    <h4>Limitations</h4>
-                    <ul>
-                        <li>Inconsistent finding structure made report generation brittle.</li>
-                        <li>No fallback when AI was disabled – reports lacked explanations.</li>
-                        <li>Remediation suggestions were embedded in rule logic, not reusable.</li>
-                        <li>No correlation between detection and exploit simulation.</li>
-                    </ul>
-                    <h3>v0.7.0</h3>
-                    <h4>Standardised Finding Object</h4>
-                    <p>Every finding now conforms to a <strong>strict schema</strong>:</p>
-                    <CodeBlock code={`{
-    "id": str,                     # e.g., "REENT-001"
-    "title": str,                   # e.g., "[CRITICAL] Reentrancy in withdraw()"
-    "severity": str,                 # "Critical", "High", "Medium", "Low"
-    "file": str,                     # Path relative to repo root
-    "line": int,                     # Starting line number
-    "vulnerable_snippet": str,       # Code block showing the issue
-    "fix_snippet": str,               # Populated by Remediation Engine
-    "explanation": str,               # Why it's dangerous (AI or fallback)
-    "impact": str,                    # Potential consequences (AI or fallback)
-    "exploit_steps": list or None,    # Steps if sandbox succeeded
-    "ai_used": bool                    # Whether AI contributed
-}`} />
-                    <h4>Rule Requirements Expanded</h4>
-                    <p>Each rule file must now define class attributes (or provide them via methods):</p>
-                    <CodeBlock code={`class ReentrancyRule:
-    severity = "Critical"
-    explanation_template = "This function allows reentrant calls because it updates state after an external call."
-    impact_template = "An attacker can drain funds by recursively calling back before state updates."
-    fix_template = "Apply the checks-effects-interactions pattern and add a nonReentrant modifier."
+                    <h2>7. Registry and Doctor</h2>
+                    <p><strong>Registry.</strong> <code>hawki registry</code> keeps a local record of everything you have scanned at <code>~/.hawki/scanned_registry.json</code>. It never leaves your machine and needs no account.</p>
+                    <p><strong>Doctor.</strong> <code>hawki doctor</code> is a preflight health check. Run it before a big scan to confirm Docker, LLM keys, and Foundry or Hardhat are all in place.</p>
+                    <CodeBlock code={`$ hawki registry
+$ hawki doctor`} />
 
-    def run_check(self, contract_ast, ...):
-        # detection logic
-        return findings  # each finding will inherit these templates`} />
-                    <ul>
-                        <li><strong>Explanation fallback</strong>: If AI is disabled, the rule’s <code>explanation_template</code> is used.</li>
-                        <li><strong>Impact fallback</strong>: Similarly, <code>impact_template</code> provides deterministic impact statements.</li>
-                        <li><strong>Fix snippet</strong>: The <code>fix_template</code> is passed to the Remediation Engine for context‑aware population.</li>
-                    </ul>
-                    <p><strong>Result:</strong> Detection is now deterministic, self‑contained, and report‑ready.</p>
-        
   </>
 )
 
-const sec_risk_scoring_system = (
+const sec_licensing = (
   <>
-                    <h2>4️⃣ Risk Scoring System</h2>
-                    <p><strong>v0.6.0:</strong> ❌ No scoring system. Users had to interpret severity counts manually.</p>
-                    <p><strong>v0.7.0:</strong> New component: <code>scoring_engine.py</code> inside <code>data_layer/reporting/</code>.</p>
-                    <h4>Scoring Formula</h4>
-                    <ul>
-                        <li><strong>Base score</strong>: 100</li>
-                        <li><strong>Deductions per finding</strong>: Critical -15, High -8, Medium -4, Low -1</li>
-                        <li><strong>Simulation penalty</strong> (if sandbox enabled): -5 per successfully reproduced exploit (capped at -15)</li>
-                    </ul>
-                    <h4>Classification Bands</h4>
-                    <table>
-                        <thead><tr><th>Score</th><th>Classification</th></tr></thead>
-                        <tbody>
-                            <tr><td>90–100</td><td>Secure</td></tr>
-                            <tr><td>75–89</td><td>Minor Risk</td></tr>
-                            <tr><td>50–74</td><td>Moderate Risk</td></tr>
-                            <tr><td>25–49</td><td>High Risk</td></tr>
-                            <tr><td>0–24</td><td>Critical Risk</td></tr>
-                        </tbody>
-                    </table>
-                    <h4>Output Example</h4>
-                    <CodeBlock code={`{
-    "score": 61,
-    "classification": "High Risk",
-    "deductions": {
-        "critical": 3,
-        "high": 4,
-        "simulation_penalty": 2
-    },
-    "simulation_used": True,
-    "ai_used": True
-}`} />
-                    <p><strong>Impact:</strong> Quantified risk posture, executive summaries, grant credibility.</p>
-        
+                    <h2>8. MIT License and No Telemetry</h2>
+                    <p>Hawk-i v1.0.0 is released under the <strong>MIT license</strong> and is 100% open source.</p>
+                    <p>There is <strong>no telemetry</strong>. Hawk-i does not collect or transmit usage data of any kind, and it does not phone home. The <code>hawki metrics</code> command reports only statistics that are computed and stored on your own machine. Enabling LLM reasoning sends your prompts and keys directly to the provider you chose, never through any Hawk-i service; run a local model through Ollama to stay fully offline. All state lives in plain files under <code>~/.hawki/</code>.</p>
+
   </>
 )
 
-const sec_reporting_system_evolution = (
+const sec_install_upgrade = (
   <>
-                    <h2>5️⃣ Reporting System Evolution (ARS v2)</h2>
-                    <p><strong>v0.6.0:</strong> Markdown only, simple list of findings, no executive summary, no charts.</p>
-                    <p><strong>v0.7.0:</strong> New directory <code>core/data_layer/reporting/</code> with multiple modules.</p>
-                    <ul>
-                        <li><code>report_generator_v2.py</code> – generates reports with executive summary, score, charts, per‑finding details.</li>
-                        <li><code>chart_renderer.py</code> – creates severity pie chart and vulnerability bar chart (PNG) using matplotlib.</li>
-                        <li><code>templates/</code> – Jinja2 templates for HTML/Markdown.</li>
-                    </ul>
-                    <p><strong>Report structure:</strong> Executive summary, vulnerability breakdown (chart + table), per‑finding details with fix snippets and exploit steps.</p>
-        
-  </>
-)
+                    <h2>9. Install and Upgrade</h2>
+                    <p>Install or upgrade from PyPI:</p>
+                    <CodeBlock code={`$ pip install --upgrade hawki`} />
+                    <p>Optional extras add HTML and PDF reporting:</p>
+                    <CodeBlock code={`$ pip install "hawki[all]"`} />
+                    <p>Or pull the Docker image:</p>
+                    <CodeBlock code={`$ docker pull 0xsemantic/hawki:latest`} />
+                    <p>After upgrading, run <code>hawki doctor</code> to confirm your environment is ready.</p>
 
-const sec_vulnerability_coverage = (
-  <>
-                    <h2>6️⃣ Vulnerability Coverage Expansion</h2>
-                    <p><strong>v0.6.0:</strong> ~15–20 rules, limited exploit pairing.</p>
-                    <p><strong>v0.7.0:</strong> <strong>Capped at 30 strong vulnerabilities</strong>, each critical/high has a corresponding attack script. Attack scripts return structured data (balances, gas, tx hash). New examples: permit signature replay, integer overflow, signature malleability, reused nonce, centralized owner risk.</p>
-        
-  </>
-)
-
-const sec_remediation_engine = (
-  <>
-                    <h2>7️⃣ Remediation Engine (New in v0.7.0)</h2>
-                    <p><strong>v0.6.0:</strong> Fix suggestions embedded in rule logic, inconsistent.</p>
-                    <p><strong>v0.7.0:</strong> New module <code>core/remediation_engine/</code>. Uses template files (e.g., <code>reentrancy.json</code>) with placeholders like <code>{'{'}{'{'}function_name{'}'}{'}'}</code>. Populates <code>fix_snippet</code> in findings. Extensible and context‑aware.</p>
-        
-  </>
-)
-
-const sec_exploit_sandbox_evolution = (
-  <>
-                    <h2>8️⃣ Exploit Sandbox Evolution</h2>
-                    <p><strong>v0.6.0:</strong> <code>SandboxManager.run_all()</code> returned simple success booleans.</p>
-                    <p><strong>v0.7.0:</strong> Extended return structure with balance delta, gas used, tx hash, logs. Simulation success rate in executive summary, score penalty for successful exploits.</p>
-        
-  </>
-)
-
-const sec_telemetry_system = (
-  <>
-                    <h2>9️⃣ Telemetry System (New)</h2>
-                    <p><strong>v0.6.0:</strong> ❌ No telemetry.</p>
-                    <p><strong>v0.7.0:</strong> Opt‑in anonymous telemetry via <code>--telemetry</code>. Collects scan count, findings per severity, version, etc. Stored locally and optionally sent to Hawk‑i API. New CLI command <code>hawki metrics</code>.</p>
-        
-  </>
-)
-
-const sec_cli_evolution = (
-  <>
-                    <h2>🔟 CLI Evolution</h2>
-                    <p><strong>v0.6.0:</strong> <code>hawki scan &lt;repo&gt; [--ai] [--sandbox]</code></p>
-                    <p><strong>v0.7.0:</strong> New subcommands: <code>hawki report</code>, <code>hawki score</code>, <code>hawki metrics</code>. Extended <code>scan</code> with <code>--telemetry</code> and <code>--format</code>. Backward compatible.</p>
-        
-  </>
-)
-
-const sec_data_layer_evolution = (
-  <>
-                    <h2>1️⃣1️⃣ Data Layer Evolution</h2>
-                    <p><strong>v0.6.0:</strong> <code>report_manager.py</code> with <code>save_findings()</code>.</p>
-                    <p><strong>v0.7.0:</strong> <code>report_manager.py</code> now has <code>generate_report()</code> delegating to <code>reporting/</code>. New subdirectory <code>reporting/</code> with versioned generators. Old findings format (v1) remains valid.</p>
-        
-  </>
-)
-
-const sec_maturity_level_comparison = (
-  <>
-                    <h2>1️⃣2️⃣ System Maturity Level Comparison</h2>
-                    <table>
-                        <thead><tr><th>Dimension</th><th>v0.6.0</th><th>v0.7.0</th></tr></thead>
-                        <tbody>
-                            <tr><td>Developer Tool</td><td>✅</td><td>✅</td></tr>
-                            <tr><td>Security Tool</td><td>✅</td><td>✅</td></tr>
-                            <tr><td>Audit Tool</td><td>⚠️ Partial</td><td>✅ Full</td></tr>
-                            <tr><td>Grant‑Ready</td><td>Early‑stage</td><td><strong>Strong</strong></td></tr>
-                            <tr><td>Enterprise Demo</td><td>Weak</td><td><strong>Strong</strong></td></tr>
-                            <tr><td>Quantifiable Intelligence</td><td>❌</td><td>✅ (score, metrics)</td></tr>
-                            <tr><td>Deterministic Risk Scoring</td><td>❌</td><td>✅</td></tr>
-                            <tr><td>Remediation Guidance</td><td>Basic</td><td><strong>Structured</strong></td></tr>
-                            <tr><td>Exploit Simulation Integration</td><td>Minimal</td><td><strong>Deep</strong></td></tr>
-                            <tr><td>Public Impact Metrics</td><td>❌</td><td>✅ (opt‑in)</td></tr>
-                        </tbody>
-                    </table>
-        
-  </>
-)
-
-const sec_philosophical_shift = (
-  <>
-                    <h2>1️⃣3️⃣ Philosophical Shift</h2>
-                    <p><strong>v0.6.0</strong> = a <strong>scanner</strong> – it finds problems and lists them.</p>
-                    <p><strong>v0.7.0</strong> = an <strong>intelligence system</strong> – it quantifies risk, explains impact, demonstrates exploitability, and guides remediation.</p>
-                    <p>v0.6.0 answers: “What vulnerabilities exist?”</p>
-                    <p>v0.7.0 answers: “What vulnerabilities exist, how severe are they, can they be exploited, what is the quantified risk, and how do we fix them?”</p>
-        
-  </>
-)
-
-const sec_breaking_changes = (
-  <>
-                    <h2>1️⃣4️⃣ Breaking Changes</h2>
-                    <p><strong>None.</strong> All existing CLI commands work unchanged. Existing rule files continue to load (fallbacks apply). Old findings JSON files can still be read. <strong>Additive only</strong> – users can upgrade without modifying their workflows.</p>
-        
-  </>
-)
-
-const sec_strategic_positioning = (
-  <>
-                    <h2>1️⃣5️⃣ Strategic Positioning After Upgrade</h2>
-                    <p>With v0.7.0, Hawk‑i is now:</p>
-                    <blockquote className="text-white border-l-4 border-steel pl-4 italic">Modular, measurable, audit‑grade security intelligence infrastructure for Web3 repositories.</blockquote>
-                    <p>This positions the project for grants, enterprise pilots, ecosystem partnerships, and community growth. The foundation is now laid for future phases (monitoring network, cross‑chain support, etc.).</p>
-                    <p className="mt-4 text-grey text-sm">End of v0.6.0 → v0.7.0 Evolution Report</p>
-        
   </>
 )
 
 export const CHANGELOG_SECTIONS = {
   'title': sec_title,
-  'executive-summary': sec_executive_summary,
-  'architectural-comparison': sec_architectural_comparison,
-  'detection-engine-evolution': sec_detection_engine_evolution,
-  'risk-scoring-system': sec_risk_scoring_system,
-  'reporting-system-evolution': sec_reporting_system_evolution,
-  'vulnerability-coverage': sec_vulnerability_coverage,
-  'remediation-engine': sec_remediation_engine,
-  'exploit-sandbox-evolution': sec_exploit_sandbox_evolution,
-  'telemetry-system': sec_telemetry_system,
-  'cli-evolution': sec_cli_evolution,
-  'data-layer-evolution': sec_data_layer_evolution,
-  'maturity-level-comparison': sec_maturity_level_comparison,
-  'philosophical-shift': sec_philosophical_shift,
-  'breaking-changes': sec_breaking_changes,
-  'strategic-positioning': sec_strategic_positioning,
+  'highlights': sec_highlights,
+  'deep-agent': sec_deep_agent,
+  'deployed-scanning': sec_deployed_scanning,
+  'security-modules': sec_security_modules,
+  'reporting': sec_reporting,
+  'security-score': sec_security_score,
+  'registry-doctor': sec_registry_doctor,
+  'licensing': sec_licensing,
+  'install-upgrade': sec_install_upgrade,
 }
