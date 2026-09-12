@@ -1,0 +1,16 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# There is deliberately no SPA catch-all ("/* /index.html 200"). Every real page
+# is prerendered to its own HTML file, and anything else gets dist/404.html with
+# a real 404 status. Section redirects live in the generated dist/_redirects.
+
+# Vite fingerprints everything under /assets, so it can be cached forever.
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

@@ -225,6 +225,7 @@ body {
   padding-top: 0;
   border-top: none;
 }
+.doc-card h1,
 .doc-card h2 {
   font-family: var(--font-display);
   font-size: 2rem;

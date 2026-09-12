@@ -1,7 +1,6 @@
 import Navbar from '../components/layout/Navbar.jsx'
 import Footer from '../components/layout/Footer.jsx'
 import Ticker from '../components/layout/Ticker.jsx'
-import { Helmet } from '../components/common/Helmet.jsx'
 import Hero from '../components/home/Hero.jsx'
 import LiveTerminal from '../components/home/LiveTerminal.jsx'
 import DeepAgent from '../components/home/DeepAgent.jsx'
@@ -20,7 +19,6 @@ export default function Home() {
   return (
     <div className="min-h-screen relative">
       <div className="grain-overlay fixed" style={{ opacity: 0.05 }} />
-      <Helmet title="Hawk-i · Security intelligence for Web3 smart contracts" />
       <Ticker />
       <Navbar />
       <Hero />

@@ -2,12 +2,10 @@ import { Link } from 'react-router-dom'
 import { ShieldAlert } from 'lucide-react'
 import Navbar from '../components/layout/Navbar.jsx'
 import Footer from '../components/layout/Footer.jsx'
-import { Helmet } from '../components/common/Helmet.jsx'
 
 export default function NotFound() {
   return (
     <div className="min-h-screen flex flex-col">
-      <Helmet title="Hawk-i · Page not found" />
       <Navbar />
       <div className="flex-1 flex flex-col items-center justify-center text-center px-6 py-32">
         <ShieldAlert className="text-[#986C67] mb-6" size={48} strokeWidth={1.5} />

@@ -1,8 +1,9 @@
+import { Link } from 'react-router-dom'
 import CodeBlock from '../common/CodeBlock.jsx'
 
 const sec_introduction = (
   <>
-                    <h2>Introduction</h2>
+                    <h1>Introduction</h1>
                     <p className="lead text-lg text-white mb-4">Hawk-i is an open-source security-intelligence platform for Solidity and Web3 smart contracts. It combines deterministic static analysis, LLM reasoning, and a live Docker exploit sandbox into a single command-line tool that runs entirely on your machine.</p>
                     <p>Hawk-i v1.0.0 is a finished, local-first tool. There is no cloud requirement, no account, and no phone-home. Point it at a repository or a deployed contract address and it produces audit-grade findings, a quantified security score, and reproducible proof-of-concept exploits.</p>
                     <h3>What makes it different</h3>
@@ -26,7 +27,7 @@ const sec_introduction = (
 
 const sec_installation = (
   <>
-                    <h2>Installation</h2>
+                    <h1>Installation</h1>
                     <h3>Prerequisites</h3>
                     <ul className="list-disc list-inside mb-4">
                         <li>Python 3.9+ (developed on 3.12)</li>
@@ -63,7 +64,7 @@ $ docker run --rm -v $(pwd):/repo levichinecherem/hawki scan /repo`} />
 
 const sec_quickstart = (
   <>
-                    <h2>Quickstart</h2>
+                    <h1>Quickstart</h1>
                     <p>Scan a local repository with the default static rule engine:</p>
                     <CodeBlock code={`$ hawki scan ./my-project`} />
 
@@ -80,14 +81,14 @@ const sec_quickstart = (
                     <CodeBlock code={`$ hawki report --input findings.json --format html --output report.html
 $ hawki score findings.json`} />
 
-                    <p className="mt-4">For the full command surface, see the <a href="#cli-reference" className="text-[#687F97] underline">CLI reference</a>.</p>
+                    <p className="mt-4">For the full command surface, see the <Link to="/docs/cli-reference" className="text-[#687F97] underline">CLI reference</Link>.</p>
 
   </>
 )
 
 const sec_cli_reference = (
   <>
-                    <h2>CLI Reference</h2>
+                    <h1>CLI Reference</h1>
                     <p>The base command is <span className="inline-code">hawki</span>. Every capability is a subcommand.</p>
 
                     <h3>Command overview</h3>
@@ -127,7 +128,7 @@ hawki scan --address <0x...> --chain <chain> [options]`} />
                     </ul>
 
                     <h3>hawki deep</h3>
-                    <p>Run the autonomous Deep agent against a target. See the <a href="#deep-agent" className="text-[#687F97] underline">Deep agent</a> page for the full model.</p>
+                    <p>Run the autonomous Deep agent against a target. See the <Link to="/docs/deep-agent" className="text-[#687F97] underline">Deep agent</Link> page for the full model.</p>
                     <CodeBlock code={`hawki deep <path> [--sandbox] [--max-attempts N] [--max-tokens N] [--continuous]`} />
 
                     <h3>hawki report</h3>
@@ -162,7 +163,7 @@ hawki report --input findings.json --style immunefi --format md`} />
 
 const sec_scanning = (
   <>
-                    <h2>Scanning</h2>
+                    <h1>Scanning</h1>
                     <p>The <span className="inline-code">hawki scan</span> pipeline is the core workflow. It runs a fixed sequence of stages and produces a findings set, a security score, and a report.</p>
 
                     <h3>The pipeline</h3>
@@ -206,7 +207,7 @@ $ hawki scan --address 0xYourContract --chain polygon --explorer-key <KEY>`} />
 
 const sec_security_score = (
   <>
-                    <h2>Security Score</h2>
+                    <h1>Security Score</h1>
                     <p>Hawk-i computes a deterministic 0-100 security score from the findings of a scan. The same findings always produce the same score.</p>
                     <h3>Formula</h3>
                     <p>The score starts at 100 and subtracts severity-weighted deductions per finding, plus flat penalties, then clamps to the range 0 to 100:</p>
@@ -230,7 +231,7 @@ const sec_security_score = (
 
 const sec_reporting = (
   <>
-                    <h2>Audit-Grade Reporting</h2>
+                    <h1>Audit-Grade Reporting</h1>
                     <p>Hawk-i produces professional, audit-grade reports suitable for team reviews, auditor handoffs, and bug-bounty submissions. Reports can be generated during a scan or re-rendered later from a saved findings JSON with <span className="inline-code">hawki report</span>.</p>
 
                     <h3>Report styles</h3>
@@ -261,7 +262,7 @@ $ hawki report --input findings.json --style immunefi --format md`} />
 
 const sec_deep_agent = (
   <>
-                    <h2>The Deep Agent</h2>
+                    <h1>The Deep Agent</h1>
                     <p className="lead text-lg text-white mb-4">Hawk-i Deep is the flagship capability: an autonomous agent that does not just match known patterns, it invents new attacks and proves them by running working exploit code.</p>
                     <CodeBlock code={`$ hawki deep ./contracts --sandbox`} />
 
@@ -300,7 +301,7 @@ const sec_deep_agent = (
 
 const sec_security_modules = (
   <>
-                    <h2>Security Modules</h2>
+                    <h1>Security Modules</h1>
                     <p>Beyond the scan pipeline, Hawk-i ships four focused security modules as standalone subcommands. Each answers one sharp question about a contract.</p>
 
                     <h3>verify - source matches deployed bytecode</h3>
@@ -324,7 +325,7 @@ const sec_security_modules = (
 
 const sec_registry = (
   <>
-                    <h2>Contract Registry</h2>
+                    <h1>Contract Registry</h1>
                     <p>The registry is a local record of everything you have scanned. It lives at <span className="inline-code">~/.hawki/scanned_registry.json</span> and never leaves your machine.</p>
                     <CodeBlock code={`$ hawki registry`} />
                     <p>Use it to keep track of contracts and repositories you have audited over time, without any external service or account.</p>
@@ -334,7 +335,7 @@ const sec_registry = (
 
 const sec_doctor = (
   <>
-                    <h2>Doctor</h2>
+                    <h1>Doctor</h1>
                     <p>The <span className="inline-code">doctor</span> command is a preflight health check. Run it before a big scan to confirm your environment is ready.</p>
                     <CodeBlock code={`$ hawki doctor`} />
                     <p>It checks for things like a working Docker daemon (needed for the sandbox and Deep agent), configured LLM API keys, and the presence of Foundry or Hardhat for proof-of-concept execution. Doctor also reads <span className="inline-code">~/.hawki/config.yaml</span> if present. That config file is consulted only by <span className="inline-code">doctor</span> and diagnostics; <span className="inline-code">scan</span> and <span className="inline-code">deep</span> take everything from CLI flags.</p>
@@ -344,7 +345,7 @@ const sec_doctor = (
 
 const sec_monitoring = (
   <>
-                    <h2>Monitoring</h2>
+                    <h1>Monitoring</h1>
                     <p>Hawk-i can watch a repository or a deployed contract and rescan automatically when something changes.</p>
                     <CodeBlock code={`$ hawki monitor ./my-project --interval 300 --alert-log alerts.txt`} />
                     <p><strong>Options:</strong></p>
@@ -364,7 +365,7 @@ const sec_monitoring = (
 
 const sec_architecture = (
   <>
-                    <h2>Architecture</h2>
+                    <h1>Architecture</h1>
                     <p>Hawk-i is a set of independent subsystems. The <span className="inline-code">scan</span> pipeline chains a few of them together; the rest are standalone subcommands.</p>
 
                     <h3>Scan pipeline stages</h3>
@@ -390,7 +391,7 @@ const sec_architecture = (
 
 const sec_vulnerability_library = (
   <>
-                    <h2>Vulnerability Library</h2>
+                    <h1>Vulnerability Library</h1>
                     <p>Hawk-i ships 50 source-level detection rules covering the common classes of smart-contract vulnerability: reentrancy, access control, integer overflow, oracle manipulation, unchecked external and ERC20 calls, weak randomness, unsafe downcasts, ecrecover checks, upgrade safety, selfdestruct, locked ether, and code-hygiene issues such as outdated Solidity versions, floating pragmas, inline assembly, and deprecated constructs.</p>
                     <h3>No dead rules</h3>
                     <p>Every rule is backed by a liveness test: a crafted triggering contract is indexed through the real repository indexer and passed to the rule exactly as the scan pipeline passes it, and the rule must produce at least one finding. A rule that only works on hand-crafted inputs, or never fires in production, fails the suite. Adding a new rule requires adding its liveness trigger. The result is 50 rules that actually run, not a padded count.</p>
@@ -423,7 +424,7 @@ const sec_vulnerability_library = (
 
 const sec_ai_integration = (
   <>
-                    <h2>AI Integration</h2>
+                    <h1>AI Integration</h1>
                     <p>LLM reasoning is optional and off by default. Enable it with the <code>--ai</code> flag. Hawk-i routes all model calls through litellm, so it works with several providers behind one interface.</p>
 
                     <h3>Command-line flags</h3>
@@ -454,7 +455,7 @@ export ANTHROPIC_API_KEY=your_key_here   # Anthropic`} />
 
 const sec_privacy = (
   <>
-                    <h2>Privacy Promise</h2>
+                    <h1>Privacy Promise</h1>
                     <p className="lead text-lg text-white mb-4">Hawk-i is local-first and stays that way. There is no telemetry, no cloud requirement, and no phone-home. Ever.</p>
                     <ul className="list-disc list-inside">
                         <li><strong>No telemetry.</strong> Hawk-i does not collect or transmit usage data. The <span className="inline-code">hawki metrics</span> command shows statistics that are computed and stored purely on your own machine.</li>
@@ -470,9 +471,9 @@ const sec_privacy = (
 
 const sec_contributing = (
   <>
-                    <h2>Contributing</h2>
+                    <h1>Contributing</h1>
                     <p>Hawk-i is MIT licensed and fully open source. Contributions are welcome on <a href="https://github.com/gethawki/hawki" target="_blank" rel="noreferrer" className="text-[#687F97] underline">GitHub</a>.</p>
-                    <p>The plugin model means most contributions never touch core code: new detection rules, remediation templates, attack scripts, formal-verification engines, monitoring watchers, and prompt templates are all added by dropping a file in the right directory. See the <a href="#vulnerability-library" className="text-[#687F97] underline">Vulnerability Library</a> page for the directory contracts, and read <span className="inline-code">CONTRIBUTING.md</span> in the repository before opening a pull request.</p>
+                    <p>The plugin model means most contributions never touch core code: new detection rules, remediation templates, attack scripts, formal-verification engines, monitoring watchers, and prompt templates are all added by dropping a file in the right directory. See the <Link to="/docs/vulnerability-library" className="text-[#687F97] underline">Vulnerability Library</Link> page for the directory contracts, and read <span className="inline-code">CONTRIBUTING.md</span> in the repository before opening a pull request.</p>
 
   </>
 )

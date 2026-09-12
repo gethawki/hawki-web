@@ -72,10 +72,36 @@ src/
 ```bash
 npm install     # install dependencies
 npm run dev     # start local dev server
-npm run build   # production build to dist/
+npm run build   # client build + SSR build + prerender to dist/ (see SEO below)
 npm run preview # preview the production build locally
 npm run lint    # oxlint (no config file, pure defaults)
+npm run seo:indexnow  # after a deploy: ping IndexNow (Bing etc.) about changed URLs
 ```
+
+## SEO and deployment
+
+The site is deployed on Netlify (`netlify.toml`) at `https://gethawki.com`.
+
+- **Prerendered pages.** `npm run build` runs `vite build`, then an SSR build of
+  `src/entry-server.jsx`, then `scripts/prerender.mjs`, which writes one static
+  HTML file per page (`/docs/installation` becomes `dist/docs/installation.html`)
+  with the page content, title, description, canonical URL, Open Graph/Twitter
+  tags and JSON-LD already in the HTML. `src/main.jsx` hydrates it.
+- **One source of truth.** Every indexable page is listed in `src/data/seo.js`,
+  which builds the docs and changelog pages from `data/docsNav.js` and
+  `data/changelogNav.js`. Adding a nav entry (with a `description`) adds the page
+  to the prerender, the sitemap and the head tags. `Helmet` keeps `<head>` in
+  sync during client-side navigation.
+- **Generated files.** `dist/sitemap.xml`, `dist/_redirects` (`/docs` and
+  `/changelog` 301 to their first page) and `dist/404.html`. There is no SPA
+  catch-all: unknown URLs get a real 404 status.
+- **Build-time checks.** The build fails if a page is missing a title or
+  description, duplicates another page's, has a description outside 50-170
+  characters, or does not render exactly one `<h1>`.
+- **Static SEO files** in `public/`: `robots.txt`, `og-image.png` (1200x630),
+  `logo.png`, `apple-touch-icon.png`, and the IndexNow key file
+  (`<32 hex chars>.txt`).
+- Netlify deploy previews and branch deploys are built with `noindex`.
 
 ## Notes
 

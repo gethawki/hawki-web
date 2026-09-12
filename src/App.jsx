@@ -1,6 +1,7 @@
 import { Suspense, lazy } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import ScrollToTop from './components/layout/ScrollToTop.jsx'
+import { Helmet } from './components/common/Helmet.jsx'
 
 const Home = lazy(() => import('./pages/Home.jsx'))
 const Docs = lazy(() => import('./pages/Docs.jsx'))
@@ -22,6 +23,7 @@ export default function App() {
   return (
     <>
       <ScrollToTop />
+      <Helmet />
       <Suspense fallback={<PageFallback />}>
         <Routes>
           <Route path="/" element={<Home />} />

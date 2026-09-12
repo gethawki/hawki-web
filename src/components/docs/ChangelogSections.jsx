@@ -10,7 +10,7 @@ const sec_title = (
 
 const sec_highlights = (
   <>
-                    <h2>1. Highlights</h2>
+                    <h1>1. Highlights</h1>
                     <p>Hawk-i v1.0.0 is a complete smart-contract security toolkit that runs entirely on your machine. The headline capabilities:</p>
                     <ul className="list-disc list-inside mb-4">
                         <li><strong>The Deep agent</strong> - an autonomous loop that invents novel exploits and proves them with a runnable Hardhat or Foundry proof-of-concept.</li>
@@ -34,7 +34,7 @@ const sec_highlights = (
 
 const sec_deep_agent = (
   <>
-                    <h2>2. The Deep Agent</h2>
+                    <h1>2. The Deep Agent</h1>
                     <p>The flagship of v1.0.0 is <code>hawki deep</code>, an autonomous exploit-hunting agent. It runs an asynchronous loop, gated by a budget manager:</p>
                     <CodeBlock code={`Planner.next_attack  ->  Executor.execute  ->  memory.record  ->  budget.consume`} />
                     <p>Planners escalate in creativity: RulePlanner drains the known attack scripts, HybridPlanner blends known patterns with contract context, and LLMPlanner invents novel attacks the rules never encoded. For a novel attack, the NovelExecutor uses an LLM code generator to synthesize a Hardhat or Foundry proof-of-concept and runs it in the Docker sandbox, so the result is a reproducible PoC rather than a bare claim.</p>
@@ -47,7 +47,7 @@ const sec_deep_agent = (
 
 const sec_deployed_scanning = (
   <>
-                    <h2>3. Deployed-Contract and Multi-Chain Scanning</h2>
+                    <h1>3. Deployed-Contract and Multi-Chain Scanning</h1>
                     <p>Hawk-i scans live contracts by address, not just local source. Pass an address and a chain and it pulls verified source from the chain's block explorer (Etherscan-family), falling back to web3 and raw bytecode when source is not published.</p>
                     <CodeBlock code={`$ hawki scan --address 0xYourContract --chain ethereum`} />
                     <p>Per-chain RPC and explorer endpoints ship built in for seven EVM mainnets (Ethereum, Polygon, Arbitrum, Optimism, Base, BNB Chain, and Avalanche), plus the Sepolia testnet and a local node. Override the RPC with <code>--rpc-url</code> and supply an explorer API key with <code>--explorer-key</code>.</p>
@@ -57,7 +57,7 @@ const sec_deployed_scanning = (
 
 const sec_security_modules = (
   <>
-                    <h2>4. Security Modules</h2>
+                    <h1>4. Security Modules</h1>
                     <p>v1.0.0 ships four standalone security modules alongside the scan pipeline:</p>
                     <ul className="list-disc list-inside">
                         <li><strong>verify</strong> - compare deployed on-chain bytecode against local source, to catch source that does not match what is running.</li>
@@ -71,7 +71,7 @@ const sec_security_modules = (
 
 const sec_reporting = (
   <>
-                    <h2>5. Reporting and JSON Export</h2>
+                    <h1>5. Reporting and JSON Export</h1>
                     <p>Reports are audit-grade and come in two styles: <code>audit</code> (a full security-audit layout) and <code>immunefi</code> (an Immunefi-style bug-bounty submission). Formats are Markdown, JSON, HTML, and PDF; HTML and PDF need the <code>reports</code> and <code>pdf</code> extras.</p>
                     <p>Every scan writes structured JSON to <code>./hawki_reports/</code> as its canonical record. Re-render any report or recompute the score from that file at any time:</p>
                     <CodeBlock code={`$ hawki report --input findings.json --style immunefi --format md
@@ -83,7 +83,7 @@ $ hawki score findings.json`} />
 
 const sec_security_score = (
   <>
-                    <h2>6. Security Score</h2>
+                    <h1>6. Security Score</h1>
                     <p>Every scan produces a deterministic 0-100 security score. It starts at 100 and subtracts severity-weighted deductions per finding (Critical -15, High -8, Medium -4, Low -1) plus flat penalties, then clamps to the 0 to 100 range and maps to a risk band.</p>
                     <table>
                         <thead><tr><th>Score</th><th>Risk band</th></tr></thead>
@@ -101,7 +101,7 @@ const sec_security_score = (
 
 const sec_registry_doctor = (
   <>
-                    <h2>7. Registry and Doctor</h2>
+                    <h1>7. Registry and Doctor</h1>
                     <p><strong>Registry.</strong> <code>hawki registry</code> keeps a local record of everything you have scanned at <code>~/.hawki/scanned_registry.json</code>. It never leaves your machine and needs no account.</p>
                     <p><strong>Doctor.</strong> <code>hawki doctor</code> is a preflight health check. Run it before a big scan to confirm Docker, LLM keys, and Foundry or Hardhat are all in place.</p>
                     <CodeBlock code={`$ hawki registry
@@ -112,7 +112,7 @@ $ hawki doctor`} />
 
 const sec_licensing = (
   <>
-                    <h2>8. MIT License and No Telemetry</h2>
+                    <h1>8. MIT License and No Telemetry</h1>
                     <p>Hawk-i v1.0.0 is released under the <strong>MIT license</strong> and is 100% open source.</p>
                     <p>There is <strong>no telemetry</strong>. Hawk-i does not collect or transmit usage data of any kind, and it does not phone home. The <code>hawki metrics</code> command reports only statistics that are computed and stored on your own machine. Enabling LLM reasoning sends your prompts and keys directly to the provider you chose, never through any Hawk-i service; run a local model through Ollama to stay fully offline. All state lives in plain files under <code>~/.hawki/</code>.</p>
 
@@ -121,7 +121,7 @@ const sec_licensing = (
 
 const sec_install_upgrade = (
   <>
-                    <h2>9. Install and Upgrade</h2>
+                    <h1>9. Install and Upgrade</h1>
                     <p>Install or upgrade from PyPI:</p>
                     <CodeBlock code={`$ pip install --upgrade hawki`} />
                     <p>Optional extras add HTML and PDF reporting:</p>
