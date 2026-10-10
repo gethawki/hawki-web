@@ -6,6 +6,8 @@
 //     the extensionless URL with HTTP 200)
 //   - 404.html, an empty app shell Netlify serves with a real 404 status, so
 //     unknown URLs are never soft-404s
+//   - app.html, the empty noindex shell for the signed-in Cloud app, which
+//     Netlify serves for every /app/* URL (client-side routing takes over)
 //   - sitemap.xml and _redirects, generated from the same page list
 // The build fails if a page is missing metadata, duplicates another page's
 // title or description, or does not render exactly one <h1>.
@@ -13,6 +15,8 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import {
+  APP_PATH,
+  APP_SHELL,
   NOT_FOUND,
   OG_IMAGE,
   PAGES,
@@ -96,6 +100,7 @@ for (const meta of PAGES) {
 }
 
 fs.writeFileSync(path.join(dist, '404.html'), htmlFor(NOT_FOUND))
+fs.writeFileSync(path.join(dist, `${APP_PATH.slice(1)}.html`), htmlFor(APP_SHELL))
 
 fs.writeFileSync(
   path.join(dist, 'sitemap.xml'),
@@ -106,11 +111,21 @@ ${PAGES.map((p) => `  <url><loc>${p.url}</loc></url>`).join('\n')}
 `,
 )
 
-fs.writeFileSync(path.join(dist, '_redirects'), REDIRECTS.map((r) => `${r.from}  ${r.to}  301`).join('\n') + '\n')
+fs.writeFileSync(
+  path.join(dist, '_redirects'),
+  [
+    ...REDIRECTS.map((r) => `${r.from}  ${r.to}  301`),
+    // Rewrite (200), not redirect: the URL stays and the app routes it.
+    `${APP_PATH}  ${APP_PATH}.html  200`,
+    `${APP_PATH}/*  ${APP_PATH}.html  200`,
+  ].join('\n') + '\n',
+)
 
 const robots = fs.readFileSync(path.join(dist, 'robots.txt'), 'utf8')
 if (!robots.includes(`Sitemap: ${SITE_URL}/sitemap.xml`)) problems.push('robots.txt does not reference the sitemap')
 if (/^Disallow:\s*\/\s*$/m.test(robots)) problems.push('robots.txt blocks the whole site')
+if (!new RegExp(`^Disallow:\\s*${APP_PATH}\\s*$`, 'm').test(robots)) problems.push(`robots.txt does not disallow ${APP_PATH}`)
+if (PAGES.some((p) => p.path === APP_PATH || p.path.startsWith(`${APP_PATH}/`))) problems.push(`${APP_PATH} pages must not be prerendered`)
 
 fs.rmSync(ssrOut, { recursive: true, force: true })
 

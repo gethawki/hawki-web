@@ -55,6 +55,8 @@ src/
                 CodeBlock, SocialIcon, Helmet
   data/         links.js, product.js, docsNav.js, changelogNav.js (content/config)
   pages/        Home.jsx, Docs.jsx, Changelog.jsx, NotFound.jsx
+  cloud/        the signed-in Hawk-i Cloud app under /app: api.js (API client),
+                auth.jsx (session state), AppShell, ui primitives, pages/
 ```
 
 - **Home** (`/`) is composed from the named sections above, each built on the
@@ -66,6 +68,24 @@ src/
   through a shared `DocsLayout` (left nav + auto-built table of contents +
   scrollspy + mobile drawer + `Pager`). Add a section by editing the nav data and
   the matching sections file, not the layout.
+
+## Hawk-i Cloud app (`/app`)
+
+The signed-in app for Hawk-i Cloud lives in `src/cloud/` and talks to the
+`hawki-cloud` API. It is a separate lazy chunk, so marketing pages never load
+it, and it is never prerendered: Netlify serves one empty `noindex` shell
+(`dist/app.html`) for every `/app/*` URL and the client router takes over.
+`robots.txt` disallows `/app` and the build checks that it does.
+
+- Point it at an API with `VITE_API_URL` (see `.env.example`, default
+  `http://localhost:8080`). The API must list this site's origin in
+  `HAWKI_APP_CORS_ORIGINS` (or `HAWKI_APP_PUBLIC_URL`).
+- The access token is kept in memory only; the refresh token is an httpOnly
+  cookie set by the API. On a 401 the client refreshes once and retries, and
+  refreshes are serialized across tabs.
+- Routes: `/app/login`, `/app/signup`, `/app/forgot-password`,
+  `/app/reset-password`, `/app/verify-email`, `/app/invite`, and the signed-in
+  area at `/app`. Emailed links from the API point at these paths.
 
 ## Scripts
 

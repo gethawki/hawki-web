@@ -7,6 +7,8 @@ const Home = lazy(() => import('./pages/Home.jsx'))
 const Docs = lazy(() => import('./pages/Docs.jsx'))
 const Changelog = lazy(() => import('./pages/Changelog.jsx'))
 const NotFound = lazy(() => import('./pages/NotFound.jsx'))
+// The signed-in Cloud app is its own chunk; marketing pages never load it.
+const CloudApp = lazy(() => import('./cloud/CloudApp.jsx'))
 
 function PageFallback() {
   return (
@@ -31,6 +33,7 @@ export default function App() {
           <Route path="/docs/:slug" element={<Docs />} />
           <Route path="/changelog" element={<Changelog />} />
           <Route path="/changelog/:slug" element={<Changelog />} />
+          <Route path="/app/*" element={<CloudApp />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>

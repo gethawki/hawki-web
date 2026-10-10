@@ -1,4 +1,6 @@
 User-agent: *
 Allow: /
+# The signed-in Cloud app has nothing to index.
+Disallow: /app
 
 Sitemap: https://gethawki.com/sitemap.xml
