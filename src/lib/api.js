@@ -1,4 +1,5 @@
-// Client for the Hawk-i Cloud API (solution/hawki-cloud).
+// Client for the Hawk-i Cloud API (solution/hawki-cloud), used by the sign-in
+// pages and the dashboards.
 //
 // The access token lives only in memory. The refresh token is an httpOnly
 // cookie the browser sends to /api/v1/auth; scripts never see it. When a call
@@ -84,7 +85,7 @@ export async function api(path, opts = {}) {
 }
 
 export const oauthStartURL = (provider, next) =>
-  `${API_URL}/api/v1/auth/oauth/${encodeURIComponent(provider)}/start?redirect=${encodeURIComponent(next || '/app')}`
+  `${API_URL}/api/v1/auth/oauth/${encodeURIComponent(provider)}/start?redirect=${encodeURIComponent(next || '/dashboard')}`
 
 // Messages for the ?error= codes the OAuth callback sends back.
 export const OAUTH_ERRORS = {

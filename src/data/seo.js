@@ -59,14 +59,27 @@ export const REDIRECTS = [
 
 export const NOT_FOUND = { title: `Page not found · ${SITE_NAME}`, description: HOME.description }
 
-// The signed-in Hawk-i Cloud app under /app. It is one client-rendered shell
-// (dist/app.html), never prerendered, never in the sitemap, always noindex.
-export const APP_PATH = '/app'
-export const APP_SHELL = {
+// Pages behind sign-in (and the sign-in pages themselves). They are rendered
+// in the browser from one shared noindex shell (dist/app-shell.html), never
+// prerendered, never in the sitemap, and disallowed in robots.txt. Add a
+// prefix here when a new private area is added to App.jsx.
+export const PRIVATE_PREFIXES = [
+  '/login',
+  '/signup',
+  '/forgot-password',
+  '/reset-password',
+  '/verify-email',
+  '/invite',
+  '/dashboard',
+  '/admin',
+]
+export const PRIVATE_SHELL_FILE = 'app-shell.html'
+export const PRIVATE_META = {
   title: `${SITE_NAME} Cloud`,
   description: 'Sign in to Hawk-i Cloud to run hosted scans, keep evidence and work with your team on smart contract security.',
 }
-export const isAppPath = (pathname) => pathname === APP_PATH || pathname.startsWith(`${APP_PATH}/`)
+export const isPrivatePath = (pathname) =>
+  PRIVATE_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`))
 
 export function pageMeta(pathname) {
   const path = pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname

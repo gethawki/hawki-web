@@ -1,6 +1,13 @@
 User-agent: *
 Allow: /
-# The signed-in Cloud app has nothing to index.
-Disallow: /app
+# Sign-in pages and dashboards have nothing to index.
+Disallow: /login
+Disallow: /signup
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /verify-email
+Disallow: /invite
+Disallow: /dashboard
+Disallow: /admin
 
 Sitemap: https://gethawki.com/sitemap.xml

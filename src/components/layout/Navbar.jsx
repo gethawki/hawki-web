@@ -2,11 +2,24 @@ import { useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { Menu, X } from 'lucide-react'
 import { LINKS, VERSION } from '../../data/links.js'
+import { useAuth } from '../../lib/auth.jsx'
+import Logo from '../common/Logo.jsx'
 
 const NAV_ITEMS = [
   { to: '/docs', label: 'Docs' },
   { to: '/changelog', label: 'Changelog' },
 ]
+
+// AccountLink is "Sign in" for visitors and "Dashboard" once signed in.
+function AccountLink({ onClick, className }) {
+  const { status } = useAuth()
+  const authed = status === 'authed'
+  return (
+    <Link to={authed ? '/dashboard' : '/login'} onClick={onClick} className={className}>
+      {authed ? 'Dashboard' : 'Sign in'}
+    </Link>
+  )
+}
 
 export default function Navbar() {
   const [open, setOpen] = useState(false)
@@ -14,15 +27,7 @@ export default function Navbar() {
   return (
     <nav className="relative z-30">
       <div className="max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2.5" onClick={() => setOpen(false)}>
-          <span className="w-2 h-2 rounded-full bg-[#687F97]" />
-          <span className="font-display text-xl text-white tracking-tight">
-            Hawk<span className="text-[#687F97] italic">i</span>
-          </span>
-          <span className="hidden sm:inline-flex items-center gap-1 font-mono text-[0.6rem] tracking-wider text-[#77746C] border border-[#2a2a2a] rounded-full px-1.5 py-0.5">
-            v{VERSION}
-          </span>
-        </Link>
+        <Logo badge={`v${VERSION}`} onClick={() => setOpen(false)} />
 
         <div className="hidden md:flex gap-9 text-sm items-center">
           {NAV_ITEMS.map((item) => (
@@ -52,6 +57,7 @@ export default function Navbar() {
           >
             pip install hawki
           </a>
+          <AccountLink className="text-[#e0e0e0] hover:text-white transition font-medium" />
         </div>
 
         <button
@@ -86,6 +92,7 @@ export default function Navbar() {
           >
             pip install hawki
           </a>
+          <AccountLink onClick={() => setOpen(false)} className="text-white font-medium" />
         </div>
       )}
     </nav>

@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { api } from '../api.js'
-import { useAuth } from '../auth.jsx'
-import { Alert, AuthCard, Button, Spinner, messageFor } from '../ui.jsx'
-
-const ROLE_LABELS = { org_admin: 'an admin', member: 'a member', viewer: 'a viewer' }
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { api } from '../../lib/api.js'
+import { useAuth } from '../../lib/auth.jsx'
+import { ROLE_LABELS } from '../../data/dashboardNav.js'
+import AuthLayout from '../../components/auth/AuthLayout.jsx'
+import Alert, { errorMessage } from '../../components/common/Alert.jsx'
+import Button from '../../components/common/Button.jsx'
+import Spinner from '../../components/common/Spinner.jsx'
 
 export default function AcceptInvite() {
   const [params] = useSearchParams()
@@ -19,7 +21,7 @@ export default function AcceptInvite() {
     if (!token) return
     api(`/api/v1/invites/${encodeURIComponent(token)}`, { auth: false })
       .then(setPreview)
-      .catch((err) => setError(err.code === 'invalid_token' ? 'This invitation has expired or was revoked.' : messageFor(err)))
+      .catch((err) => setError(err.code === 'invalid_token' ? 'This invitation has expired or was revoked.' : errorMessage(err)))
   }, [token])
 
   async function accept() {
@@ -29,29 +31,29 @@ export default function AcceptInvite() {
       const org = await api('/api/v1/invites/accept', { method: 'POST', body: { token } })
       await reload()
       selectOrg(org.id)
-      navigate('/app', { replace: true })
+      navigate('/dashboard', { replace: true })
     } catch (err) {
       setError(
         err.code === 'forbidden'
           ? `This invitation was sent to ${preview?.email}. Sign in with that address to accept it.`
           : err.code === 'already_member'
             ? 'You are already a member of this organization.'
-            : messageFor(err),
+            : errorMessage(err),
       )
       setBusy(false)
     }
   }
 
-  const here = `/app/invite?token=${encodeURIComponent(token)}`
+  const here = `/invite?token=${encodeURIComponent(token)}`
   return (
-    <AuthCard title="Join an organization">
+    <AuthLayout title="Join an organization">
       {error && <Alert>{error}</Alert>}
-      {!error && !preview && <Spinner label="Opening invitation" />}
+      {!error && !preview && <Spinner label="opening invitation" />}
       {preview && (
-        <div className="grid gap-5">
+        <div className="grid gap-5 mt-1">
           <p className="text-sm text-[#cfcfcf]">
             You are invited to join <span className="text-white font-medium">{preview.org_name}</span> as{' '}
-            {ROLE_LABELS[preview.role] || preview.role}.
+            {(ROLE_LABELS[preview.role] || preview.role).toLowerCase()}.
             {preview.email && <> The invitation is for <span className="text-white">{preview.email}</span>.</>}
           </p>
           {status === 'authed' ? (
@@ -61,18 +63,14 @@ export default function AcceptInvite() {
             </>
           ) : status === 'anon' ? (
             <div className="grid gap-2.5">
-              <Link to={`/app/login?next=${encodeURIComponent(here)}`} className="text-center rounded-lg bg-steel text-ink px-4 py-2.5 text-sm font-medium hover:bg-steel-light transition">
-                Sign in to accept
-              </Link>
-              <Link to={`/app/signup?next=${encodeURIComponent(here)}`} className="text-center rounded-lg border border-panel-border px-4 py-2.5 text-sm text-[#e0e0e0] hover:border-steel transition">
-                Create an account
-              </Link>
+              <Button to={`/login?next=${encodeURIComponent(here)}`}>Sign in to accept</Button>
+              <Button to={`/signup?next=${encodeURIComponent(here)}`} variant="ghost">Create an account</Button>
             </div>
           ) : (
             <Spinner />
           )}
         </div>
       )}
-    </AuthCard>
+    </AuthLayout>
   )
 }

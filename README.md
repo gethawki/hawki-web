@@ -52,11 +52,18 @@ src/
     docs/       DocsLayout (shared sidebar + TOC shell), DocsSections,
                 ChangelogSections, Pager
     common/     Section, Kicker, RiskBadge, Terminal, StatMeter, CountUp, Reveal,
-                CodeBlock, SocialIcon, Helmet
-  data/         links.js, product.js, docsNav.js, changelogNav.js (content/config)
-  pages/        Home.jsx, Docs.jsx, Changelog.jsx, NotFound.jsx
-  cloud/        the signed-in Hawk-i Cloud app under /app: api.js (API client),
-                auth.jsx (session state), AppShell, ui primitives, pages/
+                CodeBlock, SocialIcon, Helmet, Logo, Button, Field, Alert, Spinner
+    auth/       AuthLayout (sign-in frame with the site navbar), OAuthButtons,
+                RouteGuards (RequireAuth, GuestOnly, RequireAccess)
+    dashboard/  DashboardLayout (sidebar from data/dashboardNav.js), PageHeader
+  data/         links.js, product.js, docsNav.js, changelogNav.js,
+                dashboardNav.js (dashboard sections and who may open them), seo.js
+  lib/          api.js (Hawk-i Cloud API client), auth.jsx (session for the whole
+                site), access.js (access rule checks)
+  pages/        Home, Docs, Changelog, NotFound
+    auth/       Login, Signup, ForgotPassword, ResetPassword, VerifyEmail, AcceptInvite
+    dashboard/  Overview, Members, ApiKeys, AuditLog, OrgSettings, Profile
+    admin/      AdminConsole (platform admins only)
 ```
 
 - **Home** (`/`) is composed from the named sections above, each built on the
@@ -69,23 +76,34 @@ src/
   scrollspy + mobile drawer + `Pager`). Add a section by editing the nav data and
   the matching sections file, not the layout.
 
-## Hawk-i Cloud app (`/app`)
+## Accounts and dashboards
 
-The signed-in app for Hawk-i Cloud lives in `src/cloud/` and talks to the
-`hawki-cloud` API. It is a separate lazy chunk, so marketing pages never load
-it, and it is never prerendered: Netlify serves one empty `noindex` shell
-(`dist/app.html`) for every `/app/*` URL and the client router takes over.
-`robots.txt` disallows `/app` and the build checks that it does.
+The site is one app: the same router and session serve the public pages, the
+sign-in pages and the Hawk-i Cloud dashboards, which talk to the `hawki-cloud`
+API.
 
-- Point it at an API with `VITE_API_URL` (see `.env.example`, default
-  `http://localhost:8080`). The API must list this site's origin in
-  `HAWKI_APP_CORS_ORIGINS` (or `HAWKI_APP_PUBLIC_URL`).
-- The access token is kept in memory only; the refresh token is an httpOnly
-  cookie set by the API. On a 401 the client refreshes once and retries, and
-  refreshes are serialized across tabs.
-- Routes: `/app/login`, `/app/signup`, `/app/forgot-password`,
-  `/app/reset-password`, `/app/verify-email`, `/app/invite`, and the signed-in
-  area at `/app`. Emailed links from the API point at these paths.
+- **Session.** `lib/auth.jsx` wraps the whole app. The navbar shows "Sign in"
+  or "Dashboard". Anonymous visitors on public pages never call the API: the
+  session is only checked on private pages or after a previous sign-in.
+- **Access levels.** `data/dashboardNav.js` lists every dashboard page with
+  the access it needs: any signed-in user, a permission in the selected
+  organization (from the API's role model: viewer, member, org admin), or
+  platform admin. The sidebar shows only what the user may open and
+  `RequireAccess` guards the same routes, so viewers, members, org admins and
+  platform admins each get their own dashboard. Switching organization
+  switches the access level.
+- **Routes.** Public: `/`, `/docs`, `/changelog`. Sign-in: `/login`,
+  `/signup`, `/forgot-password`, `/reset-password`, `/verify-email`,
+  `/invite`. Signed in: `/dashboard/*`, `/admin`.
+- **Private pages are not indexed.** They are listed in `PRIVATE_PREFIXES`
+  (`data/seo.js`), rendered client side from one `noindex` shell
+  (`dist/app-shell.html`) through Netlify rewrites, kept out of the sitemap
+  and disallowed in `robots.txt`; the build checks all of this.
+- **API.** Set `VITE_API_URL` (see `.env.example`, default
+  `http://localhost:8080`); the API must allow this site's origin
+  (`HAWKI_APP_PUBLIC_URL` or `HAWKI_APP_CORS_ORIGINS`). The access token stays
+  in memory and the refresh token is an httpOnly cookie; on a 401 the client
+  refreshes once and retries, serialized across tabs.
 
 ## Scripts
 

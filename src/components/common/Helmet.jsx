@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
-import { APP_SHELL, NOT_FOUND, isAppPath, pageMeta } from '../../data/seo.js'
+import { NOT_FOUND, PRIVATE_META, isPrivatePath, pageMeta } from '../../data/seo.js'
 
 // Keeps <head> in sync during client-side navigation. The initial HTML of every
 // page already carries the full tag set (scripts/prerender.mjs); this only
@@ -26,12 +26,12 @@ export function Helmet() {
   const { pathname } = useLocation()
 
   useEffect(() => {
-    const app = isAppPath(pathname)
-    const page = app ? null : pageMeta(pathname)
-    const meta = page || (app ? APP_SHELL : NOT_FOUND)
+    const isPrivate = isPrivatePath(pathname)
+    const page = isPrivate ? null : pageMeta(pathname)
+    const meta = page || (isPrivate ? PRIVATE_META : NOT_FOUND)
 
-    // The Cloud app is never indexed, even after client-side navigation into it.
-    if (app) setMeta('name', 'robots', 'noindex')
+    // Private pages are never indexed, even after client-side navigation.
+    if (isPrivate) setMeta('name', 'robots', 'noindex')
     else if (page) document.head.querySelector('meta[name="robots"]')?.remove()
 
     document.title = meta.title

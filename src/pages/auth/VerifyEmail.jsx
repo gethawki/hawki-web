@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
-import { api } from '../api.js'
-import { useAuth } from '../auth.jsx'
-import { Alert, AuthCard, Spinner } from '../ui.jsx'
+import { useSearchParams } from 'react-router-dom'
+import { api } from '../../lib/api.js'
+import { useAuth } from '../../lib/auth.jsx'
+import AuthLayout from '../../components/auth/AuthLayout.jsx'
+import Alert from '../../components/common/Alert.jsx'
+import Button from '../../components/common/Button.jsx'
+import Spinner from '../../components/common/Spinner.jsx'
 
 export default function VerifyEmail() {
   const [params] = useSearchParams()
@@ -24,22 +27,19 @@ export default function VerifyEmail() {
     if (result === 'ok' && status === 'authed') reload().catch(() => {})
   }, [result, status, reload])
 
-  const next = status === 'authed' ? '/app' : '/app/login'
   return (
-    <AuthCard title="Confirm your email">
-      {result === 'pending' && <Spinner label="Confirming" />}
+    <AuthLayout title="Confirm your email">
+      {result === 'pending' && <Spinner label="confirming" />}
       {result === 'ok' && (
         <div className="grid gap-4">
-          <Alert tone="success">Your email address is confirmed.</Alert>
-          <Link to={next} className="text-center rounded-lg bg-steel text-ink px-4 py-2.5 text-sm font-medium hover:bg-steel-light transition">
-            {status === 'authed' ? 'Continue to Hawk-i Cloud' : 'Sign in'}
-          </Link>
+          <Alert tone="info">Your email address is confirmed.</Alert>
+          <Button to={status === 'authed' ? '/dashboard' : '/login'}>
+            {status === 'authed' ? 'Continue to your dashboard' : 'Sign in'}
+          </Button>
         </div>
       )}
-      {result === 'invalid' && (
-        <Alert>This link has expired or was already used. Sign in and send a new one from the dashboard.</Alert>
-      )}
+      {result === 'invalid' && <Alert>This link has expired or was already used. Sign in and send a new one from your dashboard.</Alert>}
       {result === 'error' && <Alert>We could not confirm your email right now. Please try the link again.</Alert>}
-    </AuthCard>
+    </AuthLayout>
   )
 }
