@@ -21,9 +21,9 @@ export const DASHBOARD_NAV = [
     title: 'Workspace',
     links: [
       { to: '/dashboard', label: 'Overview', icon: LayoutDashboard, end: true },
-      { label: 'Projects', icon: FolderGit2, soon: true, access: { permission: 'projects:read' } },
-      { label: 'Scans', icon: ScanLine, soon: true, access: { permission: 'scans:read' } },
-      { label: 'Findings', icon: ShieldAlert, soon: true, access: { permission: 'findings:read' } },
+      { to: '/dashboard/projects', label: 'Projects', icon: FolderGit2, access: { permission: 'projects:read' } },
+      { to: '/dashboard/scans', label: 'Scans', icon: ScanLine, access: { permission: 'scans:read' } },
+      { to: '/dashboard/findings', label: 'Findings', icon: ShieldAlert, access: { permission: 'findings:read' } },
       { label: 'Reports', icon: FileText, soon: true, access: { permission: 'reports:read' } },
       { label: 'Alerts', icon: Bell, soon: true, access: { permission: 'projects:read' } },
       { label: 'Hunt', icon: Crosshair, soon: true, access: { permission: 'hunt:read' } },
@@ -48,6 +48,21 @@ export const DASHBOARD_NAV = [
     links: [{ to: '/admin', label: 'Admin console', icon: ShieldCheck, end: true, access: { platformAdmin: true } }],
   },
 ]
+
+export const SCAN_TYPES = [
+  { value: 'quick', label: 'Quick', hint: 'Static rules only. Fast.' },
+  { value: 'full', label: 'Full', hint: 'Adds AI reasoning and the security modules.' },
+  { value: 'deep', label: 'Deep', hint: 'Full scan plus a bounded Deep Agent run.' },
+]
+
+export const FINDING_STATUSES = [
+  { value: 'new', label: 'New' },
+  { value: 'acknowledged', label: 'Acknowledged' },
+  { value: 'resolved', label: 'Resolved' },
+  { value: 'false_positive', label: 'False positive' },
+]
+
+export const SEVERITIES = ['Critical', 'High', 'Medium', 'Low', 'Info']
 
 export const ROLE_LABELS = { org_admin: 'Admin', member: 'Member', viewer: 'Viewer' }
 export const PLAN_LABELS = {

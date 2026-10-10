@@ -55,14 +55,16 @@ src/
                 CodeBlock, SocialIcon, Helmet, Logo, Button, Field, Alert, Spinner
     auth/       AuthLayout (sign-in frame with the site navbar), OAuthButtons,
                 RouteGuards (RequireAuth, GuestOnly, RequireAccess)
-    dashboard/  DashboardLayout (sidebar from data/dashboardNav.js), PageHeader
+    dashboard/  DashboardLayout (sidebar from data/dashboardNav.js), PageHeader,
+                ScanBits (scan status, severity, scan rows)
   data/         links.js, product.js, docsNav.js, changelogNav.js,
                 dashboardNav.js (dashboard sections and who may open them), seo.js
   lib/          api.js (Hawk-i Cloud API client), auth.jsx (session for the whole
                 site), access.js (access rule checks)
   pages/        Home, Docs, Changelog, NotFound
     auth/       Login, Signup, ForgotPassword, ResetPassword, VerifyEmail, AcceptInvite
-    dashboard/  Overview, Members, ApiKeys, AuditLog, OrgSettings, Profile
+    dashboard/  Overview, Projects, ProjectDetail, Scans, ScanDetail, Findings,
+                FindingDetail, Members, ApiKeys, AuditLog, OrgSettings, Profile
     admin/      AdminConsole (platform admins only)
 ```
 

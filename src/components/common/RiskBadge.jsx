@@ -1,4 +1,5 @@
 const MAP = {
+  info: { cls: 'risk-low', label: 'Info' },
   low: { cls: 'risk-low', label: 'Low' },
   medium: { cls: 'risk-med', label: 'Medium' },
   high: { cls: 'risk-high', label: 'High' },

@@ -25,6 +25,12 @@ const AcceptInvite = lazy(() => import('./pages/auth/AcceptInvite.jsx'))
 // data/dashboardNav.js holds the access rule of each page.
 const DashboardLayout = lazy(() => import('./components/dashboard/DashboardLayout.jsx'))
 const Overview = lazy(() => import('./pages/dashboard/Overview.jsx'))
+const Projects = lazy(() => import('./pages/dashboard/Projects.jsx'))
+const ProjectDetail = lazy(() => import('./pages/dashboard/ProjectDetail.jsx'))
+const Scans = lazy(() => import('./pages/dashboard/Scans.jsx'))
+const ScanDetail = lazy(() => import('./pages/dashboard/ScanDetail.jsx'))
+const Findings = lazy(() => import('./pages/dashboard/Findings.jsx'))
+const FindingDetail = lazy(() => import('./pages/dashboard/FindingDetail.jsx'))
 const Members = lazy(() => import('./pages/dashboard/Members.jsx'))
 const ApiKeys = lazy(() => import('./pages/dashboard/ApiKeys.jsx'))
 const AuditLog = lazy(() => import('./pages/dashboard/AuditLog.jsx'))
@@ -57,6 +63,12 @@ export default function App() {
 
           <Route element={<RequireAuth><DashboardLayout /></RequireAuth>}>
             <Route path="/dashboard" element={<Overview />} />
+            <Route path="/dashboard/projects" element={guarded('/dashboard/projects', <Projects />)} />
+            <Route path="/dashboard/projects/:projectId" element={guarded('/dashboard/projects', <ProjectDetail />)} />
+            <Route path="/dashboard/scans" element={guarded('/dashboard/scans', <Scans />)} />
+            <Route path="/dashboard/scans/:scanId" element={guarded('/dashboard/scans', <ScanDetail />)} />
+            <Route path="/dashboard/findings" element={guarded('/dashboard/findings', <Findings />)} />
+            <Route path="/dashboard/findings/:findingId" element={guarded('/dashboard/findings', <FindingDetail />)} />
             <Route path="/dashboard/members" element={guarded('/dashboard/members', <Members />)} />
             <Route path="/dashboard/api-keys" element={guarded('/dashboard/api-keys', <ApiKeys />)} />
             <Route path="/dashboard/audit-log" element={guarded('/dashboard/audit-log', <AuditLog />)} />

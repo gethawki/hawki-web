@@ -84,6 +84,26 @@ export async function api(path, opts = {}) {
   }
 }
 
+// download fetches an authenticated file (evidence) and saves it in the
+// browser. Files are behind authorization, so a plain link cannot be used.
+export async function download(path, filename) {
+  const get = () => fetch(API_URL + path, { headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {}, credentials: 'include' })
+  let res = await get()
+  if (res.status === 401 && accessToken) {
+    await refresh()
+    res = await get()
+  }
+  if (!res.ok) throw new ApiError(res.status, 'download_failed', 'The file could not be downloaded.')
+  const url = URL.createObjectURL(await res.blob())
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
+
 export const oauthStartURL = (provider, next) =>
   `${API_URL}/api/v1/auth/oauth/${encodeURIComponent(provider)}/start?redirect=${encodeURIComponent(next || '/dashboard')}`
 

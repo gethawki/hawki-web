@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../../lib/api.js'
 import { useAuth } from '../../lib/auth.jsx'
@@ -8,6 +8,27 @@ import { LINKS } from '../../data/links.js'
 import Alert, { errorMessage } from '../../components/common/Alert.jsx'
 import Button from '../../components/common/Button.jsx'
 import PageHeader, { Panel } from '../../components/dashboard/PageHeader.jsx'
+import { ScanRow } from '../../components/dashboard/ScanBits.jsx'
+
+function RecentScans({ orgId, canCreate }) {
+  const [scans, setScans] = useState(null)
+  useEffect(() => {
+    api(`/api/v1/orgs/${orgId}/scans?limit=5`).then((d) => setScans(d.scans)).catch(() => setScans([]))
+  }, [orgId])
+  if (!scans) return null
+  return (
+    <Panel title="Recent scans">
+      {scans.length === 0 ? (
+        <p className="text-sm text-grey">
+          No cloud scans yet.{' '}
+          {canCreate && <Link to="/dashboard/projects" className="text-steel hover:text-steel-light">Add a project and run one.</Link>}
+        </p>
+      ) : (
+        <div className="divide-y divide-panel-border">{scans.map((s) => <ScanRow key={s.id} scan={s} showProject />)}</div>
+      )}
+    </Panel>
+  )
+}
 
 function VerifyBanner() {
   const [state, setState] = useState('idle')
@@ -58,7 +79,7 @@ export default function Overview() {
       {!user.email_verified && <VerifyBanner />}
       <PageHeader
         title={firstName ? `Welcome, ${firstName}` : 'Welcome'}
-        description="Your Hawk-i Cloud workspace. Hosted scans, findings and evidence arrive here as each part of the platform ships."
+        description="Your Hawk-i Cloud workspace: projects, cloud scans, findings and their evidence."
       />
       {currentOrg && (
         <div className="grid gap-3 sm:grid-cols-3 -mt-4">
@@ -76,9 +97,10 @@ export default function Overview() {
           ))}
         </div>
       )}
-      <Panel title="Scan now with the open-source scanner">
+      {currentOrg && auth.can('scans:read') && <RecentScans orgId={currentOrg.id} canCreate={auth.can('projects:write')} />}
+      <Panel title="Scan locally with the open-source scanner">
         <p className="text-sm text-grey max-w-2xl">
-          Hawk-i OSS runs the same rule engine locally, for free. Cloud scans will run it for you, keep every result and its evidence, and share them with your team.
+          Cloud scans run the same open-source engine. Run it on your machine or in CI for free, and use the cloud to keep every result and its evidence with your team.
         </p>
         <pre className="mt-4 overflow-x-auto rounded-lg border border-panel-border bg-ink px-4 py-3 font-mono text-sm text-[#d9d9d9]">
           <span className="text-grey">$ </span>pip install hawki{'\n'}<span className="text-grey">$ </span>hawki scan ./contracts
