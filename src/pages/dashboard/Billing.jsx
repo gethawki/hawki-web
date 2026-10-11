@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api } from '../../lib/api.js'
 import { useAuth } from '../../lib/auth.jsx'
+import { useRefresh } from '../../lib/live.jsx'
 import { creditsLabel, formatCredits, formatPrice } from '../../lib/credits.js'
 import { SCAN_TYPES } from '../../data/dashboardNav.js'
 import Alert, { errorMessage } from '../../components/common/Alert.jsx'
@@ -163,6 +164,10 @@ export default function Billing() {
   const [catalog, setCatalog] = useState(null)
   const [error, setError] = useState(null)
 
+  const [version, setVersion] = useState(0)
+  const reload = useCallback(() => setVersion((v) => v + 1), [])
+  useRefresh(['billing.updated'], reload)
+
   useEffect(() => {
     Promise.all([api(`/api/v1/orgs/${currentOrg.id}/billing`), api('/api/v1/plans', { auth: false })])
       .then(([s, c]) => {
@@ -170,7 +175,7 @@ export default function Billing() {
         setCatalog(c)
       })
       .catch((err) => setError(errorMessage(err)))
-  }, [currentOrg.id])
+  }, [currentOrg.id, version])
 
   if (error) return <div className="max-w-5xl"><Alert>{error}</Alert></div>
   if (!summary || !catalog) return <Spinner />
@@ -206,7 +211,7 @@ export default function Billing() {
       </Panel>
       <Plans catalog={catalog} current={summary.plan.slug} paymentsEnabled={summary.payments_enabled} />
       <Panel title="Credit history">
-        <Ledger orgId={currentOrg.id} />
+        <Ledger key={version} orgId={currentOrg.id} />
       </Panel>
     </div>
   )

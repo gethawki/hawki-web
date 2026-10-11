@@ -3,6 +3,8 @@ import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { LogOut, Menu, X } from 'lucide-react'
 import { DASHBOARD_NAV } from '../../data/dashboardNav.js'
 import { useAuth } from '../../lib/auth.jsx'
+import { LiveProvider } from '../../lib/live.jsx'
+import { AlertBell } from './AlertBits.jsx'
 import { hasAccess } from '../../lib/access.js'
 import Logo from '../common/Logo.jsx'
 
@@ -128,42 +130,45 @@ function UserMenu() {
 }
 
 export default function DashboardLayout() {
-  const { currentOrg } = useAuth()
+  const { currentOrg, can } = useAuth()
   const [drawer, setDrawer] = useState(false)
   const location = useLocation()
   useEffect(() => setDrawer(false), [location.pathname])
 
   return (
-    <div className="min-h-screen bg-ink text-[#e0e0e0] lg:grid lg:grid-cols-[16rem_1fr]">
-      <aside className="hidden lg:block border-r border-panel-border bg-ink-soft h-screen sticky top-0">
-        <Sidebar />
-      </aside>
+    <LiveProvider orgId={currentOrg?.id}>
+      <div className="min-h-screen bg-ink text-[#e0e0e0] lg:grid lg:grid-cols-[16rem_1fr]">
+        <aside className="hidden lg:block border-r border-panel-border bg-ink-soft h-screen sticky top-0">
+          <Sidebar />
+        </aside>
 
-      {drawer && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <button className="absolute inset-0 bg-black/60" aria-label="Close menu" onClick={() => setDrawer(false)} />
-          <aside className="absolute inset-y-0 left-0 w-72 border-r border-panel-border bg-ink-soft">
-            <Sidebar onNavigate={() => setDrawer(false)} />
-          </aside>
+        {drawer && (
+          <div className="fixed inset-0 z-50 lg:hidden">
+            <button className="absolute inset-0 bg-black/60" aria-label="Close menu" onClick={() => setDrawer(false)} />
+            <aside className="absolute inset-y-0 left-0 w-72 border-r border-panel-border bg-ink-soft">
+              <Sidebar onNavigate={() => setDrawer(false)} />
+            </aside>
+          </div>
+        )}
+
+        <div className="min-w-0 flex flex-col">
+          <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-panel-border bg-ink/85 backdrop-blur px-4 sm:px-6 py-3">
+            <button className="lg:hidden -ml-1 p-1.5 text-[#e0e0e0]" aria-label="Open menu" onClick={() => setDrawer((v) => !v)}>
+              {drawer ? <X size={20} /> : <Menu size={20} />}
+            </button>
+            <div className="ml-auto flex items-center gap-3">
+              {currentOrg && can('alerts:read') && <AlertBell key={currentOrg.id} />}
+              <UserMenu />
+            </div>
+          </header>
+          <main className="flex-1 px-4 sm:px-6 lg:px-10 py-8">
+            {/* keyed by org so every page starts fresh after switching organization */}
+            <div key={currentOrg?.id || 'none'}>
+              <Outlet />
+            </div>
+          </main>
         </div>
-      )}
-
-      <div className="min-w-0 flex flex-col">
-        <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-panel-border bg-ink/85 backdrop-blur px-4 sm:px-6 py-3">
-          <button className="lg:hidden -ml-1 p-1.5 text-[#e0e0e0]" aria-label="Open menu" onClick={() => setDrawer((v) => !v)}>
-            {drawer ? <X size={20} /> : <Menu size={20} />}
-          </button>
-          <div className="ml-auto">
-            <UserMenu />
-          </div>
-        </header>
-        <main className="flex-1 px-4 sm:px-6 lg:px-10 py-8">
-          {/* keyed by org so every page starts fresh after switching organization */}
-          <div key={currentOrg?.id || 'none'}>
-            <Outlet />
-          </div>
-        </main>
       </div>
-    </div>
+    </LiveProvider>
   )
 }

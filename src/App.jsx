@@ -33,6 +33,9 @@ const Findings = lazy(() => import('./pages/dashboard/Findings.jsx'))
 const FindingDetail = lazy(() => import('./pages/dashboard/FindingDetail.jsx'))
 const Members = lazy(() => import('./pages/dashboard/Members.jsx'))
 const ApiKeys = lazy(() => import('./pages/dashboard/ApiKeys.jsx'))
+const Alerts = lazy(() => import('./pages/dashboard/Alerts.jsx'))
+const AlertDetail = lazy(() => import('./pages/dashboard/AlertDetail.jsx'))
+const AlertChannels = lazy(() => import('./pages/dashboard/AlertChannels.jsx'))
 const Billing = lazy(() => import('./pages/dashboard/Billing.jsx'))
 const AuditLog = lazy(() => import('./pages/dashboard/AuditLog.jsx'))
 const OrgSettings = lazy(() => import('./pages/dashboard/OrgSettings.jsx'))
@@ -70,6 +73,9 @@ export default function App() {
             <Route path="/dashboard/scans/:scanId" element={guarded('/dashboard/scans', <ScanDetail />)} />
             <Route path="/dashboard/findings" element={guarded('/dashboard/findings', <Findings />)} />
             <Route path="/dashboard/findings/:findingId" element={guarded('/dashboard/findings', <FindingDetail />)} />
+            <Route path="/dashboard/alerts" element={guarded('/dashboard/alerts', <Alerts />)} />
+            <Route path="/dashboard/alerts/channels" element={guarded('/dashboard/settings', <AlertChannels />)} />
+            <Route path="/dashboard/alerts/:alertId" element={guarded('/dashboard/alerts', <AlertDetail />)} />
             <Route path="/dashboard/members" element={guarded('/dashboard/members', <Members />)} />
             <Route path="/dashboard/api-keys" element={guarded('/dashboard/api-keys', <ApiKeys />)} />
             <Route path="/dashboard/billing" element={guarded('/dashboard/billing', <Billing />)} />

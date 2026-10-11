@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api } from '../../lib/api.js'
 import { useAuth } from '../../lib/auth.jsx'
+import { useRefresh } from '../../lib/live.jsx'
 import Alert, { errorMessage } from '../../components/common/Alert.jsx'
 import Spinner from '../../components/common/Spinner.jsx'
 import PageHeader, { Panel } from '../../components/dashboard/PageHeader.jsx'
@@ -22,11 +23,7 @@ export default function Scans() {
   useEffect(() => {
     load()
   }, [load])
-  useEffect(() => {
-    if (!scans?.some(isActive)) return
-    const t = setInterval(load, 3000)
-    return () => clearInterval(t)
-  }, [scans, load])
+  useRefresh(['scan.updated'], load, { poll: Boolean(scans?.some(isActive)) })
 
   return (
     <div className="max-w-5xl grid gap-6">

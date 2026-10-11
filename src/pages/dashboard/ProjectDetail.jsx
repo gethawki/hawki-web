@@ -2,11 +2,12 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../../lib/api.js'
 import { useAuth } from '../../lib/auth.jsx'
-import { SCAN_TYPES } from '../../data/dashboardNav.js'
+import { useLiveEvent, useRefresh } from '../../lib/live.jsx'
+import { ALERT_SEVERITIES, SCAN_TYPES } from '../../data/dashboardNav.js'
 import { creditsLabel, paymentMessage } from '../../lib/credits.js'
 import Alert, { errorMessage } from '../../components/common/Alert.jsx'
 import Button from '../../components/common/Button.jsx'
-import Field from '../../components/common/Field.jsx'
+import Field, { SelectField } from '../../components/common/Field.jsx'
 import Spinner from '../../components/common/Spinner.jsx'
 import PageHeader, { Panel } from '../../components/dashboard/PageHeader.jsx'
 import { ScanRow, isActive } from '../../components/dashboard/ScanBits.jsx'
@@ -28,6 +29,7 @@ function RunScan({ orgId, project, onStarted }) {
     api('/api/v1/plans', { auth: false }).then((d) => setCosts(d.scan_costs_mc)).catch(() => setCosts(null))
     loadBalance()
   }, [orgId, loadBalance])
+  useLiveEvent(['billing.updated'], loadBalance)
   const [ref, setRef] = useState('')
   const [target, setTarget] = useState(project.repository_url ? 'repository' : 'contract')
   const [error, setError] = useState(null)
@@ -113,6 +115,100 @@ function RunScan({ orgId, project, onStarted }) {
   )
 }
 
+const MUTE_FOR = [
+  { value: '', label: 'Choose how long' },
+  { value: String(60 * 60e3), label: '1 hour' },
+  { value: String(24 * 60 * 60e3), label: '1 day' },
+  { value: String(7 * 24 * 60 * 60e3), label: '1 week' },
+  { value: String(30 * 24 * 60 * 60e3), label: '30 days' },
+]
+
+// ProjectAlerts narrows which channels hear about this project, from which
+// severity, and mutes delivery during maintenance. The dashboard still shows
+// every alert.
+function ProjectAlerts({ orgId, projectId, canWrite }) {
+  const [prefs, setPrefs] = useState(null)
+  const [channels, setChannels] = useState([])
+  const [mute, setMute] = useState('')
+  const [saved, setSaved] = useState(false)
+  const [error, setError] = useState(null)
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    api(`/api/v1/orgs/${orgId}/projects/${projectId}/alerts`).then(setPrefs).catch((err) => setError(errorMessage(err)))
+    api(`/api/v1/orgs/${orgId}/alert-channels`).then((d) => setChannels(d.channels)).catch(() => setChannels([]))
+  }, [orgId, projectId])
+
+  async function save(next) {
+    setBusy(true)
+    setSaved(false)
+    setError(null)
+    try {
+      setPrefs(await api(`/api/v1/orgs/${orgId}/projects/${projectId}/alerts`, { method: 'PUT', body: next }))
+      setSaved(true)
+      setMute('')
+    } catch (err) {
+      setError(errorMessage(err))
+    }
+    setBusy(false)
+  }
+
+  if (!prefs) return error ? <Panel title="Alerts"><Alert>{error}</Alert></Panel> : null
+  const all = prefs.channel_ids == null
+  const muted = prefs.muted_until && new Date(prefs.muted_until) > new Date()
+  const toggle = (id) => {
+    const ids = all ? channels.map((c) => c.id) : prefs.channel_ids
+    setPrefs({ ...prefs, channel_ids: ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id] })
+  }
+  return (
+    <Panel title="Alerts">
+      <div className="grid gap-4">
+        {error && <Alert>{error}</Alert>}
+        {muted && <Alert tone="info">Delivery is muted until {new Date(prefs.muted_until).toLocaleString()}. Alerts still show in the dashboard.</Alert>}
+        <SelectField id="project-alert-severity" label="Send alerts from" disabled={!canWrite} value={prefs.min_severity}
+          onChange={(e) => setPrefs({ ...prefs, min_severity: e.target.value })}
+          options={ALERT_SEVERITIES.map((s) => ({ value: s.value, label: `${s.label} and above` }))} />
+        {channels.length === 0 ? (
+          <p className="text-sm text-grey">No alert channels yet. <Link to="/dashboard/alerts/channels" className="text-steel hover:text-steel-light">Set one up.</Link></p>
+        ) : (
+          <fieldset disabled={!canWrite}>
+            <legend className="text-sm text-[#cfcfcf] mb-1.5">To</legend>
+            <label className="flex items-center gap-2 text-sm text-[#cfcfcf] mb-1.5">
+              <input type="checkbox" checked={all} onChange={() => setPrefs({ ...prefs, channel_ids: all ? channels.map((c) => c.id) : null })} />
+              Every channel of the organization
+            </label>
+            {!all && (
+              <div className="grid gap-1.5 sm:grid-cols-2 pl-6">
+                {channels.map((c) => (
+                  <label key={c.id} className="flex items-center gap-2 text-sm text-[#cfcfcf]">
+                    <input type="checkbox" checked={prefs.channel_ids.includes(c.id)} onChange={() => toggle(c.id)} />
+                    {c.name} <span className="text-grey text-xs capitalize">({c.kind})</span>
+                  </label>
+                ))}
+              </div>
+            )}
+          </fieldset>
+        )}
+        {canWrite && (
+          <div className="flex flex-wrap items-end gap-3">
+            <Button busy={busy} onClick={() => save({ min_severity: prefs.min_severity, channel_ids: prefs.channel_ids, muted_until: prefs.muted_until })}>Save</Button>
+            {muted ? (
+              <Button variant="ghost" onClick={() => save({ ...prefs, muted_until: null })}>Unmute</Button>
+            ) : (
+              <>
+                <SelectField id="project-mute" label="Mute delivery for" value={mute} onChange={(e) => setMute(e.target.value)} options={MUTE_FOR} />
+                <Button variant="ghost" disabled={!mute}
+                  onClick={() => save({ ...prefs, muted_until: new Date(Date.now() + Number(mute)).toISOString() })}>Mute</Button>
+              </>
+            )}
+            {saved && <span className="text-xs text-grey">Saved.</span>}
+          </div>
+        )}
+      </div>
+    </Panel>
+  )
+}
+
 export default function ProjectDetail() {
   const { projectId } = useParams()
   const { currentOrg, can } = useAuth()
@@ -138,12 +234,8 @@ export default function ProjectDetail() {
     load()
   }, [load])
 
-  // Follow scans that are still queued or running.
-  useEffect(() => {
-    if (!scans?.some(isActive)) return
-    const t = setInterval(load, 3000)
-    return () => clearInterval(t)
-  }, [scans, load])
+  // Follow this project's scans.
+  useRefresh(['scan.updated'], load, { poll: Boolean(scans?.some(isActive)), filter: (m) => m.data?.project_id === projectId })
 
   async function remove() {
     if (!window.confirm(`Delete ${project.name} with all its scans and findings?`)) return
@@ -170,6 +262,7 @@ export default function ProjectDetail() {
         }
       />
       {can('scans:create') && <RunScan orgId={currentOrg.id} project={project} onStarted={load} />}
+      {can('alerts:read') && <ProjectAlerts orgId={currentOrg.id} projectId={project.id} canWrite={can('projects:write')} />}
       <Panel title="Scans">
         {!scans ? <Spinner /> : scans.length === 0 ? (
           <p className="text-sm text-grey">No scans yet.</p>

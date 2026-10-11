@@ -25,7 +25,7 @@ export const DASHBOARD_NAV = [
       { to: '/dashboard/scans', label: 'Scans', icon: ScanLine, access: { permission: 'scans:read' } },
       { to: '/dashboard/findings', label: 'Findings', icon: ShieldAlert, access: { permission: 'findings:read' } },
       { label: 'Reports', icon: FileText, soon: true, access: { permission: 'reports:read' } },
-      { label: 'Alerts', icon: Bell, soon: true, access: { permission: 'projects:read' } },
+      { to: '/dashboard/alerts', label: 'Alerts', icon: Bell, access: { permission: 'alerts:read' } },
       { label: 'Hunt', icon: Crosshair, soon: true, access: { permission: 'hunt:read' } },
       { label: 'Watch', icon: Radar, soon: true, access: { permission: 'watch:read' } },
     ],
@@ -64,6 +64,38 @@ export const FINDING_STATUSES = [
 ]
 
 export const SEVERITIES = ['Critical', 'High', 'Medium', 'Low', 'Info']
+
+// Alerts use lowercase severities (hawki-cloud alerts package).
+export const ALERT_SEVERITIES = [
+  { value: 'critical', label: 'Critical' },
+  { value: 'high', label: 'High' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'low', label: 'Low' },
+  { value: 'info', label: 'Info' },
+]
+
+export const ALERT_STATUSES = [
+  { value: 'new', label: 'New' },
+  { value: 'acknowledged', label: 'Acknowledged' },
+  { value: 'resolved', label: 'Resolved' },
+]
+
+export const ALERT_TYPES = [
+  { value: 'finding', label: 'Findings' },
+  { value: 'scan', label: 'Scans' },
+  { value: 'watch', label: 'Watch' },
+  { value: 'hunt', label: 'Hunt' },
+  { value: 'mev', label: 'MEV' },
+  { value: 'system', label: 'System' },
+]
+
+export const CHANNEL_KINDS = [
+  { value: 'email', label: 'Email', hint: 'Sends to members of this organization.' },
+  { value: 'slack', label: 'Slack', hint: 'An incoming webhook URL from your Slack workspace.' },
+  { value: 'discord', label: 'Discord', hint: 'A webhook URL from your Discord channel settings.' },
+  { value: 'telegram', label: 'Telegram', hint: 'A bot token from BotFather and the chat to post in.' },
+  { value: 'webhook', label: 'Webhook', hint: 'A signed JSON POST to your own https endpoint.' },
+]
 
 export const ROLE_LABELS = { org_admin: 'Admin', member: 'Member', viewer: 'Viewer' }
 export const PLAN_LABELS = {

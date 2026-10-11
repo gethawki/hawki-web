@@ -104,6 +104,25 @@ export async function download(path, filename) {
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 
+// openStream opens a long-lived authenticated response (server-sent events)
+// and returns it, refreshing the access token once on 401. The token goes in
+// a header, never in the URL.
+export async function openStream(path, signal) {
+  const get = () =>
+    fetch(API_URL + path, {
+      headers: { Accept: 'text/event-stream', ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}) },
+      credentials: 'include',
+      signal,
+    })
+  let res = await get()
+  if (res.status === 401 && accessToken) {
+    await refresh()
+    res = await get()
+  }
+  if (!res.ok || !res.body) throw new ApiError(res.status, 'stream_failed', 'Live updates are unavailable.')
+  return res
+}
+
 export const oauthStartURL = (provider, next) =>
   `${API_URL}/api/v1/auth/oauth/${encodeURIComponent(provider)}/start?redirect=${encodeURIComponent(next || '/dashboard')}`
 

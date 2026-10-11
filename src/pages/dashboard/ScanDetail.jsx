@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { Download } from 'lucide-react'
 import { api, download } from '../../lib/api.js'
 import { useAuth } from '../../lib/auth.jsx'
+import { useRefresh } from '../../lib/live.jsx'
 import Alert, { errorMessage } from '../../components/common/Alert.jsx'
 import Spinner from '../../components/common/Spinner.jsx'
 import PageHeader, { Panel } from '../../components/dashboard/PageHeader.jsx'
@@ -42,11 +43,7 @@ export default function ScanDetail() {
   useEffect(() => {
     load()
   }, [load])
-  useEffect(() => {
-    if (!scan || !isActive(scan)) return
-    const t = setInterval(load, 2500)
-    return () => clearInterval(t)
-  }, [scan, load])
+  useRefresh(['scan.updated'], load, { poll: Boolean(scan && isActive(scan)), filter: (m) => m.data?.id === scanId })
 
   async function save(ev) {
     try {

@@ -6,6 +6,7 @@ import { hasAccess } from '../../lib/access.js'
 import { DASHBOARD_NAV, PLAN_LABELS, ROLE_LABELS } from '../../data/dashboardNav.js'
 import { LINKS } from '../../data/links.js'
 import { formatCredits } from '../../lib/credits.js'
+import { useLiveEvent } from '../../lib/live.jsx'
 import Alert, { errorMessage } from '../../components/common/Alert.jsx'
 import Button from '../../components/common/Button.jsx'
 import PageHeader, { Panel } from '../../components/dashboard/PageHeader.jsx'
@@ -72,10 +73,12 @@ function Stat({ label, value, to }) {
 
 function useCredits(orgId, enabled) {
   const [mc, setMc] = useState(null)
+  const [version, setVersion] = useState(0)
+  useLiveEvent(['billing.updated'], () => setVersion((v) => v + 1))
   useEffect(() => {
     if (!enabled) return
     api(`/api/v1/orgs/${orgId}/billing`).then((d) => setMc(d.total_remaining_mc)).catch(() => setMc(null))
-  }, [orgId, enabled])
+  }, [orgId, enabled, version])
   return mc
 }
 
