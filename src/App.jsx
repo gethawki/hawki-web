@@ -33,6 +33,7 @@ const Findings = lazy(() => import('./pages/dashboard/Findings.jsx'))
 const FindingDetail = lazy(() => import('./pages/dashboard/FindingDetail.jsx'))
 const Members = lazy(() => import('./pages/dashboard/Members.jsx'))
 const ApiKeys = lazy(() => import('./pages/dashboard/ApiKeys.jsx'))
+const Billing = lazy(() => import('./pages/dashboard/Billing.jsx'))
 const AuditLog = lazy(() => import('./pages/dashboard/AuditLog.jsx'))
 const OrgSettings = lazy(() => import('./pages/dashboard/OrgSettings.jsx'))
 const Profile = lazy(() => import('./pages/dashboard/Profile.jsx'))
@@ -71,6 +72,7 @@ export default function App() {
             <Route path="/dashboard/findings/:findingId" element={guarded('/dashboard/findings', <FindingDetail />)} />
             <Route path="/dashboard/members" element={guarded('/dashboard/members', <Members />)} />
             <Route path="/dashboard/api-keys" element={guarded('/dashboard/api-keys', <ApiKeys />)} />
+            <Route path="/dashboard/billing" element={guarded('/dashboard/billing', <Billing />)} />
             <Route path="/dashboard/audit-log" element={guarded('/dashboard/audit-log', <AuditLog />)} />
             <Route path="/dashboard/settings" element={guarded('/dashboard/settings', <OrgSettings />)} />
             <Route path="/dashboard/profile" element={<Profile />} />

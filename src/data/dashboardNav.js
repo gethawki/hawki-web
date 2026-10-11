@@ -12,7 +12,7 @@
 // `soon` marks sections that are planned but not built yet; they are shown
 // greyed out to users who will be able to open them.
 import {
-  Bell, Crosshair, FileText, FolderGit2, KeyRound, LayoutDashboard, Radar, ScanLine, ScrollText,
+  Bell, CreditCard, Crosshair, FileText, FolderGit2, KeyRound, LayoutDashboard, Radar, ScanLine, ScrollText,
   Settings, ShieldAlert, ShieldCheck, User, Users,
 } from 'lucide-react'
 
@@ -35,6 +35,7 @@ export const DASHBOARD_NAV = [
     links: [
       { to: '/dashboard/members', label: 'Members', icon: Users, access: { permission: 'members:read' } },
       { to: '/dashboard/api-keys', label: 'API keys', icon: KeyRound, access: { permission: 'apikeys:read' } },
+      { to: '/dashboard/billing', label: 'Billing', icon: CreditCard, access: { permission: 'billing:read' } },
       { to: '/dashboard/audit-log', label: 'Audit log', icon: ScrollText, access: { permission: 'audit:read' } },
       { to: '/dashboard/settings', label: 'Settings', icon: Settings, access: { permission: 'settings:read' } },
     ],

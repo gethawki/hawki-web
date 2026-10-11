@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../../lib/api.js'
 import { useAuth } from '../../lib/auth.jsx'
 import { SCAN_TYPES } from '../../data/dashboardNav.js'
+import { creditsLabel, paymentMessage } from '../../lib/credits.js'
 import Alert, { errorMessage } from '../../components/common/Alert.jsx'
 import Button from '../../components/common/Button.jsx'
 import Field from '../../components/common/Field.jsx'
@@ -14,9 +15,19 @@ function RunScan({ orgId, project, onStarted }) {
   const { can } = useAuth()
   const [type, setType] = useState('quick')
   const [hasKey, setHasKey] = useState(null)
+  const [costs, setCosts] = useState(null)
+  const [balance, setBalance] = useState(null)
+  const [refused, setRefused] = useState(null)
+  const canBill = can('billing:read')
+  const loadBalance = useCallback(() => {
+    if (!canBill) return
+    api(`/api/v1/orgs/${orgId}/billing`).then(setBalance).catch(() => setBalance(null))
+  }, [orgId, canBill])
   useEffect(() => {
     api(`/api/v1/orgs/${orgId}/llm-key`).then((d) => setHasKey(d.llm_key.configured)).catch(() => setHasKey(false))
-  }, [orgId])
+    api('/api/v1/plans', { auth: false }).then((d) => setCosts(d.scan_costs_mc)).catch(() => setCosts(null))
+    loadBalance()
+  }, [orgId, loadBalance])
   const [ref, setRef] = useState('')
   const [target, setTarget] = useState(project.repository_url ? 'repository' : 'contract')
   const [error, setError] = useState(null)
@@ -26,11 +37,14 @@ function RunScan({ orgId, project, onStarted }) {
   async function run() {
     setBusy(true)
     setError(null)
+    setRefused(null)
     try {
       await api(`/api/v1/orgs/${orgId}/projects/${project.id}/scans`, { method: 'POST', body: { type, target, ref: target === 'repository' ? ref : '' } })
       onStarted()
+      loadBalance()
     } catch (err) {
-      setError(errorMessage(err))
+      if (err.status === 402) setRefused(paymentMessage(err) || errorMessage(err))
+      else setError(errorMessage(err))
     }
     setBusy(false)
   }
@@ -39,6 +53,12 @@ function RunScan({ orgId, project, onStarted }) {
     <Panel title="Run a scan">
       <div className="grid gap-4">
         {error && <Alert>{error}</Alert>}
+        {refused && (
+          <Alert>
+            {refused}{' '}
+            {can('billing:read') && <Link to="/dashboard/billing" className="underline hover:text-white">See billing.</Link>}
+          </Alert>
+        )}
         <div className="grid gap-2 sm:grid-cols-3" role="radiogroup" aria-label="Scan type">
           {SCAN_TYPES.map((t) => {
             const locked = t.value !== 'quick' && hasKey === false
@@ -46,7 +66,10 @@ function RunScan({ orgId, project, onStarted }) {
               <button key={t.value} type="button" role="radio" aria-checked={type === t.value} disabled={locked}
                 onClick={() => setType(t.value)}
                 className={`text-left rounded-xl border px-4 py-3 transition disabled:opacity-45 disabled:cursor-not-allowed ${type === t.value ? 'border-steel bg-steel/10' : 'border-panel-border hover:border-steel/60'}`}>
-                <div className="text-sm text-white">{t.label}</div>
+                <div className="flex justify-between gap-2 text-sm text-white">
+                  <span>{t.label}</span>
+                  {costs && <span className="font-mono text-xs text-grey">{creditsLabel(costs[t.value])}</span>}
+                </div>
                 <div className="text-xs text-grey mt-0.5">{locked ? 'Needs your AI provider key.' : t.hint}</div>
               </button>
             )
@@ -75,7 +98,16 @@ function RunScan({ orgId, project, onStarted }) {
         {target === 'repository' && (
           <Field id="scan-ref" label="Branch or tag" placeholder={project.default_ref || 'default branch'} value={ref} onChange={(e) => setRef(e.target.value)} />
         )}
-        <div><Button onClick={run} busy={busy}>Start scan</Button></div>
+        <div className="flex flex-wrap items-center gap-4">
+          <Button onClick={run} busy={busy}>Start scan</Button>
+          {balance && (
+            <span className="text-xs text-grey">
+              {balance.period_cap_mc === 0
+                ? 'Cloud scans start on the Builder plan.'
+                : `${creditsLabel(balance.total_remaining_mc)} available. Failed scans are refunded.`}
+            </span>
+          )}
+        </div>
       </div>
     </Panel>
   )

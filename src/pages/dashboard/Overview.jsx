@@ -5,6 +5,7 @@ import { useAuth } from '../../lib/auth.jsx'
 import { hasAccess } from '../../lib/access.js'
 import { DASHBOARD_NAV, PLAN_LABELS, ROLE_LABELS } from '../../data/dashboardNav.js'
 import { LINKS } from '../../data/links.js'
+import { formatCredits } from '../../lib/credits.js'
 import Alert, { errorMessage } from '../../components/common/Alert.jsx'
 import Button from '../../components/common/Button.jsx'
 import PageHeader, { Panel } from '../../components/dashboard/PageHeader.jsx'
@@ -58,13 +59,24 @@ function VerifyBanner() {
   )
 }
 
-function Stat({ label, value }) {
-  return (
-    <div className="rounded-xl border border-panel-border bg-panel/60 px-5 py-4">
+function Stat({ label, value, to }) {
+  const body = (
+    <>
       <div className="font-mono text-[0.65rem] uppercase tracking-wider text-grey">{label}</div>
       <div className="mt-1.5 text-lg text-white truncate">{value}</div>
-    </div>
+    </>
   )
+  const cls = 'block rounded-xl border border-panel-border bg-panel/60 px-5 py-4 min-w-0'
+  return to ? <Link to={to} className={`${cls} hover:border-steel transition`}>{body}</Link> : <div className={cls}>{body}</div>
+}
+
+function useCredits(orgId, enabled) {
+  const [mc, setMc] = useState(null)
+  useEffect(() => {
+    if (!enabled) return
+    api(`/api/v1/orgs/${orgId}/billing`).then((d) => setMc(d.total_remaining_mc)).catch(() => setMc(null))
+  }, [orgId, enabled])
+  return mc
 }
 
 export default function Overview() {
@@ -72,6 +84,7 @@ export default function Overview() {
   const { user, currentOrg } = auth
   const firstName = (user.name || '').split(/\s+/)[0]
   // Shortcuts to the organization pages this user can open.
+  const credits = useCredits(currentOrg?.id, Boolean(currentOrg) && auth.can('billing:read'))
   const shortcuts = DASHBOARD_NAV.find((s) => s.title === 'Organization').links.filter((l) => hasAccess(auth, l.access))
 
   return (
@@ -82,10 +95,11 @@ export default function Overview() {
         description="Your Hawk-i Cloud workspace: projects, cloud scans, findings and their evidence."
       />
       {currentOrg && (
-        <div className="grid gap-3 sm:grid-cols-3 -mt-4">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 -mt-4">
           <Stat label="Organization" value={currentOrg.name} />
           <Stat label="Plan" value={PLAN_LABELS[currentOrg.plan] || currentOrg.plan} />
           <Stat label="Your role" value={ROLE_LABELS[currentOrg.role] || currentOrg.role} />
+          {credits != null && <Stat label="Credits" value={formatCredits(credits)} to="/dashboard/billing" />}
         </div>
       )}
       {shortcuts.length > 0 && (
