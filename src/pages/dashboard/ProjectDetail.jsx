@@ -11,7 +11,12 @@ import PageHeader, { Panel } from '../../components/dashboard/PageHeader.jsx'
 import { ScanRow, isActive } from '../../components/dashboard/ScanBits.jsx'
 
 function RunScan({ orgId, project, onStarted }) {
+  const { can } = useAuth()
   const [type, setType] = useState('quick')
+  const [hasKey, setHasKey] = useState(null)
+  useEffect(() => {
+    api(`/api/v1/orgs/${orgId}/llm-key`).then((d) => setHasKey(d.llm_key.configured)).catch(() => setHasKey(false))
+  }, [orgId])
   const [ref, setRef] = useState('')
   const [target, setTarget] = useState(project.repository_url ? 'repository' : 'contract')
   const [error, setError] = useState(null)
@@ -35,14 +40,28 @@ function RunScan({ orgId, project, onStarted }) {
       <div className="grid gap-4">
         {error && <Alert>{error}</Alert>}
         <div className="grid gap-2 sm:grid-cols-3" role="radiogroup" aria-label="Scan type">
-          {SCAN_TYPES.map((t) => (
-            <button key={t.value} type="button" role="radio" aria-checked={type === t.value} onClick={() => setType(t.value)}
-              className={`text-left rounded-xl border px-4 py-3 transition ${type === t.value ? 'border-steel bg-steel/10' : 'border-panel-border hover:border-steel/60'}`}>
-              <div className="text-sm text-white">{t.label}</div>
-              <div className="text-xs text-grey mt-0.5">{t.hint}</div>
-            </button>
-          ))}
+          {SCAN_TYPES.map((t) => {
+            const locked = t.value !== 'quick' && hasKey === false
+            return (
+              <button key={t.value} type="button" role="radio" aria-checked={type === t.value} disabled={locked}
+                onClick={() => setType(t.value)}
+                className={`text-left rounded-xl border px-4 py-3 transition disabled:opacity-45 disabled:cursor-not-allowed ${type === t.value ? 'border-steel bg-steel/10' : 'border-panel-border hover:border-steel/60'}`}>
+                <div className="text-sm text-white">{t.label}</div>
+                <div className="text-xs text-grey mt-0.5">{locked ? 'Needs your AI provider key.' : t.hint}</div>
+              </button>
+            )
+          })}
         </div>
+        {hasKey === false && (
+          <p className="text-xs text-grey">
+            Full and deep scans use your own model provider key.{' '}
+            {can('settings:write') ? (
+              <Link to="/dashboard/settings" className="text-steel hover:text-steel-light">Add one in settings.</Link>
+            ) : (
+              'Ask an organization admin to add one.'
+            )}
+          </p>
+        )}
         {both && (
           <div className="flex gap-2 text-sm">
             {['repository', 'contract'].map((t) => (
