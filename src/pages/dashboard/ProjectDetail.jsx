@@ -115,6 +115,55 @@ function RunScan({ orgId, project, onStarted }) {
   )
 }
 
+const FREQUENCIES = [
+  { value: 'off', label: 'Off' },
+  { value: 'daily', label: 'Every day' },
+  { value: 'weekly', label: 'Every week' },
+  { value: 'monthly', label: 'Every month' },
+]
+
+// Schedule runs a scan of the project on a fixed cadence. Each run is charged
+// like a manual one; a run that cannot start raises an alert.
+function Schedule({ orgId, project, canWrite, onSaved }) {
+  const [form, setForm] = useState({ scan_frequency: project.scan_frequency, scheduled_scan_type: project.scheduled_scan_type || 'quick' })
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState(null)
+  const changed = form.scan_frequency !== project.scan_frequency || form.scheduled_scan_type !== project.scheduled_scan_type
+
+  async function save() {
+    setBusy(true)
+    setError(null)
+    try {
+      await api(`/api/v1/orgs/${orgId}/projects/${project.id}`, { method: 'PATCH', body: form })
+      onSaved()
+    } catch (err) {
+      setError(errorMessage(err))
+    }
+    setBusy(false)
+  }
+
+  return (
+    <Panel title="Scheduled scans">
+      <div className="grid gap-4">
+        {error && <Alert>{error}</Alert>}
+        <div className="grid gap-4 sm:grid-cols-2">
+          <SelectField id="schedule-frequency" label="Run" disabled={!canWrite} value={form.scan_frequency} options={FREQUENCIES}
+            onChange={(e) => setForm({ ...form, scan_frequency: e.target.value })} />
+          <SelectField id="schedule-type" label="Scan" disabled={!canWrite || form.scan_frequency === 'off'} value={form.scheduled_scan_type}
+            options={SCAN_TYPES.map((t) => ({ value: t.value, label: t.label }))}
+            onChange={(e) => setForm({ ...form, scheduled_scan_type: e.target.value })} />
+        </div>
+        <p className="text-xs text-grey">
+          {project.scan_frequency === 'off' || !project.next_scheduled_at
+            ? 'No scheduled scans. Each run costs the same credits as starting it yourself.'
+            : `Next run ${new Date(project.next_scheduled_at).toLocaleString()}. If a run cannot start, you get an alert.`}
+        </p>
+        {canWrite && <div><Button onClick={save} busy={busy} disabled={!changed}>Save schedule</Button></div>}
+      </div>
+    </Panel>
+  )
+}
+
 const MUTE_FOR = [
   { value: '', label: 'Choose how long' },
   { value: String(60 * 60e3), label: '1 hour' },
@@ -262,6 +311,8 @@ export default function ProjectDetail() {
         }
       />
       {can('scans:create') && <RunScan orgId={currentOrg.id} project={project} onStarted={load} />}
+      <Schedule key={`${project.scan_frequency}-${project.scheduled_scan_type}-${project.next_scheduled_at}`} orgId={currentOrg.id}
+        project={project} canWrite={can('projects:write')} onSaved={load} />
       {can('alerts:read') && <ProjectAlerts orgId={currentOrg.id} projectId={project.id} canWrite={can('projects:write')} />}
       <Panel title="Scans">
         {!scans ? <Spinner /> : scans.length === 0 ? (

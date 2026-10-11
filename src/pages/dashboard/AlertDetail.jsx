@@ -89,6 +89,12 @@ export default function AlertDetail() {
         {alert.ref_type === 'scan' && alert.ref_id && (
           <Link to={`/dashboard/scans/${alert.ref_id}`} className="mt-4 inline-block text-sm text-steel hover:text-steel-light">Open the scan</Link>
         )}
+        {alert.ref_type === 'project' && alert.ref_id && (
+          <Link to={`/dashboard/projects/${alert.ref_id}`} className="mt-4 inline-block text-sm text-steel hover:text-steel-light">Open the project</Link>
+        )}
+        {alert.ref_type === 'billing' && can('billing:read') && (
+          <Link to="/dashboard/billing" className="mt-4 inline-block text-sm text-steel hover:text-steel-light">Open billing</Link>
+        )}
         {(alert.acknowledged_at || alert.resolved_at) && (
           <p className="mt-4 text-xs text-grey">
             {alert.acknowledged_at && `Acknowledged ${formatDateTime(alert.acknowledged_at)}. `}

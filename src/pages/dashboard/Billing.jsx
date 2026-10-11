@@ -48,6 +48,18 @@ function SpendBar({ spent, cap }) {
   )
 }
 
+function Usage({ label, used, max }) {
+  const full = max != null && used >= max
+  return (
+    <div className="flex justify-between gap-4 rounded-lg border border-panel-border px-4 py-3 text-sm">
+      <span className="text-[#cfcfcf]">{label}</span>
+      <span className={full ? 'text-copper' : 'text-grey'}>
+        {used} of {max == null ? 'unlimited' : max}{full ? ', plan limit reached' : ''}
+      </span>
+    </div>
+  )
+}
+
 function Ledger({ orgId }) {
   const [entries, setEntries] = useState(null)
   const [more, setMore] = useState(false)
@@ -195,6 +207,10 @@ export default function Billing() {
       </div>
       <Panel title="This period">
         <SpendBar spent={summary.period_spent_mc} cap={summary.period_cap_mc} />
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          <Usage label="Members" used={summary.members} max={summary.plan.max_users} />
+          <Usage label="Projects" used={summary.projects} max={summary.plan.max_projects} />
+        </div>
         {purchasedLots.length > 0 && (
           <div className="mt-5">
             <div className="font-mono text-[0.65rem] uppercase tracking-wider text-grey mb-2">Purchased and added credits</div>

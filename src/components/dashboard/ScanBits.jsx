@@ -51,6 +51,7 @@ export function ScanRow({ scan, showProject }) {
           {showProject && scan.project_name ? `${scan.project_name} · ` : ''}
           <span className="capitalize">{scan.type}</span> scan
           {scan.target?.ref ? <span className="text-grey"> on {scan.target.ref}</span> : null}
+          {scan.requested_by === 'schedule' ? <span className="text-grey"> (scheduled)</span> : null}
         </div>
         <div className="text-xs text-grey">{new Date(scan.created_at).toLocaleString()}</div>
       </div>
