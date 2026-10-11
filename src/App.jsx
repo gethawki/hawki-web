@@ -36,6 +36,9 @@ const ApiKeys = lazy(() => import('./pages/dashboard/ApiKeys.jsx'))
 const Alerts = lazy(() => import('./pages/dashboard/Alerts.jsx'))
 const AlertDetail = lazy(() => import('./pages/dashboard/AlertDetail.jsx'))
 const AlertChannels = lazy(() => import('./pages/dashboard/AlertChannels.jsx'))
+const Reports = lazy(() => import('./pages/dashboard/Reports.jsx'))
+const ReportDetail = lazy(() => import('./pages/dashboard/ReportDetail.jsx'))
+const SharedReport = lazy(() => import('./pages/SharedReport.jsx'))
 const Billing = lazy(() => import('./pages/dashboard/Billing.jsx'))
 const AuditLog = lazy(() => import('./pages/dashboard/AuditLog.jsx'))
 const OrgSettings = lazy(() => import('./pages/dashboard/OrgSettings.jsx'))
@@ -64,6 +67,7 @@ export default function App() {
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/invite" element={<AcceptInvite />} />
+          <Route path="/r/:token" element={<SharedReport />} />
 
           <Route element={<RequireAuth><DashboardLayout /></RequireAuth>}>
             <Route path="/dashboard" element={<Overview />} />
@@ -73,6 +77,8 @@ export default function App() {
             <Route path="/dashboard/scans/:scanId" element={guarded('/dashboard/scans', <ScanDetail />)} />
             <Route path="/dashboard/findings" element={guarded('/dashboard/findings', <Findings />)} />
             <Route path="/dashboard/findings/:findingId" element={guarded('/dashboard/findings', <FindingDetail />)} />
+            <Route path="/dashboard/reports" element={guarded('/dashboard/reports', <Reports />)} />
+            <Route path="/dashboard/reports/:reportId" element={guarded('/dashboard/reports', <ReportDetail />)} />
             <Route path="/dashboard/alerts" element={guarded('/dashboard/alerts', <Alerts />)} />
             <Route path="/dashboard/alerts/channels" element={guarded('/dashboard/settings', <AlertChannels />)} />
             <Route path="/dashboard/alerts/:alertId" element={guarded('/dashboard/alerts', <AlertDetail />)} />

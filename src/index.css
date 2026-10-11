@@ -552,3 +552,19 @@ th {
   .radar-ping,
   .caret { animation: none !important; }
 }
+/* Printing a report (Save as PDF): drop the app chrome and print dark text
+   on white. */
+@media print {
+  body { background: #fff !important; }
+  aside, header, nav, .no-print { display: none !important; }
+  .report-sheet, .report-sheet * {
+    color: #111 !important;
+    background: transparent !important;
+    border-color: #ccc !important;
+    box-shadow: none !important;
+  }
+  main h1, main h1 + p { color: #111 !important; }
+  .report-sheet pre { white-space: pre-wrap; word-break: break-all; }
+  .report-finding { break-inside: avoid; }
+  .report-findings { break-before: page; }
+}

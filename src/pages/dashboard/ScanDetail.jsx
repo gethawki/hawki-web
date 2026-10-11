@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Download } from 'lucide-react'
 import { api, download } from '../../lib/api.js'
 import { useAuth } from '../../lib/auth.jsx'
 import { useRefresh } from '../../lib/live.jsx'
 import Alert, { errorMessage } from '../../components/common/Alert.jsx'
+import Button from '../../components/common/Button.jsx'
 import Spinner from '../../components/common/Spinner.jsx'
 import PageHeader, { Panel } from '../../components/dashboard/PageHeader.jsx'
 import { ScanStatus, Severity, isActive } from '../../components/dashboard/ScanBits.jsx'
@@ -23,7 +24,9 @@ function Stat({ label, value }) {
 
 export default function ScanDetail() {
   const { scanId } = useParams()
-  const { currentOrg } = useAuth()
+  const { currentOrg, can } = useAuth()
+  const navigate = useNavigate()
+  const [reporting, setReporting] = useState(false)
   const [scan, setScan] = useState(null)
   const [findings, setFindings] = useState(null)
   const [error, setError] = useState(null)
@@ -45,6 +48,17 @@ export default function ScanDetail() {
   }, [load])
   useRefresh(['scan.updated'], load, { poll: Boolean(scan && isActive(scan)), filter: (m) => m.data?.id === scanId })
 
+  async function createReport() {
+    setReporting(true)
+    try {
+      const r = await api(`/api/v1/orgs/${currentOrg.id}/reports`, { method: 'POST', body: { scan_id: scanId } })
+      navigate(`/dashboard/reports/${r.id}`)
+    } catch (err) {
+      setError(errorMessage(err))
+      setReporting(false)
+    }
+  }
+
   async function save(ev) {
     try {
       await download(`/api/v1/orgs/${currentOrg.id}/scans/${scanId}/evidence/${ev.id}`, `hawki-${scanId.slice(0, 8)}-${FILE_NAMES[ev.kind] || ev.kind}`)
@@ -64,7 +78,12 @@ export default function ScanDetail() {
           <Link to={`/dashboard/projects/${scan.project_id}`} className="text-steel hover:text-steel-light">{scan.project_name}</Link>
           {' · '}{scan.target.repository_url || `${scan.target.chain} ${scan.target.address}`}{scan.target.ref ? ` @ ${scan.target.ref}` : ''}
         </>}
-        actions={<ScanStatus status={scan.status} />}
+        actions={
+          <div className="flex items-center gap-3">
+            {scan.status === 'completed' && can('reports:create') && <Button variant="ghost" busy={reporting} onClick={createReport}>Create report</Button>}
+            <ScanStatus status={scan.status} />
+          </div>
+        }
       />
       {isActive(scan) && <Alert tone="info">{scan.status === 'queued' ? 'Waiting for a scan worker.' : 'Scanning. This page updates on its own.'}</Alert>}
       {scan.status === 'failed' && <Alert>{scan.error}</Alert>}

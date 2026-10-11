@@ -125,7 +125,7 @@ const robots = fs.readFileSync(path.join(dist, 'robots.txt'), 'utf8')
 if (!robots.includes(`Sitemap: ${SITE_URL}/sitemap.xml`)) problems.push('robots.txt does not reference the sitemap')
 if (/^Disallow:\s*\/\s*$/m.test(robots)) problems.push('robots.txt blocks the whole site')
 for (const prefix of PRIVATE_PREFIXES) {
-  if (!new RegExp(`^Disallow:\\s*${prefix}\\s*$`, 'm').test(robots)) problems.push(`robots.txt does not disallow ${prefix}`)
+  if (!new RegExp(`^Disallow:\\s*${prefix}/?\\s*$`, 'm').test(robots)) problems.push(`robots.txt does not disallow ${prefix}`)
   if (PAGES.some((p) => p.path === prefix || p.path.startsWith(`${prefix}/`))) problems.push(`${prefix} pages must not be prerendered`)
 }
 

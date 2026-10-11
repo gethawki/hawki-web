@@ -11,6 +11,7 @@ import Field, { SelectField } from '../../components/common/Field.jsx'
 import Spinner from '../../components/common/Spinner.jsx'
 import PageHeader, { Panel } from '../../components/dashboard/PageHeader.jsx'
 import { ScanRow, isActive } from '../../components/dashboard/ScanBits.jsx'
+import ProjectHistory from '../../components/reports/ProjectHistory.jsx'
 
 function RunScan({ orgId, project, onStarted }) {
   const { can } = useAuth()
@@ -314,6 +315,7 @@ export default function ProjectDetail() {
       <Schedule key={`${project.scan_frequency}-${project.scheduled_scan_type}-${project.next_scheduled_at}`} orgId={currentOrg.id}
         project={project} canWrite={can('projects:write')} onSaved={load} />
       {can('alerts:read') && <ProjectAlerts orgId={currentOrg.id} projectId={project.id} canWrite={can('projects:write')} />}
+      {can('scans:read') && <ProjectHistory orgId={currentOrg.id} projectId={project.id} />}
       <Panel title="Scans">
         {!scans ? <Spinner /> : scans.length === 0 ? (
           <p className="text-sm text-grey">No scans yet.</p>

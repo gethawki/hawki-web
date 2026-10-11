@@ -24,7 +24,7 @@ export const DASHBOARD_NAV = [
       { to: '/dashboard/projects', label: 'Projects', icon: FolderGit2, access: { permission: 'projects:read' } },
       { to: '/dashboard/scans', label: 'Scans', icon: ScanLine, access: { permission: 'scans:read' } },
       { to: '/dashboard/findings', label: 'Findings', icon: ShieldAlert, access: { permission: 'findings:read' } },
-      { label: 'Reports', icon: FileText, soon: true, access: { permission: 'reports:read' } },
+      { to: '/dashboard/reports', label: 'Reports', icon: FileText, access: { permission: 'reports:read' } },
       { to: '/dashboard/alerts', label: 'Alerts', icon: Bell, access: { permission: 'alerts:read' } },
       { label: 'Hunt', icon: Crosshair, soon: true, access: { permission: 'hunt:read' } },
       { label: 'Watch', icon: Radar, soon: true, access: { permission: 'watch:read' } },

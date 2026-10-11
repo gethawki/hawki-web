@@ -72,6 +72,7 @@ export const PRIVATE_PREFIXES = [
   '/invite',
   '/dashboard',
   '/admin',
+  '/r', // shared report links
 ]
 export const PRIVATE_SHELL_FILE = 'app-shell.html'
 export const PRIVATE_META = {

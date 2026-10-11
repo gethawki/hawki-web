@@ -9,5 +9,6 @@ Disallow: /verify-email
 Disallow: /invite
 Disallow: /dashboard
 Disallow: /admin
+Disallow: /r/
 
 Sitemap: https://gethawki.com/sitemap.xml
