@@ -12,7 +12,7 @@
 // `soon` marks sections that are planned but not built yet; they are shown
 // greyed out to users who will be able to open them.
 import {
-  Bell, Building2, CreditCard, Crosshair, FileText, History, Power, Receipt, TrendingUp, UserCog, FolderGit2, KeyRound, LayoutDashboard, Radar, ScanLine, ScrollText,
+  Bell, Building2, CreditCard, Crosshair, FileText, History, Network, Power, Receipt, TrendingUp, UserCog, FolderGit2, KeyRound, LayoutDashboard, Radar, ScanLine, ScrollText,
   Settings, ShieldAlert, User, Users,
 } from 'lucide-react'
 
@@ -55,6 +55,12 @@ export const ADMIN_NAV = [
       { to: '/admin', label: 'Overview', icon: LayoutDashboard, end: true, access: { platformAdmin: true } },
       { to: '/admin/users', label: 'Users', icon: UserCog, access: { platformAdmin: true } },
       { to: '/admin/customers', label: 'Customers', icon: Building2, access: { platformAdmin: true } },
+    ],
+  },
+  {
+    title: 'Engines',
+    links: [
+      { to: '/admin/intel', label: 'Intel', icon: Network, access: { platformAdmin: true } },
     ],
   },
   {

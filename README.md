@@ -79,7 +79,7 @@ src/
                 FindingDetail, Members, ApiKeys, AuditLog, OrgSettings, Profile
     admin/      AdminOverview, AdminUsers, AdminUser, AdminCustomers,
                 AdminCustomer, AdminPayments, AdminRevenue, AdminAudit,
-                AdminSwitches (platform admins only)
+                AdminSwitches, AdminIntel (platform admins only)
 ```
 
 - **Home** (`/`) is composed from the named sections above, each built on the
@@ -125,7 +125,8 @@ API.
 - **Platform console.** `/admin` is the owner's view: platform overview,
   users (suspend, role, password reset, sign out, two-factor reset),
   customers (plan, credits, exemption, notes, tags, payments), payments,
-  revenue, platform audit and emergency switches. `StatusBanner` shows the
+  revenue, platform audit, emergency switches and Intel (chains the Intel
+  Engine follows, endpoint health, Intel audit). `StatusBanner` shows the
   site banner and maintenance notice to every signed-in user.
 - **Private pages are not indexed.** They are listed in `PRIVATE_PREFIXES`
   (`data/seo.js`), rendered client side from one `noindex` shell

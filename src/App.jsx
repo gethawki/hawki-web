@@ -54,6 +54,7 @@ const AdminPayments = lazy(() => import('./pages/admin/AdminPayments.jsx'))
 const AdminRevenue = lazy(() => import('./pages/admin/AdminRevenue.jsx'))
 const AdminAudit = lazy(() => import('./pages/admin/AdminAudit.jsx'))
 const AdminSwitches = lazy(() => import('./pages/admin/AdminSwitches.jsx'))
+const AdminIntel = lazy(() => import('./pages/admin/AdminIntel.jsx'))
 
 const guarded = (path, element) => <RequireAccess access={accessFor(path)}>{element}</RequireAccess>
 
@@ -108,6 +109,7 @@ export default function App() {
             <Route path="/admin/revenue" element={guarded('/admin/revenue', <AdminRevenue />)} />
             <Route path="/admin/audit" element={guarded('/admin/audit', <AdminAudit />)} />
             <Route path="/admin/switches" element={guarded('/admin/switches', <AdminSwitches />)} />
+            <Route path="/admin/intel" element={guarded('/admin/intel', <AdminIntel />)} />
           </Route>
 
           <Route path="*" element={<NotFound />} />
