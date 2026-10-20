@@ -14,7 +14,7 @@ const EVENT_LINK = { scan: '/dashboard/scans/', report: '/dashboard/reports/', a
 // ScoreTrend draws the security score of completed scans, oldest to newest.
 function ScoreTrend({ points }) {
   const scored = [...points].reverse().filter((p) => p.score != null)
-  if (scored.length < 2) return <p className="text-sm text-grey">The score trend appears after two completed scans.</p>
+  if (scored.length < 2) return <p className="text-sm text-fg-3">The score trend appears after two completed scans.</p>
   const x = (i) => (i / (scored.length - 1)) * 100
   const y = (s) => 38 - (s / 100) * 34
   const line = scored.map((p, i) => `${x(i).toFixed(2)},${y(p.score).toFixed(2)}`).join(' ')
@@ -23,12 +23,12 @@ function ScoreTrend({ points }) {
   const delta = last.score - first.score
   return (
     <div>
-      <svg viewBox="0 0 100 40" preserveAspectRatio="none" className="w-full h-24 text-steel" role="img"
+      <svg viewBox="0 0 100 40" preserveAspectRatio="none" className="w-full h-24 text-accent" role="img"
         aria-label={`Security score went from ${first.score} to ${last.score} over ${scored.length} scans`}>
         <polyline points={line} fill="none" stroke="currentColor" strokeWidth="1.2" vectorEffect="non-scaling-stroke" />
         {scored.map((p, i) => <circle key={p.scan_id} cx={x(i)} cy={y(p.score)} r="1.2" fill="currentColor" />)}
       </svg>
-      <p className="mt-2 text-xs text-grey">
+      <p className="mt-2 text-xs text-fg-3">
         Score {first.score} to {last.score} over {scored.length} scans ({delta >= 0 ? '+' : ''}{delta}). Latest: {last.total} findings.
       </p>
     </div>
@@ -38,19 +38,19 @@ function ScoreTrend({ points }) {
 function FindingList({ title, items, empty }) {
   return (
     <div>
-      <div className="font-mono text-[0.65rem] uppercase tracking-wider text-grey mb-2">{title} ({items.length})</div>
-      {items.length === 0 ? <p className="text-sm text-grey">{empty}</p> : (
+      <div className="text-xs font-medium text-fg-3 mb-2">{title} ({items.length})</div>
+      {items.length === 0 ? <p className="text-sm text-fg-3">{empty}</p> : (
         <ul className="grid gap-1.5">
           {items.slice(0, 50).map((f) => (
             <li key={f.id}>
-              <Link to={`/dashboard/findings/${f.id}`} className="flex items-center gap-3 text-sm hover:text-white">
+              <Link to={`/dashboard/findings/${f.id}`} className="flex items-center gap-3 text-sm hover:text-fg">
                 <Severity value={f.severity} />
-                <span className="flex-1 min-w-0 truncate text-[#cfcfcf]">{f.title}</span>
-                <span className="hidden sm:block font-mono text-xs text-grey truncate max-w-[12rem]">{f.file}</span>
+                <span className="flex-1 min-w-0 truncate text-fg-2">{f.title}</span>
+                <span className="hidden sm:block font-mono text-xs text-fg-3 truncate max-w-[12rem]">{f.file}</span>
               </Link>
             </li>
           ))}
-          {items.length > 50 && <li className="text-xs text-grey">and {items.length - 50} more</li>}
+          {items.length > 50 && <li className="text-xs text-fg-3">and {items.length - 50} more</li>}
         </ul>
       )}
     </div>
@@ -78,7 +78,7 @@ function Compare({ orgId, projectId, points }) {
 
   return (
     <div className="grid gap-4">
-      <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] items-end">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_1fr_auto] items-end">
         <SelectField id="compare-from" label="From" value={from} onChange={(e) => setFrom(e.target.value)} options={options} />
         <SelectField id="compare-to" label="To" value={to} onChange={(e) => setTo(e.target.value)} options={options} />
         <Button variant="ghost" onClick={run} busy={busy} disabled={from === to}>Compare</Button>
@@ -86,10 +86,10 @@ function Compare({ orgId, projectId, points }) {
       {error && <Alert>{error}</Alert>}
       {result && (
         <div className="grid gap-5">
-          <p className="text-sm text-[#cfcfcf]">
+          <p className="text-sm text-fg-2">
             Score {result.from.score ?? 'n/a'} to {result.to.score ?? 'n/a'}. {result.added.length} new, {result.removed.length} gone, {result.kept} still present.
           </p>
-          <div className="grid gap-5 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
             <FindingList title="New since the earlier scan" items={result.added} empty="Nothing new." />
             <FindingList title="Gone since the earlier scan" items={result.removed} empty="Nothing went away." />
           </div>
@@ -118,13 +118,13 @@ export default function ProjectHistory({ orgId, projectId }) {
         <ScoreTrend points={points} />
         {points.length >= 2 && <Compare key={points[0].scan_id} orgId={orgId} projectId={projectId} points={points} />}
         <div>
-          <div className="font-mono text-[0.65rem] uppercase tracking-wider text-grey mb-2">Timeline</div>
-          {events.length === 0 ? <p className="text-sm text-grey">Nothing has happened yet.</p> : (
-            <ol className="grid gap-2 border-l border-panel-border pl-4">
+          <div className="text-xs font-medium text-fg-3 mb-2">Timeline</div>
+          {events.length === 0 ? <p className="text-sm text-fg-3">Nothing has happened yet.</p> : (
+            <ol className="grid gap-2 border-l border-line pl-4">
               {events.slice(0, 30).map((ev) => (
                 <li key={`${ev.kind}-${ev.ref_id}`} className="text-sm">
-                  <span className="text-xs text-grey mr-2">{fmt(ev.at)}</span>
-                  <Link to={(EVENT_LINK[ev.ref_type] || '/dashboard/') + ev.ref_id} className="text-[#cfcfcf] hover:text-white">{ev.title}</Link>
+                  <span className="text-xs text-fg-3 mr-2">{fmt(ev.at)}</span>
+                  <Link to={(EVENT_LINK[ev.ref_type] || '/dashboard/') + ev.ref_id} className="text-fg-2 hover:text-fg">{ev.title}</Link>
                 </li>
               ))}
             </ol>

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { api } from '../../lib/api.js'
 import { useAuth } from '../../lib/auth.jsx'
 import Alert, { errorMessage } from '../../components/common/Alert.jsx'
@@ -6,6 +7,8 @@ import Button from '../../components/common/Button.jsx'
 import Field from '../../components/common/Field.jsx'
 import PageHeader, { Panel } from '../../components/dashboard/PageHeader.jsx'
 import { MIN_PASSWORD } from '../auth/shared.js'
+import Badge from '../../components/ui/Badge.jsx'
+import { ButtonTabs } from '../../components/ui/Controls.jsx'
 import { DeleteAccountPanel, EmailPanel, SessionsPanel, TwoFactorPanel, useSecurity } from '../../components/account/Security.jsx'
 
 function ProfileForm() {
@@ -66,17 +69,35 @@ function PasswordForm() {
   )
 }
 
+const TABS = [
+  { value: 'general', label: 'General' },
+  { value: 'security', label: 'Password and two-factor' },
+  { value: 'sessions', label: 'Sessions' },
+  { value: 'delete', label: 'Delete account' },
+]
+
 export default function Profile() {
+  const { user } = useAuth()
   const [security, reloadSecurity] = useSecurity()
+  const [params, setParams] = useSearchParams()
+  const tab = TABS.some((t) => t.value === params.get('tab')) ? params.get('tab') : 'general'
   return (
-    <div className="max-w-3xl grid gap-6">
-      <PageHeader title="Your account" description="Profile, sign-in and security." />
-      <ProfileForm />
-      <EmailPanel security={security} onChanged={reloadSecurity} />
-      <PasswordForm />
-      <TwoFactorPanel security={security} onChanged={reloadSecurity} />
-      <SessionsPanel />
-      <DeleteAccountPanel security={security} />
+    <div className="max-w-3xl">
+      <PageHeader title="Your account" description="Profile, sign-in and security for your Hawk-i account across every organization."
+        meta={security && (
+          <>
+            <Badge tone={user.email_verified ? 'good' : 'warning'} dot>{user.email_verified ? 'Email confirmed' : 'Email not confirmed'}</Badge>
+            <Badge tone={security.two_factor_enabled ? 'good' : 'warning'} dot>{security.two_factor_enabled ? 'Two-factor on' : 'Two-factor off'}</Badge>
+          </>
+        )}>
+        <ButtonTabs tabs={TABS} value={tab} onChange={(v) => setParams(v === 'general' ? {} : { tab: v }, { replace: true })} />
+      </PageHeader>
+      <div className="grid gap-4">
+        {tab === 'general' && <><ProfileForm /><EmailPanel security={security} onChanged={reloadSecurity} /></>}
+        {tab === 'security' && <><PasswordForm /><TwoFactorPanel security={security} onChanged={reloadSecurity} /></>}
+        {tab === 'sessions' && <SessionsPanel />}
+        {tab === 'delete' && <DeleteAccountPanel security={security} />}
+      </div>
     </div>
   )
 }

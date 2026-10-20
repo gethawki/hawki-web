@@ -22,6 +22,66 @@
   --color-risk-low: #77746c;
   --color-risk-med: #687f97;
   --color-risk-high: #986c67;
+
+  /* Signed-in app surfaces and ink (dashboards and admin console). */
+  --color-app: #09090a;
+  --color-surface: #111112;
+  --color-surface-2: #18181a;
+  --color-surface-3: #202023;
+  --color-line: #222225;
+  --color-line-strong: #303035;
+  --color-fg: #ededee;
+  --color-fg-2: #a3a3a8;
+  --color-fg-3: #6f6f76;
+  --color-accent: #8fa8c2;
+  --color-staff: #e0a458;
+
+  /* Severity is ordinal: one red hue, brightest = most severe (validated on
+     #141414: monotone lightness, light end >= 2:1). Info is not charted. */
+  --color-sev-critical: #ffa198;
+  --color-sev-high: #f0645a;
+  --color-sev-medium: #c8463e;
+  --color-sev-low: #94352f;
+  --color-sev-info: #6f6f76;
+
+  /* Chart series in fixed order (validated: CVD and normal-vision separation
+     on the dark surface), and reserved status colors. */
+  --color-series-1: #3987e5;
+  --color-series-2: #199e70;
+  --color-series-3: #d95926;
+  --color-good: #0ca30c;
+  --color-warning: #fab219;
+  --color-serious: #ec835a;
+  --color-critical: #d03b3b;
+}
+
+/* ---------- signed-in app ---------- */
+
+.app-root {
+  background: var(--color-app);
+  color: var(--color-fg);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+}
+.app-root .tnum {
+  font-variant-numeric: tabular-nums;
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--color-surface-2) 0%, var(--color-surface-3) 50%, var(--color-surface-2) 100%);
+  background-size: 200% 100%;
+  animation: skeleton 1.4s ease-in-out infinite;
+  border-radius: 6px;
+}
+@keyframes skeleton {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton { animation: none; }
+}
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line-strong) transparent;
 }
 
 html {
@@ -275,7 +335,7 @@ body {
 .doc-card a:hover { text-decoration-color: var(--color-steel); }
 .doc-card > p:first-of-type { font-size: 1.05rem; color: #aeaeae; }
 
-pre {
+pre:not(.app-root *) {
   background: #101010;
   padding: 1.25rem 1.4rem;
   border-radius: 0.85rem;
@@ -285,7 +345,7 @@ pre {
   margin: 1.5rem 0;
   box-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.6);
 }
-code {
+code:not(.app-root *) {
   font-family: var(--font-mono);
   font-size: 0.87rem;
   color: #ccc;
@@ -299,7 +359,7 @@ code {
   font-size: 0.87rem;
   color: #cfcfcf;
 }
-hr {
+hr:not(.app-root *) {
   border-color: #1a1a1a;
   margin: 2.5rem 0;
 }
@@ -314,27 +374,30 @@ hr {
   border-radius: 9999px;
   display: inline-block;
 }
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 1.5rem 0;
-  font-size: 0.92rem;
-}
-th, td {
-  border: none;
-  border-bottom: 1px solid #1e1e1e;
-  padding: 0.7rem 0.9rem 0.7rem 0;
-  text-align: left;
-}
-th {
-  background: transparent;
-  color: #6a6a6a;
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-weight: 500;
-  border-bottom: 1px solid #2a2a2a;
+/* Docs and changelog tables. Kept out of the app, which styles its own. */
+@layer base {
+  table:not(.app-root *) {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+    font-size: 0.92rem;
+  }
+  th:not(.app-root *), td:not(.app-root *) {
+    border: none;
+    border-bottom: 1px solid #1e1e1e;
+    padding: 0.7rem 0.9rem 0.7rem 0;
+    text-align: left;
+  }
+  th:not(.app-root *) {
+    background: transparent;
+    color: #6a6a6a;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 500;
+    border-bottom: 1px solid #2a2a2a;
+  }
 }
 
 /* ============================================================

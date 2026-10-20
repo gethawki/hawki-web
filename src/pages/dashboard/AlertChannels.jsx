@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { api } from '../../lib/api.js'
 import { useAuth } from '../../lib/auth.jsx'
 import { ALERT_SEVERITIES, CHANNEL_KINDS } from '../../data/dashboardNav.js'
@@ -59,23 +58,23 @@ function NewChannel({ orgId, members, onCreated }) {
     <Panel title="Add a channel">
       <form onSubmit={submit} className="grid gap-4">
         {error && <Alert>{error}</Alert>}
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <SelectField id="channel-kind" label="Type" value={form.kind} onChange={(e) => setForm({ ...EMPTY, kind: e.target.value, name: form.name })}
             options={CHANNEL_KINDS} hint={kind.hint} error={errors.kind} />
           <Field id="channel-name" label="Name" placeholder="Security team" value={form.name} onChange={set('name')} error={errors.name} />
         </div>
         {form.kind === 'email' && (
           <fieldset>
-            <legend className="text-sm text-[#cfcfcf] mb-1.5">Recipients</legend>
+            <legend className="text-sm text-fg-2 mb-1.5">Recipients</legend>
             <div className="grid gap-1.5 sm:grid-cols-2">
               {members.map((m) => (
-                <label key={m.user_id} className="flex items-center gap-2 text-sm text-[#cfcfcf]">
+                <label key={m.user_id} className="flex items-center gap-2 text-sm text-fg-2">
                   <input type="checkbox" checked={form.recipients.includes(m.email)} onChange={() => toggleRecipient(m.email)} />
                   <span className="truncate">{m.name ? `${m.name} (${m.email})` : m.email}</span>
                 </label>
               ))}
             </div>
-            {errors.recipients && <span className="block mt-1.5 text-xs text-copper">{errors.recipients}</span>}
+            {errors.recipients && <span className="block mt-1.5 text-xs text-[#ff8b8b]">{errors.recipients}</span>}
           </fieldset>
         )}
         {(form.kind === 'slack' || form.kind === 'discord' || form.kind === 'webhook') && (
@@ -84,12 +83,12 @@ function NewChannel({ orgId, members, onCreated }) {
             value={form.url} onChange={set('url')} error={errors.url} />
         )}
         {form.kind === 'telegram' && (
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field id="channel-token" label="Bot token" autoComplete="off" value={form.bot_token} onChange={set('bot_token')} error={errors.bot_token} />
             <Field id="channel-chat" label="Chat ID" placeholder="-1001234567890 or @channel" value={form.chat_id} onChange={set('chat_id')} error={errors.chat_id} />
           </div>
         )}
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <SelectField id="channel-severity" label="Send" value={form.min_severity} onChange={set('min_severity')} options={SEVERITY_OPTIONS} error={errors.min_severity} />
           {form.kind !== 'webhook' && (
             <SelectField id="channel-mode" label="When" value={form.mode} onChange={set('mode')} options={MODES} error={errors.mode} />
@@ -102,7 +101,7 @@ function NewChannel({ orgId, members, onCreated }) {
               Copy the signing secret now. It is shown only once. Each request carries
               X-Hawki-Signature: t=timestamp,v1=HMAC-SHA256 of &quot;timestamp.body&quot; with this secret.
             </Alert>
-            <code className="block overflow-x-auto rounded-lg border border-panel-border bg-ink px-3 py-2 font-mono text-xs text-[#d9d9d9]">{secret}</code>
+            <code className="block overflow-x-auto rounded-lg border border-line bg-surface-2 px-3 py-2 font-mono text-xs text-fg-2">{secret}</code>
           </div>
         )}
       </form>
@@ -152,40 +151,40 @@ function ChannelRow({ orgId, channel, canWrite, onChanged }) {
   return (
     <li className="py-4 first:pt-0 last:pb-0 grid gap-3">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <span className="text-white">{channel.name}</span>
-        <span className="text-xs text-grey">{kind} · {channel.display}</span>
-        {!channel.enabled && <span className="text-xs text-copper">off</span>}
+        <span className="text-fg">{channel.name}</span>
+        <span className="text-xs text-fg-3">{kind} · {channel.display}</span>
+        {!channel.enabled && <span className="text-xs text-[#ff8b8b]">off</span>}
       </div>
-      <div className="text-xs text-grey">
-        {channel.last_error ? <span className="text-copper">Last attempt failed: {channel.last_error}</span>
+      <div className="text-xs text-fg-3">
+        {channel.last_error ? <span className="text-[#ff8b8b]">Last attempt failed: {channel.last_error}</span>
           : channel.last_delivery_at ? `Last delivered ${formatDateTime(channel.last_delivery_at)}` : 'Nothing delivered yet.'}
       </div>
       {canWrite ? (
         <div className="flex flex-wrap items-end gap-3">
-          <label className="text-xs text-grey">
+          <label className="text-xs text-fg-3">
             <span className="sr-only">Severity for {channel.name}</span>
             <select value={channel.min_severity} onChange={(e) => patch({ min_severity: e.target.value })}
-              className="rounded-lg bg-ink-soft border border-panel-border px-2.5 py-1.5 text-sm text-white">
+              className="rounded-lg bg-surface border border-line px-2.5 py-1.5 text-sm text-fg">
               {SEVERITY_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
           </label>
           {channel.kind !== 'webhook' && (
-            <label className="text-xs text-grey">
+            <label className="text-xs text-fg-3">
               <span className="sr-only">When to send to {channel.name}</span>
               <select value={channel.mode} onChange={(e) => patch({ mode: e.target.value })}
-                className="rounded-lg bg-ink-soft border border-panel-border px-2.5 py-1.5 text-sm text-white">
+                className="rounded-lg bg-surface border border-line px-2.5 py-1.5 text-sm text-fg">
                 {MODES.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </label>
           )}
-          <label className="flex items-center gap-2 text-sm text-[#cfcfcf]">
+          <label className="flex items-center gap-2 text-sm text-fg-2">
             <input type="checkbox" checked={channel.enabled} onChange={(e) => patch({ enabled: e.target.checked })} /> On
           </label>
           <Button variant="ghost" className="py-1.5" busy={busy === 'test'} onClick={test}>Send test</Button>
           <Button variant="danger" className="py-1.5" busy={busy === 'delete'} onClick={remove}>Delete</Button>
         </div>
       ) : (
-        <div className="text-xs text-grey">
+        <div className="text-xs text-fg-3">
           {SEVERITY_OPTIONS.find((o) => o.value === channel.min_severity)?.label}, {MODES.find((m) => m.value === channel.mode)?.label.toLowerCase()}
         </div>
       )}
@@ -215,20 +214,19 @@ export default function AlertChannels() {
   }, [load, canWrite, currentOrg.id])
 
   return (
-    <div className="max-w-5xl grid gap-6">
-      <PageHeader title="Alert channels" description="Where alerts go besides this dashboard. Each project can narrow this list or mute it in its settings." />
+    <div className="grid gap-6">
+      <PageHeader back={{ to: '/dashboard/alerts', label: 'Alerts' }} title="Alert channels" description="Where alerts go besides this dashboard. Each project can narrow this list or mute it in its settings." />
       {error && <Alert>{error}</Alert>}
       <Panel>
         {!channels ? <Spinner /> : channels.length === 0 ? (
-          <p className="text-sm text-grey">No channels yet. Alerts only show in the dashboard.</p>
+          <p className="text-sm text-fg-3">No channels yet. Alerts only show in the dashboard.</p>
         ) : (
-          <ul className="divide-y divide-panel-border">
+          <ul className="divide-y divide-line">
             {channels.map((c) => <ChannelRow key={c.id} orgId={currentOrg.id} channel={c} canWrite={canWrite} onChanged={load} />)}
           </ul>
         )}
       </Panel>
       {canWrite && <NewChannel orgId={currentOrg.id} members={members} onCreated={load} />}
-      <p className="text-xs text-grey"><Link to="/dashboard/alerts" className="hover:text-white">All alerts</Link></p>
     </div>
   )
 }

@@ -57,7 +57,7 @@ export default function PaymentForm({ orgId, orgs, onSaved }) {
   return (
     <form onSubmit={submit} className="grid gap-4">
       {error && <Alert>{error}</Alert>}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {!orgId && (
           <div className="sm:col-span-2">
             <SelectField id="pay-org" label="Customer" value={form.org_id} onChange={set('org_id')}

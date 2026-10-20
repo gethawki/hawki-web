@@ -58,7 +58,7 @@ function AIProvider({ orgId, editable }) {
   const defaultModel = data?.default_models?.[form.provider]
   return (
     <Panel title="AI provider">
-      <p className="text-sm text-grey mb-4 max-w-2xl">
+      <p className="text-sm text-fg-3 mb-4 max-w-2xl">
         Full and deep scans use your own model provider account, so AI usage is billed by your provider, not by Hawk-i.
         The key is stored encrypted and is never shown again.
       </p>
@@ -74,7 +74,7 @@ function AIProvider({ orgId, editable }) {
         <form onSubmit={save} className="grid gap-4 mt-4">
           {state.error && <Alert>{state.error}</Alert>}
           {state.saved && <Alert tone="info">Saved.</Alert>}
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <SelectField id="llm-provider" label="Provider" value={form.provider} options={PROVIDERS}
               onChange={(e) => setForm({ ...form, provider: e.target.value, model: '' })} />
             <Field id="llm-model" label="Model" value={form.model} placeholder={defaultModel || 'provider/model-name'}
@@ -90,7 +90,7 @@ function AIProvider({ orgId, editable }) {
           </div>
         </form>
       ) : (
-        <p className="mt-3 text-xs text-grey">Only organization admins can change the AI provider.</p>
+        <p className="mt-3 text-xs text-fg-3">Only organization admins can change the AI provider.</p>
       )}
     </Panel>
   )
@@ -128,7 +128,7 @@ export default function OrgSettings() {
           {editable ? (
             <div><Button type="submit" busy={state.busy}>Save changes</Button></div>
           ) : (
-            <p className="text-xs text-grey">Only organization admins can change these.</p>
+            <p className="text-xs text-fg-3">Only organization admins can change these.</p>
           )}
         </form>
       </Panel>

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { GitBranch, ScanLine, Trash2 } from 'lucide-react'
 import { api } from '../../lib/api.js'
 import { useAuth } from '../../lib/auth.jsx'
 import { useLiveEvent, useRefresh } from '../../lib/live.jsx'
@@ -8,9 +9,17 @@ import { creditsLabel, paymentMessage } from '../../lib/credits.js'
 import Alert, { errorMessage } from '../../components/common/Alert.jsx'
 import Button from '../../components/common/Button.jsx'
 import Field, { SelectField } from '../../components/common/Field.jsx'
-import Spinner from '../../components/common/Spinner.jsx'
 import PageHeader, { Panel } from '../../components/dashboard/PageHeader.jsx'
-import { ScanRow, isActive } from '../../components/dashboard/ScanBits.jsx'
+import { SeverityCounts, isActive } from '../../components/dashboard/ScanBits.jsx'
+import Card, { CardLink } from '../../components/ui/Card.jsx'
+import Badge, { ScanStatusBadge } from '../../components/ui/Badge.jsx'
+import DataTable from '../../components/ui/DataTable.jsx'
+import { ButtonTabs } from '../../components/ui/Controls.jsx'
+import { EmptyState, ErrorState, PageSkeleton } from '../../components/ui/Feedback.jsx'
+import { SeverityBar } from '../../components/charts/Small.jsx'
+import { useApi } from '../../lib/useApi.js'
+import { ago, num } from '../../lib/format.js'
+import { postureScore, projectSource, scanDuration, scoreBand } from '../../lib/dashboard.js'
 import ProjectHistory from '../../components/reports/ProjectHistory.jsx'
 
 function RunScan({ orgId, project, onStarted }) {
@@ -53,36 +62,36 @@ function RunScan({ orgId, project, onStarted }) {
   }
 
   return (
-    <Panel title="Run a scan">
+    <Panel title="Run a scan" description="Scans this project with the open-source engine.">
       <div className="grid gap-4">
         {error && <Alert>{error}</Alert>}
         {refused && (
           <Alert>
             {refused}{' '}
-            {can('billing:read') && <Link to="/dashboard/billing" className="underline hover:text-white">See billing.</Link>}
+            {can('billing:read') && <Link to="/dashboard/billing" className="underline hover:text-fg">See billing.</Link>}
           </Alert>
         )}
-        <div className="grid gap-2 sm:grid-cols-3" role="radiogroup" aria-label="Scan type">
+        <div className="grid gap-2" role="radiogroup" aria-label="Scan type">
           {SCAN_TYPES.map((t) => {
             const locked = t.value !== 'quick' && hasKey === false
             return (
               <button key={t.value} type="button" role="radio" aria-checked={type === t.value} disabled={locked}
                 onClick={() => setType(t.value)}
-                className={`text-left rounded-xl border px-4 py-3 transition disabled:opacity-45 disabled:cursor-not-allowed ${type === t.value ? 'border-steel bg-steel/10' : 'border-panel-border hover:border-steel/60'}`}>
-                <div className="flex justify-between gap-2 text-sm text-white">
+                className={`text-left rounded-lg border px-3 py-2.5 transition disabled:opacity-45 disabled:cursor-not-allowed ${type === t.value ? 'border-accent/70 bg-accent/10' : 'border-line hover:border-line-strong'}`}>
+                <div className="flex justify-between gap-2 text-sm font-medium text-fg">
                   <span>{t.label}</span>
-                  {costs && <span className="font-mono text-xs text-grey">{creditsLabel(costs[t.value])}</span>}
+                  {costs && <span className="text-xs font-normal text-fg-3 tnum">{balance?.exempt ? 'Free' : creditsLabel(costs[t.value])}</span>}
                 </div>
-                <div className="text-xs text-grey mt-0.5">{locked ? 'Needs your AI provider key.' : t.hint}</div>
+                <div className="text-xs text-fg-3 mt-0.5">{locked ? 'Needs your AI provider key.' : t.hint}</div>
               </button>
             )
           })}
         </div>
         {hasKey === false && (
-          <p className="text-xs text-grey">
+          <p className="text-xs text-fg-3">
             Full and deep scans use your own model provider key.{' '}
             {can('settings:write') ? (
-              <Link to="/dashboard/settings" className="text-steel hover:text-steel-light">Add one in settings.</Link>
+              <Link to="/dashboard/settings" className="text-accent hover:underline">Add one in settings.</Link>
             ) : (
               'Ask an organization admin to add one.'
             )}
@@ -92,7 +101,7 @@ function RunScan({ orgId, project, onStarted }) {
           <div className="flex gap-2 text-sm">
             {['repository', 'contract'].map((t) => (
               <button key={t} type="button" onClick={() => setTarget(t)}
-                className={`rounded-lg border px-3 py-1.5 capitalize ${target === t ? 'border-steel text-white' : 'border-panel-border text-grey'}`}>
+                className={`rounded-lg border px-3 py-1.5 capitalize ${target === t ? 'border-accent/70 text-fg' : 'border-line text-fg-3'}`}>
                 {t}
               </button>
             ))}
@@ -101,16 +110,16 @@ function RunScan({ orgId, project, onStarted }) {
         {target === 'repository' && (
           <Field id="scan-ref" label="Branch or tag" placeholder={project.default_ref || 'default branch'} value={ref} onChange={(e) => setRef(e.target.value)} />
         )}
-        <div className="flex flex-wrap items-center gap-4">
-          <Button onClick={run} busy={busy}>Start scan</Button>
-          {balance && (
-            <span className="text-xs text-grey">
-              {balance.period_cap_mc === 0
+        <Button onClick={run} busy={busy} className="w-full">Start scan</Button>
+        {balance && (
+          <p className="text-xs text-fg-3">
+            {balance.exempt
+              ? 'This organization is exempt from billing, so scans are free.'
+              : balance.period_cap_mc === 0
                 ? 'Cloud scans start on the Builder plan.'
                 : `${creditsLabel(balance.total_remaining_mc)} available. Failed scans are refunded.`}
-            </span>
-          )}
-        </div>
+          </p>
+        )}
       </div>
     </Panel>
   )
@@ -147,14 +156,14 @@ function Schedule({ orgId, project, canWrite, onSaved }) {
     <Panel title="Scheduled scans">
       <div className="grid gap-4">
         {error && <Alert>{error}</Alert>}
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <SelectField id="schedule-frequency" label="Run" disabled={!canWrite} value={form.scan_frequency} options={FREQUENCIES}
             onChange={(e) => setForm({ ...form, scan_frequency: e.target.value })} />
           <SelectField id="schedule-type" label="Scan" disabled={!canWrite || form.scan_frequency === 'off'} value={form.scheduled_scan_type}
             options={SCAN_TYPES.map((t) => ({ value: t.value, label: t.label }))}
             onChange={(e) => setForm({ ...form, scheduled_scan_type: e.target.value })} />
         </div>
-        <p className="text-xs text-grey">
+        <p className="text-xs text-fg-3">
           {project.scan_frequency === 'off' || !project.next_scheduled_at
             ? 'No scheduled scans. Each run costs the same credits as starting it yourself.'
             : `Next run ${new Date(project.next_scheduled_at).toLocaleString()}. If a run cannot start, you get an alert.`}
@@ -219,20 +228,20 @@ function ProjectAlerts({ orgId, projectId, canWrite }) {
           onChange={(e) => setPrefs({ ...prefs, min_severity: e.target.value })}
           options={ALERT_SEVERITIES.map((s) => ({ value: s.value, label: `${s.label} and above` }))} />
         {channels.length === 0 ? (
-          <p className="text-sm text-grey">No alert channels yet. <Link to="/dashboard/alerts/channels" className="text-steel hover:text-steel-light">Set one up.</Link></p>
+          <p className="text-sm text-fg-3">No alert channels yet. <Link to="/dashboard/alerts/channels" className="text-accent hover:underline">Set one up.</Link></p>
         ) : (
           <fieldset disabled={!canWrite}>
-            <legend className="text-sm text-[#cfcfcf] mb-1.5">To</legend>
-            <label className="flex items-center gap-2 text-sm text-[#cfcfcf] mb-1.5">
+            <legend className="text-sm text-fg-2 mb-1.5">To</legend>
+            <label className="flex items-center gap-2 text-sm text-fg-2 mb-1.5">
               <input type="checkbox" checked={all} onChange={() => setPrefs({ ...prefs, channel_ids: all ? channels.map((c) => c.id) : null })} />
               Every channel of the organization
             </label>
             {!all && (
               <div className="grid gap-1.5 sm:grid-cols-2 pl-6">
                 {channels.map((c) => (
-                  <label key={c.id} className="flex items-center gap-2 text-sm text-[#cfcfcf]">
+                  <label key={c.id} className="flex items-center gap-2 text-sm text-fg-2">
                     <input type="checkbox" checked={prefs.channel_ids.includes(c.id)} onChange={() => toggle(c.id)} />
-                    {c.name} <span className="text-grey text-xs capitalize">({c.kind})</span>
+                    {c.name} <span className="text-fg-3 text-xs capitalize">({c.kind})</span>
                   </label>
                 ))}
               </div>
@@ -251,7 +260,7 @@ function ProjectAlerts({ orgId, projectId, canWrite }) {
                   onClick={() => save({ ...prefs, muted_until: new Date(Date.now() + Number(mute)).toISOString() })}>Mute</Button>
               </>
             )}
-            {saved && <span className="text-xs text-grey">Saved.</span>}
+            {saved && <span className="text-xs text-fg-3">Saved.</span>}
           </div>
         )}
       </div>
@@ -259,10 +268,46 @@ function ProjectAlerts({ orgId, projectId, canWrite }) {
   )
 }
 
+function OpenFindings({ orgId, projectId }) {
+  const base = `/api/v1/orgs/${orgId}/findings?project=${projectId}&limit=1&facets=1`
+  const fresh = useApi(`${base}&status=new`)
+  const ack = useApi(`${base}&status=acknowledged`)
+  useRefresh(['finding.updated', 'scan.updated'], () => { fresh.reload(); ack.reload() })
+  if (!fresh.data || !ack.data) return <Card title="Open findings"><div className="h-24" /></Card>
+  const sev = (k) => (fresh.data.facets.severity[k] || 0) + (ack.data.facets.severity[k] || 0)
+  const counts = { critical: sev('Critical'), high: sev('High'), medium: sev('Medium'), low: sev('Low') }
+  const open = counts.critical + counts.high + counts.medium + counts.low
+  const score = postureScore(counts)
+  const [band, tone] = scoreBand(score)
+  return (
+    <Card title="Open findings" description="New and acknowledged, excluding informational" actions={<CardLink to={`/dashboard/findings?project=${projectId}`}>All findings</CardLink>}>
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-[auto_1fr] sm:items-center">
+        <div className="flex gap-8">
+          <div><div className="text-3xl font-semibold tracking-tight text-fg tnum">{num(open)}</div><div className="text-xs text-fg-3">open</div></div>
+          <div>
+            <div className="text-3xl font-semibold tracking-tight text-fg tnum">{score}</div>
+            <div className="mt-0.5"><Badge tone={tone} dot>{band}</Badge></div>
+          </div>
+        </div>
+        <SeverityBar counts={counts} height={10} />
+      </div>
+    </Card>
+  )
+}
+
+const TABS = [
+  { value: 'overview', label: 'Overview' },
+  { value: 'scans', label: 'Scans' },
+  { value: 'history', label: 'History' },
+  { value: 'settings', label: 'Settings' },
+]
+
 export default function ProjectDetail() {
   const { projectId } = useParams()
   const { currentOrg, can } = useAuth()
   const navigate = useNavigate()
+  const [params, setParams] = useSearchParams()
+  const tab = TABS.some((t) => t.value === params.get('tab')) ? params.get('tab') : 'overview'
   const [project, setProject] = useState(null)
   const [scans, setScans] = useState(null)
   const [error, setError] = useState(null)
@@ -271,7 +316,7 @@ export default function ProjectDetail() {
     try {
       const [p, s] = await Promise.all([
         api(`/api/v1/orgs/${currentOrg.id}/projects/${projectId}`),
-        api(`/api/v1/orgs/${currentOrg.id}/scans?project=${projectId}&limit=20`),
+        api(`/api/v1/orgs/${currentOrg.id}/scans?project=${projectId}&limit=50`),
       ])
       setProject(p)
       setScans(s.scans)
@@ -297,37 +342,68 @@ export default function ProjectDetail() {
     }
   }
 
-  if (error) return <div className="max-w-5xl"><Alert>{error}</Alert></div>
-  if (!project) return <Spinner />
-  return (
-    <div className="max-w-5xl grid gap-6">
-      <PageHeader
-        title={project.name}
-        description={project.repository_url || `${project.chain} ${project.contract_address}`}
-        actions={
-          <div className="flex gap-2">
-            <Button variant="ghost" to={`/dashboard/findings?project=${project.id}`}>Findings</Button>
-            {can('projects:delete') && <Button variant="danger" onClick={remove}>Delete</Button>}
-          </div>
-        }
-      />
-      {can('scans:create') && <RunScan orgId={currentOrg.id} project={project} onStarted={load} />}
+  if (error) return <ErrorState>{error}</ErrorState>
+  if (!project) return <PageSkeleton cards={3} />
+  const last = scans?.[0]
+  const scanTable = (rows) => (
+    <DataTable rows={rows} rowHref={(s) => `/dashboard/scans/${s.id}`}
+      empty={<EmptyState compact icon={ScanLine} title="No scans yet">{can('scans:create') ? 'Start one from the Run a scan panel.' : 'Scans of this project appear here.'}</EmptyState>}
+      columns={[
+        { key: 'status', header: 'Status', className: 'w-32', cell: (s) => <ScanStatusBadge status={s.status} /> },
+        { key: 'type', header: 'Scan', cell: (s) => <Link to={`/dashboard/scans/${s.id}`} className="font-medium capitalize text-fg hover:underline">{s.type} scan{s.requested_by === 'schedule' ? <span className="font-normal normal-case text-fg-3"> · scheduled</span> : null}</Link> },
+        { key: 'result', header: 'Result', hide: 'md', cell: (s) => s.status === 'completed' ? <SeverityCounts summary={s.summary} /> : s.status === 'failed' ? <span className="block max-w-xs truncate text-xs text-[#ff8b8b]">{s.error || 'Failed'}</span> : <span className="text-xs text-fg-3">In progress</span> },
+        { key: 'duration', header: 'Duration', hide: 'lg', align: 'right', cell: (s) => <span className="text-fg-2">{scanDuration(s)}</span> },
+        { key: 'when', header: 'Started', align: 'right', cell: (s) => <span className="text-fg-3">{ago(s.created_at)}</span> },
+      ]} />
+  )
+  const settings = (
+    <div className="grid max-w-3xl gap-4">
       <Schedule key={`${project.scan_frequency}-${project.scheduled_scan_type}-${project.next_scheduled_at}`} orgId={currentOrg.id}
         project={project} canWrite={can('projects:write')} onSaved={load} />
       {can('alerts:read') && <ProjectAlerts orgId={currentOrg.id} projectId={project.id} canWrite={can('projects:write')} />}
-      {can('scans:read') && <ProjectHistory orgId={currentOrg.id} projectId={project.id} />}
-      <Panel title="Scans">
-        {!scans ? <Spinner /> : scans.length === 0 ? (
-          <p className="text-sm text-grey">No scans yet.</p>
-        ) : (
-          <div className="divide-y divide-panel-border">
-            {scans.map((s) => <ScanRow key={s.id} scan={s} />)}
+      {can('projects:delete') && (
+        <Panel title="Delete project" description="Removes the project with every scan, finding and piece of evidence. This cannot be undone.">
+          <Button variant="danger" onClick={remove}><Trash2 size={14} /> Delete {project.name}</Button>
+        </Panel>
+      )}
+    </div>
+  )
+
+  return (
+    <div>
+      <PageHeader
+        back={{ to: '/dashboard/projects', label: 'Projects' }}
+        title={project.name}
+        meta={
+          <>
+            {project.repository_url && <a href={project.repository_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 hover:text-fg"><GitBranch size={13} />{projectSource(project)}{project.default_ref ? `@${project.default_ref}` : ''}</a>}
+            {project.contract_address && <span className="font-mono">{project.chain} {project.contract_address}</span>}
+            {project.scan_frequency !== 'off' && <Badge tone="accent">Scans {project.scan_frequency}</Badge>}
+            <span>Last scanned {last ? ago(last.created_at) : 'never'}</span>
+          </>
+        }
+        actions={<Button variant="ghost" size="sm" to={`/dashboard/findings?project=${project.id}`}>View findings</Button>}
+      >
+        <ButtonTabs value={tab} onChange={(v) => setParams(v === 'overview' ? {} : { tab: v }, { replace: true })}
+          tabs={TABS.map((t) => (t.value === 'scans' ? { ...t, count: scans?.length } : t))} />
+      </PageHeader>
+
+      {tab === 'overview' && (
+        <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-3">
+          <div className="grid gap-4 lg:col-span-2">
+            {can('findings:read') && <OpenFindings orgId={currentOrg.id} projectId={project.id} />}
+            <Card title="Recent scans" actions={<button type="button" onClick={() => setParams({ tab: 'scans' }, { replace: true })} className="text-xs text-fg-2 hover:text-fg">View all</button>} flush>
+              {!scans ? <div className="h-32" /> : scanTable(scans.slice(0, 5))}
+            </Card>
           </div>
-        )}
-      </Panel>
-      <p className="text-xs text-grey">
-        <Link to="/dashboard/projects" className="hover:text-white">All projects</Link>
-      </p>
+          <div className="grid gap-4">
+            {can('scans:create') && <RunScan orgId={currentOrg.id} project={project} onStarted={load} />}
+          </div>
+        </div>
+      )}
+      {tab === 'scans' && <Card flush>{!scans ? <div className="h-32" /> : scanTable(scans)}</Card>}
+      {tab === 'history' && can('scans:read') && <ProjectHistory orgId={currentOrg.id} projectId={project.id} />}
+      {tab === 'settings' && settings}
     </div>
   )
 }

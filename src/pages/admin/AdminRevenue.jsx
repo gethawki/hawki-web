@@ -1,76 +1,54 @@
 import { Link } from 'react-router-dom'
+import { Coins, DollarSign, Repeat, TrendingUp } from 'lucide-react'
 import { PLAN_LABELS } from '../../data/dashboardNav.js'
 import { formatCredits } from '../../lib/credits.js'
-import Alert from '../../components/common/Alert.jsx'
-import Spinner from '../../components/common/Spinner.jsx'
-import PageHeader, { Panel } from '../../components/dashboard/PageHeader.jsx'
-import { Stat, Table, money, td, useAdmin } from '../../components/admin/bits.jsx'
+import { num, usd } from '../../lib/format.js'
+import { useApi } from '../../lib/useApi.js'
+import PageHeader from '../../components/dashboard/PageHeader.jsx'
+import Card from '../../components/ui/Card.jsx'
+import StatCard from '../../components/ui/Stat.jsx'
+import DataTable from '../../components/ui/DataTable.jsx'
+import { ErrorState, PageSkeleton } from '../../components/ui/Feedback.jsx'
+import TimeChart from '../../components/charts/TimeChart.jsx'
+import { BarList } from '../../components/charts/Small.jsx'
 
-function MonthlyBars({ months }) {
-  const max = Math.max(1, ...months.map((m) => m.cents))
-  return (
-    <div>
-      <div className="flex gap-1.5 h-40" role="img" aria-label="Payments received per month over the last 12 months">
-        {months.map((m) => (
-          <div key={m.month} className="flex-1 h-full flex flex-col justify-end items-center gap-1 min-w-0">
-            <div className="w-full rounded-t bg-steel/70" style={{ height: `${Math.max(2, (m.cents / max) * 100)}%` }} title={`${m.month}: ${money(m.cents)}`} />
-          </div>
-        ))}
-      </div>
-      <div className="mt-1 flex gap-1.5">
-        {months.map((m) => <div key={m.month} className="flex-1 text-center font-mono text-[0.55rem] text-grey truncate">{m.month.slice(5)}</div>)}
-      </div>
-    </div>
-  )
-}
+const monthLabel = (m) => new Date(`${m}-01T00:00:00Z`).toLocaleDateString(undefined, { month: 'short', timeZone: 'UTC' })
+const monthTitle = (m) => new Date(`${m}-01T00:00:00Z`).toLocaleDateString(undefined, { month: 'long', year: 'numeric', timeZone: 'UTC' })
 
 export default function AdminRevenue() {
-  const { data: r, error } = useAdmin('/api/v1/admin/revenue')
-  if (error) return <div className="max-w-6xl"><Alert>{error}</Alert></div>
-  if (!r) return <Spinner />
+  const { data: r, error } = useApi('/api/v1/admin/revenue')
+  if (error) return <ErrorState>{error}</ErrorState>
+  if (!r) return <PageSkeleton />
+  const monthly = r.monthly.map((m) => ({ label: monthLabel(m.month), title: monthTitle(m.month), paid: m.cents }))
   return (
-    <div className="max-w-6xl grid gap-6">
-      <PageHeader title="Revenue" description="Recurring revenue at list price for active, non-exempt customers, and money actually received." />
-      <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
-        <Stat label="MRR" value={money(r.mrr_cents)} note={`${r.paying_customers} paying customers`} />
-        <Stat label="ARR" value={money(r.arr_cents)} note={`${r.active_customers} active organizations`} />
-        <Stat label="Received, 30 days" value={money(r.paid_30d_cents)} note={`${money(r.paid_all_cents)} all time`} />
-        <Stat label="Credits, 30 days" value={`${formatCredits(r.credits_spent_30d_mc)} used`} note={`${formatCredits(r.credits_granted_30d_mc)} granted`} />
+    <div className="grid gap-4">
+      <PageHeader title="Revenue" description="Recurring revenue at list price for active, non-exempt customers, and the money actually received." />
+      <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+        <StatCard label="MRR" icon={Repeat} value={usd(r.mrr_cents)} sub={`${num(r.paying_customers)} paying customers`} />
+        <StatCard label="ARR" icon={TrendingUp} value={usd(r.arr_cents)} sub={`${num(r.active_customers)} active organizations`} />
+        <StatCard label="Received, 30 days" icon={DollarSign} value={usd(r.paid_30d_cents)} sub={`${usd(r.paid_all_cents)} all time`} trend={r.monthly.map((m) => m.cents)} />
+        <StatCard label="Credits used, 30 days" icon={Coins} value={formatCredits(r.credits_spent_30d_mc)} sub={`${formatCredits(r.credits_granted_30d_mc)} granted`} />
       </div>
-      <Panel title="Received per month"><MonthlyBars months={r.monthly} /></Panel>
-      <div className="grid gap-6 lg:grid-cols-3">
-        <Panel title="By plan">
-          <Table head={['Plan', 'Customers', 'MRR']}>
-            {r.by_plan.map((p) => (
-              <tr key={p.plan}>
-                <td className={td}><Link to={`/admin/customers?plan=${p.plan}`} className="text-white hover:text-steel-light">{PLAN_LABELS[p.plan] || p.plan}</Link></td>
-                <td className={td}>{p.customers}</td>
-                <td className={`${td} whitespace-nowrap`}>{money(p.mrr_cents)}</td>
-              </tr>
-            ))}
-          </Table>
-        </Panel>
-        <Panel title="By method">
-          {Object.keys(r.paid_by_method_cents).length === 0 ? <p className="text-sm text-grey">No payments yet.</p> : (
-            <ul className="grid gap-2 text-sm">
-              {Object.entries(r.paid_by_method_cents).map(([m, c]) => (
-                <li key={m} className="flex justify-between"><span className="text-[#cfcfcf]">{m.replace('_', ' ')}</span><span className="text-white">{money(c)}</span></li>
-              ))}
-            </ul>
-          )}
-        </Panel>
-        <Panel title="Top credit users, 30 days">
-          {r.top_consumers_30d.length === 0 ? <p className="text-sm text-grey">No credits used yet.</p> : (
-            <ul className="grid gap-2 text-sm">
-              {r.top_consumers_30d.map((c) => (
-                <li key={c.org_id} className="flex justify-between gap-3">
-                  <Link to={`/admin/customers/${c.org_id}`} className="truncate text-[#cfcfcf] hover:text-white">{c.name}</Link>
-                  <span className="text-white">{formatCredits(c.spent_mc)}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Panel>
+      <Card title="Received per month" description="Succeeded payments over the last 12 months">
+        <TimeChart kind="stacked" data={monthly} series={[{ key: 'paid', label: 'Received', color: 'var(--color-series-1)' }]} height={240}
+          format={(v) => usd(v)} caption="Payments received per month" />
+      </Card>
+      <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-3">
+        <Card title="By plan" flush>
+          <DataTable rows={r.by_plan} rowKey={(p) => p.plan} dense columns={[
+            { key: 'plan', header: 'Plan', cell: (p) => <Link to={`/admin/customers?plan=${p.plan}`} className="font-medium text-fg hover:underline">{PLAN_LABELS[p.plan] || p.plan}</Link> },
+            { key: 'customers', header: 'Customers', align: 'right', cell: (p) => num(p.customers) },
+            { key: 'mrr', header: 'MRR', align: 'right', cell: (p) => usd(p.mrr_cents) },
+          ]} />
+        </Card>
+        <Card title="By payment method">
+          <BarList format={(v) => usd(v)} empty="No payments yet."
+            items={Object.entries(r.paid_by_method_cents).map(([m, c]) => ({ key: m, label: m.replace('_', ' ').replace(/^\w/, (x) => x.toUpperCase()), value: c }))} />
+        </Card>
+        <Card title="Top credit users" description="Last 30 days">
+          <BarList format={formatCredits} empty="No credits used yet."
+            items={r.top_consumers_30d.map((c) => ({ key: c.org_id, label: c.name, value: c.spent_mc, href: `/admin/customers/${c.org_id}` }))} />
+        </Card>
       </div>
     </div>
   )

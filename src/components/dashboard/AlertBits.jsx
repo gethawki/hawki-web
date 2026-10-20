@@ -5,34 +5,24 @@ import { api } from '../../lib/api.js'
 import { useAuth } from '../../lib/auth.jsx'
 import { useLiveEvent } from '../../lib/live.jsx'
 import { Severity } from './ScanBits.jsx'
+import { AlertStatusBadge } from '../ui/Badge.jsx'
+import { ago } from '../../lib/format.js'
 
-const STATUS = {
-  new: 'text-copper border-copper/60',
-  acknowledged: 'text-steel border-steel/60',
-  resolved: 'text-grey border-panel-border',
-}
-
-export function AlertStatus({ status }) {
-  return (
-    <span className={`inline-flex rounded-full border px-2 py-0.5 font-mono text-[0.65rem] uppercase tracking-wider ${STATUS[status] || STATUS.resolved}`}>
-      {status}
-    </span>
-  )
-}
+export const AlertStatus = AlertStatusBadge
 
 export const AlertSeverity = ({ value }) => <Severity value={value.charAt(0).toUpperCase() + value.slice(1)} />
 
 export function AlertRow({ alert }) {
   return (
-    <Link to={`/dashboard/alerts/${alert.id}`} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 py-3 first:pt-0 last:pb-0 hover:text-white">
-      <div className="flex items-center gap-2 shrink-0">
+    <Link to={`/dashboard/alerts/${alert.id}`} className="flex flex-col gap-2 px-5 py-3 transition-colors hover:bg-surface-2/70 sm:flex-row sm:items-center sm:gap-4">
+      <div className="flex w-44 shrink-0 items-center gap-3">
         <AlertSeverity value={alert.severity} />
         <AlertStatus status={alert.status} />
       </div>
       <div className="flex-1 min-w-0">
-        <div className={`text-sm truncate ${alert.status === 'new' ? 'text-white' : 'text-[#cfcfcf]'}`}>{alert.title}</div>
-        <div className="text-xs text-grey truncate">
-          {new Date(alert.created_at).toLocaleString()}
+        <div className={`text-sm truncate ${alert.status === 'new' ? 'text-fg font-medium' : 'text-fg-2'}`}>{alert.title}</div>
+        <div className="text-xs text-fg-3 truncate">
+          {ago(alert.created_at)}
           {alert.occurrences > 1 ? ` · seen ${alert.occurrences} times` : ''}
         </div>
       </div>
@@ -54,10 +44,10 @@ export function AlertBell() {
   const label = open ? `Alerts, ${open} new` : 'Alerts'
   return (
     <Link to="/dashboard/alerts?status=new" aria-label={label} title={label}
-      className="relative grid h-9 w-9 place-items-center rounded-full border border-panel-border text-[#cfcfcf] hover:border-steel hover:text-white transition">
+      className="relative grid h-8 w-8 place-items-center rounded-lg border border-line bg-surface text-fg-2 transition hover:border-line-strong hover:text-fg">
       <Bell size={16} />
       {open > 0 && (
-        <span className="absolute -top-1 -right-1 min-w-[1.15rem] h-[1.15rem] rounded-full bg-copper px-1 text-[0.65rem] leading-[1.15rem] text-white text-center">
+        <span className="absolute -top-1.5 -right-1.5 min-w-[1.1rem] h-[1.1rem] rounded-full bg-critical px-1 text-[0.62rem] font-semibold leading-[1.1rem] text-white text-center ring-2 ring-app">
           {open > 99 ? '99+' : open}
         </span>
       )}

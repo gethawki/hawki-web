@@ -7,6 +7,7 @@ import Alert, { errorMessage } from '../common/Alert.jsx'
 import Button from '../common/Button.jsx'
 import Field from '../common/Field.jsx'
 import { Panel } from '../dashboard/PageHeader.jsx'
+import { device } from '../../lib/format.js'
 
 const fieldError = (err) => (err?.field ? err.message.replace(/^\w+: /, '') : null)
 const fmt = (iso) => new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
@@ -16,7 +17,7 @@ function RecoveryCodes({ codes }) {
   return (
     <div className="grid gap-2">
       <Alert tone="info">Save these recovery codes somewhere safe. Each works once if you lose your device. They are shown only now.</Alert>
-      <pre className="rounded-lg border border-panel-border bg-ink px-4 py-3 font-mono text-sm text-[#d9d9d9] grid grid-cols-2 gap-x-6">
+      <pre className="rounded-lg border border-line bg-surface-2 px-4 py-3 font-mono text-sm text-fg-2 grid grid-cols-2 gap-x-6">
         {codes.map((c) => <span key={c}>{c}</span>)}
       </pre>
       <div>
@@ -52,16 +53,16 @@ export function EmailPanel({ security, onChanged }) {
   return (
     <Panel title="Email">
       <form onSubmit={submit} className="grid gap-4">
-        <p className="text-sm text-grey">You sign in with <span className="text-white">{user.email}</span>. A new address is used only after you open the link we send to it.</p>
+        <p className="text-sm text-fg-3">You sign in with <span className="text-fg">{user.email}</span>. A new address is used only after you open the link we send to it.</p>
         {security?.pending_email && (
           <Alert tone="info">
             Waiting for confirmation of {security.pending_email}.{' '}
-            <button type="button" onClick={cancel} className="underline hover:text-white">Cancel the change</button>
+            <button type="button" onClick={cancel} className="underline hover:text-fg">Cancel the change</button>
           </Alert>
         )}
         {state.sent && <Alert tone="info">Check the new inbox for the confirmation link. Your current address was told too.</Alert>}
         {state.error && <Alert>{state.error}</Alert>}
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field id="email-new" label="New email" type="email" autoComplete="email" value={form.email} error={state.field.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })} />
           {security?.has_password && (
@@ -140,7 +141,7 @@ export function TwoFactorPanel({ security, onChanged }) {
         {codes && <RecoveryCodes codes={codes} />}
         {security.two_factor_enabled ? (
           <>
-            <p className="text-sm text-grey">
+            <p className="text-sm text-fg-3">
               On. Signing in needs a code from your authenticator app. {security.recovery_codes_left} recovery codes left.
             </p>
             {mode === null && (
@@ -150,7 +151,7 @@ export function TwoFactorPanel({ security, onChanged }) {
               </div>
             )}
             {mode && (
-              <div className="grid gap-4 sm:grid-cols-2 items-end">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 items-end">
                 {pw}
                 {mode === 'disable' && (
                   <Field id="tfa-off-code" label="Code or recovery code" autoComplete="one-time-code" value={code} onChange={(e) => setCode(e.target.value)} />
@@ -165,12 +166,12 @@ export function TwoFactorPanel({ security, onChanged }) {
             )}
           </>
         ) : setup ? (
-          <div className="grid gap-4 sm:grid-cols-[200px_1fr] items-start">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-[200px_1fr] items-start">
             {qr ? <img src={qr} alt="QR code to add Hawk-i to your authenticator app" width="200" height="200" className="rounded-lg bg-white" />
-              : <div className="h-[200px] w-[200px] rounded-lg border border-panel-border" />}
+              : <div className="h-[200px] w-[200px] rounded-lg border border-line" />}
             <div className="grid gap-3 min-w-0">
-              <p className="text-sm text-grey">Scan the code with an authenticator app (1Password, Google Authenticator, Authy), or enter this key:</p>
-              <code className="block break-all rounded-lg border border-panel-border bg-ink px-3 py-2 font-mono text-xs text-[#d9d9d9]">{setup.secret}</code>
+              <p className="text-sm text-fg-3">Scan the code with an authenticator app (1Password, Google Authenticator, Authy), or enter this key:</p>
+              <code className="block break-all rounded-lg border border-line bg-surface-2 px-3 py-2 font-mono text-xs text-fg-2">{setup.secret}</code>
               <Field id="tfa-code" label="Code from the app" inputMode="numeric" autoComplete="one-time-code" value={code} onChange={(e) => setCode(e.target.value)} />
               <div className="flex gap-2">
                 <Button busy={busy} onClick={enable} disabled={code.trim().length < 6}>Turn on</Button>
@@ -180,8 +181,8 @@ export function TwoFactorPanel({ security, onChanged }) {
           </div>
         ) : (
           <>
-            <p className="text-sm text-grey">Off. Add a second step to sign-in with a code from an authenticator app. Strongly recommended for admins.</p>
-            <div className="grid gap-4 sm:grid-cols-2 items-end">
+            <p className="text-sm text-fg-3">Off. Add a second step to sign-in with a code from an authenticator app. Strongly recommended for admins.</p>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 items-end">
               {pw}
               <div><Button busy={busy} onClick={start} disabled={security.has_password && !password}>Set up two-factor</Button></div>
             </div>
@@ -215,12 +216,12 @@ export function SessionsPanel() {
   return (
     <Panel title="Where you are signed in">
       {error && <div className="mb-3"><Alert>{error}</Alert></div>}
-      <ul className="divide-y divide-panel-border">
+      <ul className="divide-y divide-line">
         {sessions.map((s) => (
           <li key={s.id} className="py-3 first:pt-0 flex flex-col sm:flex-row sm:items-center gap-2">
             <div className="flex-1 min-w-0">
-              <div className="text-sm text-white truncate">{s.user_agent || 'Unknown device'}{s.current && <span className="ml-2 text-xs text-steel">this device</span>}</div>
-              <div className="text-xs text-grey">{s.ip || 'unknown address'} · signed in {fmt(s.created_at)}</div>
+              <div className="text-sm text-fg truncate"><span title={s.user_agent}>{device(s.user_agent)}</span>{s.current && <span className="ml-2 text-xs text-accent">this device</span>}</div>
+              <div className="text-xs text-fg-3">{s.ip || 'unknown address'} · signed in {fmt(s.created_at)}</div>
             </div>
             {!s.current && <Button variant="ghost" className="py-1.5" onClick={() => act(`/api/v1/me/sessions/${s.id}`, 'DELETE')}>Sign out</Button>}
           </li>
@@ -259,12 +260,12 @@ export function DeleteAccountPanel({ security }) {
   return (
     <Panel title="Delete account">
       <div className="grid gap-4">
-        <p className="text-sm text-grey">Deletes your account and every organization where you are the only member, with their projects, scans and reports. This cannot be undone.</p>
+        <p className="text-sm text-fg-3">Deletes your account and every organization where you are the only member, with their projects, scans and reports. This cannot be undone.</p>
         {error && <Alert>{error}</Alert>}
         {!open ? (
           <div><Button variant="danger" onClick={() => setOpen(true)}>Delete my account</Button></div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 items-end">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 items-end">
             {security?.has_password && (
               <Field id="del-password" label="Current password" type="password" autoComplete="current-password" value={form.password}
                 onChange={(e) => setForm({ ...form, password: e.target.value })} />

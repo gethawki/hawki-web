@@ -13,7 +13,7 @@
 // greyed out to users who will be able to open them.
 import {
   Bell, Building2, CreditCard, Crosshair, FileText, History, Power, Receipt, TrendingUp, UserCog, FolderGit2, KeyRound, LayoutDashboard, Radar, ScanLine, ScrollText,
-  Settings, ShieldAlert, ShieldCheck, User, Users,
+  Settings, ShieldAlert, User, Users,
 } from 'lucide-react'
 
 export const DASHBOARD_NAV = [
@@ -44,14 +44,29 @@ export const DASHBOARD_NAV = [
     title: 'Account',
     links: [{ to: '/dashboard/profile', label: 'Profile', icon: User }],
   },
+]
+
+// The admin console is its own mode with its own sidebar, so staff powers
+// never mix with a customer's workspace navigation.
+export const ADMIN_NAV = [
   {
     title: 'Platform',
     links: [
-      { to: '/admin', label: 'Platform overview', icon: ShieldCheck, end: true, access: { platformAdmin: true } },
+      { to: '/admin', label: 'Overview', icon: LayoutDashboard, end: true, access: { platformAdmin: true } },
       { to: '/admin/users', label: 'Users', icon: UserCog, access: { platformAdmin: true } },
       { to: '/admin/customers', label: 'Customers', icon: Building2, access: { platformAdmin: true } },
-      { to: '/admin/payments', label: 'Payments', icon: Receipt, access: { platformAdmin: true } },
+    ],
+  },
+  {
+    title: 'Revenue',
+    links: [
       { to: '/admin/revenue', label: 'Revenue', icon: TrendingUp, access: { platformAdmin: true } },
+      { to: '/admin/payments', label: 'Payments', icon: Receipt, access: { platformAdmin: true } },
+    ],
+  },
+  {
+    title: 'Safety',
+    links: [
       { to: '/admin/audit', label: 'Platform audit', icon: History, access: { platformAdmin: true } },
       { to: '/admin/switches', label: 'Emergency switches', icon: Power, access: { platformAdmin: true } },
     ],
@@ -117,7 +132,7 @@ export const PLAN_LABELS = {
 // accessFor returns the access rule of the nav entry for a route, so the
 // route guards in App.jsx and the sidebar can never disagree.
 export function accessFor(to) {
-  for (const section of DASHBOARD_NAV) {
+  for (const section of [...DASHBOARD_NAV, ...ADMIN_NAV]) {
     const link = section.links.find((l) => l.to === to)
     if (link) return link.access
   }

@@ -6,9 +6,11 @@ import { useRefresh } from '../../lib/live.jsx'
 import { ALERT_SEVERITIES, ALERT_STATUSES, ALERT_TYPES } from '../../data/dashboardNav.js'
 import Alert, { errorMessage } from '../../components/common/Alert.jsx'
 import Button from '../../components/common/Button.jsx'
-import { SelectField } from '../../components/common/Field.jsx'
-import Spinner from '../../components/common/Spinner.jsx'
-import PageHeader, { Panel } from '../../components/dashboard/PageHeader.jsx'
+import { BellOff } from 'lucide-react'
+import Card from '../../components/ui/Card.jsx'
+import { FilterSelect, Toolbar } from '../../components/ui/Controls.jsx'
+import { EmptyState } from '../../components/ui/Feedback.jsx'
+import PageHeader from '../../components/dashboard/PageHeader.jsx'
 import { AlertRow } from '../../components/dashboard/AlertBits.jsx'
 
 const PAGE = 50
@@ -63,40 +65,35 @@ export default function Alerts() {
   }
 
   return (
-    <div className="max-w-5xl grid gap-6">
+    <div className="grid gap-6">
       <PageHeader
         title="Alerts"
         description="What needs attention across your projects. Alerts also go to the channels you set up."
         actions={
           <div className="flex flex-wrap gap-2">
             {can('alerts:update') && open > 0 && (
-              <Button variant="ghost" onClick={acknowledgeAll} busy={busy}>Acknowledge all ({open})</Button>
+              <Button variant="ghost" size="sm" onClick={acknowledgeAll} busy={busy}>Acknowledge all ({open})</Button>
             )}
-            {can('settings:read') && <Button variant="ghost" to="/dashboard/alerts/channels">Channels</Button>}
+            {can('settings:read') && <Button variant="ghost" size="sm" to="/dashboard/alerts/channels">Channels</Button>}
           </div>
         }
       />
       {error && <Alert>{error}</Alert>}
-      <div className="grid gap-3 sm:grid-cols-3">
-        <SelectField id="alert-status" label="Status" value={filters.status} onChange={(e) => setFilter('status', e.target.value)}
-          options={[...any('Any status'), ...ALERT_STATUSES]} />
-        <SelectField id="alert-severity" label="Severity" value={filters.severity} onChange={(e) => setFilter('severity', e.target.value)}
-          options={[...any('Any severity'), ...ALERT_SEVERITIES]} />
-        <SelectField id="alert-type" label="Source" value={filters.type} onChange={(e) => setFilter('type', e.target.value)}
-          options={[...any('Any source'), ...ALERT_TYPES]} />
-      </div>
-      <Panel>
-        {!alerts ? <Spinner /> : alerts.length === 0 ? (
-          <p className="text-sm text-grey">{query ? 'No alerts match these filters.' : 'No alerts yet. Finished scans raise one here.'}</p>
+      <Toolbar>
+        <FilterSelect id="alert-status" label="Status" value={filters.status} onChange={(v) => setFilter('status', v)} options={[...any('Any status'), ...ALERT_STATUSES]} />
+        <FilterSelect id="alert-severity" label="Severity" value={filters.severity} onChange={(v) => setFilter('severity', v)} options={[...any('Any severity'), ...ALERT_SEVERITIES]} />
+        <FilterSelect id="alert-type" label="Source" value={filters.type} onChange={(v) => setFilter('type', v)} options={[...any('Any source'), ...ALERT_TYPES]} />
+      </Toolbar>
+      <Card flush>
+        {!alerts ? <div className="h-40" /> : alerts.length === 0 ? (
+          <EmptyState icon={BellOff} title={query ? 'No alerts match' : 'No alerts yet'}>{query ? 'Try other filters.' : 'Finished scans and billing events raise alerts here.'}</EmptyState>
         ) : (
           <>
-            <div className="divide-y divide-panel-border">{alerts.map((a) => <AlertRow key={a.id} alert={a} />)}</div>
-            {next > 0 && (
-              <div className="mt-4"><Button variant="ghost" onClick={() => load(next)}>Load more</Button></div>
-            )}
+            <div className="divide-y divide-line">{alerts.map((a) => <AlertRow key={a.id} alert={a} />)}</div>
+            {next > 0 && <div className="border-t border-line px-5 py-3"><Button variant="ghost" size="sm" onClick={() => load(next)}>Load more</Button></div>}
           </>
         )}
-      </Panel>
+      </Card>
     </div>
   )
 }

@@ -56,14 +56,22 @@ src/
                 StatusBanner
     auth/       AuthLayout (sign-in frame with the site navbar), OAuthButtons,
                 RouteGuards (RequireAuth, GuestOnly, RequireAccess)
-    dashboard/  DashboardLayout (sidebar from data/dashboardNav.js), PageHeader,
-                ScanBits (scan status, severity, scan rows)
+    dashboard/  DashboardLayout (workspace and admin shells, top bar with
+                breadcrumbs), CommandPalette (Ctrl or Cmd + K), PageHeader,
+                ScanBits, AlertBits
+    ui/         dashboard primitives: Card, StatCard and Delta, DataTable and
+                Pager, Badge (severity, scan, finding, alert), Controls (range,
+                tabs, search, filter row), Menu, Modal, empty and loading states
+    charts/     TimeChart (daily lines or stacked columns with tooltips and a
+                screen reader table), Sparkline, BarList, SeverityBar, Meter
     account/    Security (email change, two-factor, sessions, account deletion)
     admin/      shared admin bits (tables, stats, reason forms), PaymentForm
   data/         links.js, product.js, docsNav.js, changelogNav.js,
                 dashboardNav.js (dashboard sections and who may open them), seo.js
   lib/          api.js (Hawk-i Cloud API client), auth.jsx (session for the whole
-                site), access.js (access rule checks)
+                site), access.js (access rule checks), useApi.js (GET with
+                stale-while-loading), format.js (numbers, money, dates, devices),
+                dashboard.js (posture score, scan duration), crumbs.jsx
   pages/        Home, Docs, Changelog, NotFound
     auth/       Login (with the two-factor step), Signup, ForgotPassword,
                 ResetPassword, VerifyEmail, ConfirmEmail, AcceptInvite
@@ -103,6 +111,17 @@ API.
 - **Routes.** Public: `/`, `/docs`, `/changelog`. Sign-in: `/login`,
   `/signup`, `/forgot-password`, `/reset-password`, `/verify-email`,
   `/invite`, `/confirm-email`. Signed in: `/dashboard/*`, `/admin/*`.
+- **Look and feel.** The dashboards use their own tokens in `src/index.css`
+  (`--color-surface`, `--color-fg`, `--color-line`, severity and chart
+  series colors) on an `.app-root` scope, sans headings and dense tables;
+  the marketing site keeps its own type and palette. Chart colors were
+  checked for color-blind separation and contrast on the dark surface;
+  severity is a single red ramp, brightest for critical.
+- **Two modes.** `/dashboard` is the workspace with an organization switcher
+  and credit meter. `/admin` is a separate mode for platform admins with its
+  own sidebar (`ADMIN_NAV`), an amber edge and an Admin badge, so staff
+  always know when they act on the whole platform. Customers never see it;
+  staff reach it from the sidebar, the account menu or the command palette.
 - **Platform console.** `/admin` is the owner's view: platform overview,
   users (suspend, role, password reset, sign out, two-factor reset),
   customers (plan, credits, exemption, notes, tags, payments), payments,

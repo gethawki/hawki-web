@@ -1,14 +1,23 @@
-import { useCallback, useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { FolderGit2 } from 'lucide-react'
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { FolderGit2, Plus } from 'lucide-react'
 import { api } from '../../lib/api.js'
 import { useAuth } from '../../lib/auth.jsx'
+import { useApi } from '../../lib/useApi.js'
+import { useRefresh } from '../../lib/live.jsx'
+import { ago } from '../../lib/format.js'
+import { projectSource } from '../../lib/dashboard.js'
 import Alert, { errorMessage } from '../../components/common/Alert.jsx'
 import Button from '../../components/common/Button.jsx'
 import Field, { SelectField } from '../../components/common/Field.jsx'
-import Spinner from '../../components/common/Spinner.jsx'
-import PageHeader, { Panel } from '../../components/dashboard/PageHeader.jsx'
-import { ScanStatus, SeverityCounts } from '../../components/dashboard/ScanBits.jsx'
+import PageHeader from '../../components/dashboard/PageHeader.jsx'
+import { SeverityCounts } from '../../components/dashboard/ScanBits.jsx'
+import Card from '../../components/ui/Card.jsx'
+import Badge, { ScanStatusBadge } from '../../components/ui/Badge.jsx'
+import DataTable from '../../components/ui/DataTable.jsx'
+import Modal from '../../components/ui/Modal.jsx'
+import { SearchInput, Toolbar } from '../../components/ui/Controls.jsx'
+import { EmptyState, ErrorState } from '../../components/ui/Feedback.jsx'
 
 const EMPTY = { name: '', repository_url: '', default_ref: '', chain: '', contract_address: '' }
 
@@ -35,94 +44,78 @@ function NewProject({ orgId, chains, onCreated, onCancel }) {
   }
 
   return (
-    <Panel title="New project">
-      <form onSubmit={submit} className="grid gap-4">
-        {error && <Alert>{error}</Alert>}
-        <Field id="p-name" label="Name" value={form.name} error={fieldErrors.name} onChange={set('name')} />
-        <div className="grid gap-4 sm:grid-cols-[1fr_12rem]">
-          <Field id="p-repo" label="Repository" placeholder="https://github.com/acme/contracts" value={form.repository_url}
-            error={fieldErrors.repository_url} hint="Public https Git URL." onChange={set('repository_url')} />
-          <Field id="p-ref" label="Branch or tag" placeholder="default branch" value={form.default_ref} error={fieldErrors.default_ref} onChange={set('default_ref')} />
-        </div>
-        <div className="grid gap-4 sm:grid-cols-[12rem_1fr]">
-          <SelectField id="p-chain" label="Chain" value={form.chain} error={fieldErrors.chain} onChange={set('chain')}
-            options={[{ value: '', label: 'None' }, ...chains.map((c) => ({ value: c, label: c }))]} />
-          <Field id="p-address" label="Deployed contract (optional)" placeholder="0x..." value={form.contract_address}
-            error={fieldErrors.contract_address} onChange={set('contract_address')} />
-        </div>
-        <div className="flex gap-2">
-          <Button type="submit" busy={busy}>Create project</Button>
-          <Button type="button" variant="ghost" onClick={onCancel}>Cancel</Button>
-        </div>
-      </form>
-    </Panel>
+    <form onSubmit={submit} className="grid gap-4">
+      {error && <Alert>{error}</Alert>}
+      <Field id="p-name" label="Name" value={form.name} error={fieldErrors.name} onChange={set('name')} />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_12rem]">
+        <Field id="p-repo" label="Repository" placeholder="https://github.com/acme/contracts" value={form.repository_url}
+          error={fieldErrors.repository_url} hint="Public https Git URL." onChange={set('repository_url')} />
+        <Field id="p-ref" label="Branch or tag" placeholder="default branch" value={form.default_ref} error={fieldErrors.default_ref} onChange={set('default_ref')} />
+      </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-[12rem_1fr]">
+        <SelectField id="p-chain" label="Chain" value={form.chain} error={fieldErrors.chain} onChange={set('chain')}
+          options={[{ value: '', label: 'None' }, ...chains.map((c) => ({ value: c, label: c }))]} />
+        <Field id="p-address" label="Deployed contract (optional)" placeholder="0x..." value={form.contract_address}
+          error={fieldErrors.contract_address} onChange={set('contract_address')} />
+      </div>
+      <div className="flex justify-end gap-2 border-t border-line pt-4">
+        <Button type="button" variant="ghost" onClick={onCancel}>Cancel</Button>
+        <Button type="submit" busy={busy}>Create project</Button>
+      </div>
+    </form>
   )
 }
 
+const FREQ = { daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly' }
+
 export default function Projects() {
   const { currentOrg, can } = useAuth()
-  const [data, setData] = useState(null)
+  const navigate = useNavigate()
+  const { data, error, loading, reload } = useApi(`/api/v1/orgs/${currentOrg.id}/projects`)
+  useRefresh(['scan.updated'], reload)
   const [creating, setCreating] = useState(false)
-  const [error, setError] = useState(null)
-
-  const load = useCallback(async () => {
-    try {
-      setData(await api(`/api/v1/orgs/${currentOrg.id}/projects`))
-    } catch (err) {
-      setError(errorMessage(err))
-    }
-  }, [currentOrg.id])
-
-  useEffect(() => {
-    load()
-  }, [load])
+  const [q, setQ] = useState('')
+  const needle = q.trim().toLowerCase()
+  const rows = data?.projects.filter((p) => !needle || `${p.name} ${projectSource(p)}`.toLowerCase().includes(needle))
 
   return (
-    <div className="max-w-5xl grid gap-6">
+    <div>
       <PageHeader
         title="Projects"
         description="A project is a codebase or deployed contract you scan over time. Findings are tracked per project across scans."
-        actions={can('projects:write') && !creating && <Button onClick={() => setCreating(true)}>New project</Button>}
+        meta={data && <span>{data.projects.length} {data.projects.length === 1 ? 'project' : 'projects'}</span>}
+        actions={can('projects:write') && <Button size="sm" onClick={() => setCreating(true)}><Plus size={14} /> New project</Button>}
       />
-      {error && <Alert>{error}</Alert>}
-      {creating && data && (
-        <NewProject orgId={currentOrg.id} chains={data.chains} onCancel={() => setCreating(false)}
-          onCreated={() => { setCreating(false); load() }} />
-      )}
-      {!data ? (
-        <Spinner />
-      ) : data.projects.length === 0 ? (
-        <Panel>
-          <div className="flex flex-col items-center text-center py-6">
-            <FolderGit2 className="text-steel mb-3" size={28} strokeWidth={1.5} />
-            <p className="text-white">No projects yet</p>
-            <p className="mt-1 text-sm text-grey max-w-md">Add a repository or a deployed contract to run your first cloud scan.</p>
-          </div>
-        </Panel>
-      ) : (
-        <Panel>
-          <ul className="divide-y divide-panel-border">
-            {data.projects.map((p) => (
-              <li key={p.id}>
-                <Link to={`/dashboard/projects/${p.id}`} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 py-3.5 hover:text-white">
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm text-white truncate">{p.name}</div>
-                    <div className="text-xs text-grey truncate">{p.repository_url || `${p.chain} ${p.contract_address}`}</div>
+      <div className="grid gap-4">
+        <Toolbar>
+          <SearchInput className="w-full sm:w-72" value={q} onChange={setQ} placeholder="Search projects" />
+        </Toolbar>
+        {error && <ErrorState onRetry={reload}>{error}</ErrorState>}
+        <Card flush>
+          <DataTable rows={rows} loading={loading} rowHref={(p) => `/dashboard/projects/${p.id}`}
+            empty={<EmptyState icon={FolderGit2} title={needle ? 'No projects match' : 'No projects yet'}
+              action={!needle && can('projects:write') && <Button size="sm" onClick={() => setCreating(true)}><Plus size={14} /> New project</Button>}>
+              {needle ? 'Try another search.' : 'Add a repository or a deployed contract to run your first cloud scan.'}</EmptyState>}
+            columns={[
+              {
+                key: 'name', header: 'Project', cell: (p) => (
+                  <div className="min-w-0">
+                    <Link to={`/dashboard/projects/${p.id}`} className="font-medium text-fg hover:underline">{p.name}</Link>
+                    <div className="max-w-[22rem] truncate text-xs text-fg-3">{projectSource(p)}</div>
                   </div>
-                  {p.last_scan ? (
-                    <div className="flex items-center gap-3">
-                      {p.last_scan.status === 'completed' && <SeverityCounts summary={p.last_scan.summary} />}
-                      <ScanStatus status={p.last_scan.status} />
-                    </div>
-                  ) : (
-                    <span className="text-xs text-grey">not scanned yet</span>
-                  )}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </Panel>
-      )}
+                ),
+              },
+              { key: 'status', header: 'Last scan', cell: (p) => p.last_scan ? <ScanStatusBadge status={p.last_scan.status} /> : <span className="text-xs text-fg-3">Not scanned</span> },
+              { key: 'result', header: 'Findings in last scan', hide: 'md', cell: (p) => p.last_scan?.status === 'completed' ? <SeverityCounts summary={p.last_scan.summary} /> : <span className="text-xs text-fg-3">-</span> },
+              { key: 'schedule', header: 'Schedule', hide: 'lg', cell: (p) => FREQ[p.scan_frequency] ? <Badge tone="accent">{FREQ[p.scan_frequency]}</Badge> : <span className="text-xs text-fg-3">Manual</span> },
+              { key: 'when', header: 'Scanned', align: 'right', cell: (p) => <span className="text-fg-3">{p.last_scan ? ago(p.last_scan.created_at) : '-'}</span> },
+            ]} />
+        </Card>
+      </div>
+      <Modal open={creating} onClose={() => setCreating(false)} title="New project" description="A public https Git repository, a deployed contract, or both.">
+        {data && <NewProject orgId={currentOrg.id} chains={data.chains} onCancel={() => setCreating(false)}
+          onCreated={(p) => { setCreating(false); navigate(`/dashboard/projects/${p.id}`) }} />}
+      </Modal>
     </div>
   )
 }

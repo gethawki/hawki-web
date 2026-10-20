@@ -1,53 +1,74 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
-import { LogOut, Menu, X } from 'lucide-react'
-import { DASHBOARD_NAV } from '../../data/dashboardNav.js'
+import {
+  ArrowLeft, BookOpen, Check, ChevronsUpDown, LogOut, Menu as MenuIcon, PanelLeftClose, PanelLeftOpen, Search, Settings, ShieldCheck, User, X,
+} from 'lucide-react'
+import { ADMIN_NAV, DASHBOARD_NAV, PLAN_LABELS, ROLE_LABELS } from '../../data/dashboardNav.js'
 import { useAuth } from '../../lib/auth.jsx'
-import { LiveProvider } from '../../lib/live.jsx'
-import { AlertBell } from './AlertBits.jsx'
-import StatusBanner from '../common/StatusBanner.jsx'
+import { LiveProvider, useLive, useLiveEvent } from '../../lib/live.jsx'
+import { CrumbProvider, useCrumbs } from '../../lib/crumbs.jsx'
+import { api } from '../../lib/api.js'
+import { formatCredits } from '../../lib/credits.js'
+import { initials } from '../../lib/format.js'
 import { hasAccess } from '../../lib/access.js'
-import Logo from '../common/Logo.jsx'
+import { AlertBell } from './AlertBits.jsx'
+import CommandPalette from './CommandPalette.jsx'
+import StatusBanner from '../common/StatusBanner.jsx'
+import Menu, { MenuDivider, MenuLabel, menuItem } from '../ui/Menu.jsx'
+import Badge, { Kbd } from '../ui/Badge.jsx'
+import { Meter } from '../charts/Small.jsx'
 
-// DashboardLayout is the signed-in counterpart of DocsLayout: a docked
-// sidebar (drawer on mobile) built from data/dashboardNav.js and filtered to
-// what the user may open, plus a top bar with the account menu.
-function SidebarNav({ onNavigate }) {
+// DashboardLayout is the signed-in shell. The workspace (/dashboard) and the
+// staff-only admin console (/admin) are two modes with their own sidebars;
+// the admin mode is marked in the sidebar, the top bar and the page edge so
+// staff always know when they are acting on the whole platform.
+
+const COLLAPSE_KEY = 'hawki.sidebar.collapsed'
+const readCollapsed = () => {
+  try {
+    return localStorage.getItem(COLLAPSE_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+function NavItem({ link, collapsed, onNavigate, staff }) {
+  const { to, label, icon: Icon, end, soon } = link
+  if (soon) {
+    return (
+      <span className="flex items-center gap-3 rounded-lg px-2.5 py-[7px] text-sm text-fg-3/70" aria-disabled="true" title={collapsed ? `${label} (soon)` : undefined}>
+        <Icon size={16} className="shrink-0" />
+        {!collapsed && <><span className="truncate">{label}</span><span className="ml-auto text-[0.62rem] uppercase tracking-wider">soon</span></>}
+      </span>
+    )
+  }
+  return (
+    <NavLink to={to} end={end} onClick={onNavigate} title={collapsed ? label : undefined}
+      className={({ isActive }) => `group relative flex items-center gap-3 rounded-lg px-2.5 py-[7px] text-sm transition ${
+        isActive ? 'bg-surface-3 text-fg' : 'text-fg-2 hover:bg-surface-2 hover:text-fg'}`}>
+      {({ isActive }) => (
+        <>
+          {isActive && <span className={`absolute left-0 top-1.5 bottom-1.5 w-[2px] rounded-full ${staff ? 'bg-staff' : 'bg-accent'}`} />}
+          <Icon size={16} className={`shrink-0 ${isActive ? (staff ? 'text-staff' : 'text-accent') : ''}`} />
+          {!collapsed && <span className="truncate">{label}</span>}
+        </>
+      )}
+    </NavLink>
+  )
+}
+
+function NavSections({ sections, collapsed, onNavigate, staff }) {
   const auth = useAuth()
   return (
-    <nav aria-label="Dashboard" className="grid gap-5">
-      {DASHBOARD_NAV.map((section) => {
+    <nav aria-label={staff ? 'Admin console' : 'Workspace'} className="grid gap-5">
+      {sections.map((section) => {
         const links = section.links.filter((l) => hasAccess(auth, l.access))
         if (links.length === 0) return null
         return (
           <div key={section.title}>
-            <div className="px-3 mb-1.5 font-mono text-[0.62rem] uppercase tracking-[0.15em] text-grey">{section.title}</div>
-            <ul className="grid gap-0.5">
-              {links.map(({ to, label, icon: Icon, end, soon }) => (
-                <li key={label}>
-                  {soon ? (
-                    <span className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-grey/70" aria-disabled="true">
-                      <Icon size={16} />
-                      {label}
-                      <span className="ml-auto font-mono text-[0.6rem] uppercase tracking-wider text-grey/60">soon</span>
-                    </span>
-                  ) : (
-                    <NavLink
-                      to={to}
-                      end={end}
-                      onClick={onNavigate}
-                      className={({ isActive }) =>
-                        `flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition ${
-                          isActive ? 'bg-steel/15 text-white' : 'text-[#bdbdbd] hover:bg-panel hover:text-white'
-                        }`
-                      }
-                    >
-                      <Icon size={16} />
-                      {label}
-                    </NavLink>
-                  )}
-                </li>
-              ))}
+            {!collapsed && <div className="mb-1 px-2.5 text-[0.7rem] font-medium text-fg-3">{section.title}</div>}
+            <ul className="grid gap-px">
+              {links.map((l) => <li key={l.label}><NavItem link={l} collapsed={collapsed} onNavigate={onNavigate} staff={staff} /></li>)}
             </ul>
           </div>
         )
@@ -56,121 +77,263 @@ function SidebarNav({ onNavigate }) {
   )
 }
 
-function OrgSwitcher() {
-  const { orgs, currentOrg, selectOrg } = useAuth()
+function OrgAvatar({ name, size = 'h-7 w-7' }) {
+  return <span className={`grid ${size} shrink-0 place-items-center rounded-md bg-gradient-to-br from-steel to-steel-dark text-[0.65rem] font-semibold text-white`}>{initials(name)}</span>
+}
+
+function WorkspaceSwitcher({ collapsed }) {
+  const { orgs, currentOrg, selectOrg, can } = useAuth()
   if (!currentOrg) return null
   return (
-    <label className="block">
-      <span className="sr-only">Organization</span>
-      <select
-        value={currentOrg.id}
-        onChange={(e) => selectOrg(e.target.value)}
-        className="w-full rounded-lg bg-ink border border-panel-border px-3 py-2 text-sm text-white outline-none focus:border-steel"
-      >
-        {orgs.map((o) => (
-          <option key={o.id} value={o.id}>
-            {o.name}
-          </option>
-        ))}
-      </select>
-    </label>
+    <Menu align="left" width="w-64" label="Switch organization" trigger={({ toggle, props }) => (
+      <button type="button" onClick={toggle} {...props}
+        className={`flex w-full items-center gap-2.5 rounded-lg border border-line bg-surface px-2 py-1.5 text-left transition hover:border-line-strong ${collapsed ? 'justify-center px-1' : ''}`}>
+        <OrgAvatar name={currentOrg.name} />
+        {!collapsed && (
+          <>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm font-medium text-fg">{currentOrg.name}</span>
+              <span className="block truncate text-[0.7rem] text-fg-3">{PLAN_LABELS[currentOrg.plan] || currentOrg.plan} · {ROLE_LABELS[currentOrg.role] || currentOrg.role}</span>
+            </span>
+            <ChevronsUpDown size={14} className="text-fg-3" />
+          </>
+        )}
+      </button>
+    )}>
+      <MenuLabel>Organizations</MenuLabel>
+      {orgs.map((o) => (
+        <button key={o.id} type="button" role="menuitem" onClick={() => selectOrg(o.id)} className={menuItem}>
+          <OrgAvatar name={o.name} size="h-6 w-6" />
+          <span className="min-w-0 flex-1 truncate">{o.name}</span>
+          {o.id === currentOrg.id && <Check size={14} className="text-accent" />}
+        </button>
+      ))}
+      {can('settings:read') && (
+        <>
+          <MenuDivider />
+          <Link role="menuitem" to="/dashboard/settings" className={menuItem}><Settings size={15} /> Organization settings</Link>
+        </>
+      )}
+    </Menu>
   )
 }
 
-function Sidebar({ onNavigate }) {
+// Usage shows credits left this period, or that the organization is never
+// charged.
+function Usage() {
+  const { currentOrg, can } = useAuth()
+  const [b, setB] = useState(null)
+  const [v, setV] = useState(0)
+  useLiveEvent(['billing.updated'], () => setV((x) => x + 1))
+  const ok = Boolean(currentOrg) && can('billing:read')
+  useEffect(() => {
+    if (!ok) return
+    api(`/api/v1/orgs/${currentOrg.id}/billing`).then(setB).catch(() => setB(null))
+  }, [ok, currentOrg?.id, v])
+  if (!ok || !b) return null
+  const plan = (b.plan?.monthly_credits || 0) * 1000
   return (
-    <div className="flex h-full flex-col gap-6 overflow-y-auto p-4">
-      <div className="px-1 pt-1">
-        <Logo badge="Cloud" />
+    <Link to="/dashboard/billing" className="block rounded-lg border border-line bg-surface px-3 py-2.5 transition hover:border-line-strong">
+      <div className="flex items-center justify-between text-xs">
+        <span className="text-fg-3">Credits</span>
+        {b.exempt ? <Badge tone="good">Unlimited</Badge> : <span className="tnum text-fg">{formatCredits(b.total_remaining_mc)} left</span>}
       </div>
-      <OrgSwitcher />
-      <SidebarNav onNavigate={onNavigate} />
-      <div className="mt-auto px-3 pt-4 text-xs text-grey">
-        <Link to="/docs" className="hover:text-white">Docs</Link>
-        <span className="mx-2 text-panel-border">/</span>
-        <Link to="/" className="hover:text-white">gethawki.com</Link>
+      {!b.exempt && plan > 0 && <div className="mt-2"><Meter value={b.monthly_remaining_mc} max={plan} invert label="Plan credits left this period" /></div>}
+      <div className="mt-1.5 text-[0.7rem] text-fg-3">{b.exempt ? 'Exempt from billing' : `${b.plan?.name || ''} plan`}</div>
+    </Link>
+  )
+}
+
+function Sidebar({ staff, collapsed, onToggle, onNavigate }) {
+  const auth = useAuth()
+  return (
+    <div className="flex h-full flex-col">
+      <div className={`flex h-14 shrink-0 items-center gap-2 border-b border-line px-4 ${collapsed ? 'justify-center px-2' : ''}`}>
+        <Link to={staff ? '/admin' : '/dashboard'} className="flex items-center gap-2" onClick={onNavigate}>
+          <span className="h-2 w-2 rounded-full bg-steel" />
+          {!collapsed && <span className="font-display text-lg text-white tracking-tight">Hawk<span className="text-steel italic">i</span></span>}
+        </Link>
+        {!collapsed && (staff ? <Badge tone="staff">Admin</Badge> : <span className="text-[0.7rem] text-fg-3">Cloud</span>)}
+      </div>
+
+      <div className={`flex-1 overflow-y-auto scrollbar-thin ${collapsed ? 'px-2' : 'px-3'} py-4 grid grid-cols-1 content-start gap-5 [&>*]:min-w-0`}>
+        {staff ? (
+          <>
+            {!collapsed && (
+              <div className="rounded-lg border border-staff/30 bg-staff/[0.06] px-3 py-2.5 text-xs text-fg-2">
+                <div className="flex items-center gap-1.5 font-medium text-staff"><ShieldCheck size={13} /> Platform admin</div>
+                <p className="mt-1 text-fg-3">Actions here affect every customer and are audited.</p>
+              </div>
+            )}
+            <NavSections sections={ADMIN_NAV} collapsed={collapsed} onNavigate={onNavigate} staff />
+          </>
+        ) : (
+          <>
+            <WorkspaceSwitcher collapsed={collapsed} />
+            <NavSections sections={DASHBOARD_NAV} collapsed={collapsed} onNavigate={onNavigate} />
+          </>
+        )}
+      </div>
+
+      <div className={`grid gap-2 border-t border-line ${collapsed ? 'p-2' : 'p-3'}`}>
+        {!staff && !collapsed && <Usage />}
+        {auth.isPlatformAdmin && (
+          <Link to={staff ? '/dashboard' : '/admin'} onClick={onNavigate} title={collapsed ? (staff ? 'Back to workspace' : 'Admin console') : undefined}
+            className={`flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition ${staff ? 'text-fg-2 hover:bg-surface-2 hover:text-fg' : 'text-staff hover:bg-staff/10'} ${collapsed ? 'justify-center' : ''}`}>
+            {staff ? <ArrowLeft size={16} /> : <ShieldCheck size={16} />}
+            {!collapsed && (staff ? 'Back to workspace' : 'Admin console')}
+          </Link>
+        )}
+        {onToggle && (
+          <button type="button" onClick={onToggle} aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            className={`flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-fg-3 transition hover:bg-surface-2 hover:text-fg ${collapsed ? 'justify-center' : ''}`}>
+            {collapsed ? <PanelLeftOpen size={16} /> : <><PanelLeftClose size={16} /> Collapse</>}
+          </button>
+        )}
       </div>
     </div>
+  )
+}
+
+function Breadcrumbs({ staff }) {
+  const { pathname } = useLocation()
+  const { detail } = useCrumbs()
+  const all = (staff ? ADMIN_NAV : DASHBOARD_NAV).flatMap((s) => s.links.filter((l) => l.to).map((l) => ({ ...l, section: s.title })))
+  const match = all.filter((l) => (l.end ? pathname === l.to : pathname === l.to || pathname.startsWith(`${l.to}/`)))
+    .sort((a, b) => b.to.length - a.to.length)[0]
+  const crumbs = [staff ? 'Admin' : 'Workspace']
+  if (match) crumbs.push(match.section !== crumbs[0] && match.section !== 'Platform' ? match.section : null, match)
+  if (detail && match && pathname !== match.to) crumbs.push(detail)
+  const shown = crumbs.filter(Boolean)
+  return (
+    <nav aria-label="Breadcrumb" className="min-w-0">
+      <ol className="flex min-w-0 items-center gap-1.5 text-sm">
+        {shown.map((c, i) => {
+          const last = i === shown.length - 1
+          const label = typeof c === 'string' ? c : c.label
+          return (
+            <li key={i} className={`flex min-w-0 items-center gap-1.5 ${i < shown.length - 2 ? 'hidden md:flex' : ''}`}>
+              {i > 0 && <span className="text-fg-3/60">/</span>}
+              {typeof c !== 'string' && !last
+                ? <Link to={c.to} className="truncate text-fg-3 hover:text-fg">{label}</Link>
+                : <span className={`truncate ${last ? 'text-fg' : 'text-fg-3'}`} aria-current={last ? 'page' : undefined}>{label}</span>}
+            </li>
+          )
+        })}
+      </ol>
+    </nav>
+  )
+}
+
+function LiveDot() {
+  const { connected } = useLive()
+  return (
+    <span className="hidden items-center gap-1.5 text-xs text-fg-3 md:inline-flex" title={connected ? 'Live updates on' : 'Live updates reconnecting'}>
+      <span className={`h-1.5 w-1.5 rounded-full ${connected ? 'bg-good' : 'bg-fg-3'}`} />
+      {connected ? 'Live' : 'Offline'}
+    </span>
   )
 }
 
 function UserMenu() {
-  const { user, logout } = useAuth()
-  const [open, setOpen] = useState(false)
-  const initials = (user.name || user.email).split(/\s+/).map((p) => p[0]).join('').slice(0, 2).toUpperCase()
+  const { user, logout, isPlatformAdmin } = useAuth()
   return (
-    <div className="relative">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-2.5 rounded-full border border-panel-border pl-1 pr-3 py-1 hover:border-steel transition"
-        aria-haspopup="menu"
-        aria-expanded={open}
-      >
-        <span className="grid h-7 w-7 place-items-center rounded-full bg-steel-dark text-xs font-medium text-white">{initials}</span>
-        <span className="hidden sm:block max-w-[12rem] truncate text-sm text-[#cfcfcf]">{user.name || user.email}</span>
+    <Menu label="Account" trigger={({ toggle, props }) => (
+      <button type="button" onClick={toggle} {...props} className="grid h-8 w-8 place-items-center rounded-full bg-surface-3 text-[0.7rem] font-semibold text-fg ring-1 ring-line-strong transition hover:ring-accent/60">
+        {initials(user.name || user.email)}
       </button>
-      {open && (
-        <div role="menu" className="absolute right-0 mt-2 w-64 rounded-xl border border-panel-border bg-panel p-2 shadow-xl z-40">
-          <div className="px-3 py-2">
-            <div className="text-sm text-white truncate">{user.name}</div>
-            <div className="text-xs text-grey truncate">{user.email}</div>
-          </div>
-          <div className="my-1 h-px bg-panel-border" />
-          <Link role="menuitem" to="/dashboard/profile" onClick={() => setOpen(false)}
-            className="block rounded-lg px-3 py-2 text-sm text-[#cfcfcf] hover:bg-ink hover:text-white">
-            Profile
-          </Link>
-          <button role="menuitem" onClick={logout}
-            className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-[#cfcfcf] hover:bg-ink hover:text-white">
-            <LogOut size={15} /> Sign out
-          </button>
-        </div>
-      )}
-    </div>
+    )}>
+      <div className="px-2.5 py-2">
+        <div className="truncate text-sm font-medium text-fg">{user.name || 'Your account'}</div>
+        <div className="truncate text-xs text-fg-3">{user.email}</div>
+        {isPlatformAdmin && <div className="mt-2"><Badge tone="staff">Platform admin</Badge></div>}
+      </div>
+      <MenuDivider />
+      <Link role="menuitem" to="/dashboard/profile" className={menuItem}><User size={15} /> Profile and security</Link>
+      {isPlatformAdmin && <Link role="menuitem" to="/admin" className={menuItem}><ShieldCheck size={15} /> Admin console</Link>}
+      <Link role="menuitem" to="/docs" className={menuItem}><BookOpen size={15} /> Documentation</Link>
+      <MenuDivider />
+      <button role="menuitem" type="button" onClick={logout} className={menuItem}><LogOut size={15} /> Sign out</button>
+    </Menu>
   )
 }
 
 export default function DashboardLayout() {
   const { currentOrg, can } = useAuth()
-  const [drawer, setDrawer] = useState(false)
   const location = useLocation()
+  const staff = location.pathname === '/admin' || location.pathname.startsWith('/admin/')
+  const [drawer, setDrawer] = useState(false)
+  const [palette, setPalette] = useState(false)
+  const [collapsed, setCollapsed] = useState(readCollapsed)
   useEffect(() => setDrawer(false), [location.pathname])
+  useEffect(() => {
+    const onKey = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        setPalette((v) => !v)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+  const toggle = useCallback(() => {
+    setCollapsed((c) => {
+      try {
+        localStorage.setItem(COLLAPSE_KEY, c ? '0' : '1')
+      } catch {
+        // storage blocked: the choice lasts for this page only
+      }
+      return !c
+    })
+  }, [])
 
   return (
     <LiveProvider orgId={currentOrg?.id}>
-      <div className="min-h-screen bg-ink text-[#e0e0e0] lg:grid lg:grid-cols-[16rem_1fr]">
-        <aside className="hidden lg:block border-r border-panel-border bg-ink-soft h-screen sticky top-0">
-          <Sidebar />
-        </aside>
+      <CrumbProvider>
+        <div className={`app-root min-h-screen lg:grid ${collapsed ? 'lg:grid-cols-[4rem_1fr]' : 'lg:grid-cols-[15.5rem_1fr]'}`}>
+          {staff && <div className="fixed inset-x-0 top-0 z-[70] h-[2px] bg-staff" aria-hidden="true" />}
+          <aside className="sticky top-0 hidden h-screen border-r border-line bg-[#0c0c0d] lg:block">
+            <Sidebar staff={staff} collapsed={collapsed} onToggle={toggle} />
+          </aside>
 
-        {drawer && (
-          <div className="fixed inset-0 z-50 lg:hidden">
-            <button className="absolute inset-0 bg-black/60" aria-label="Close menu" onClick={() => setDrawer(false)} />
-            <aside className="absolute inset-y-0 left-0 w-72 border-r border-panel-border bg-ink-soft">
-              <Sidebar onNavigate={() => setDrawer(false)} />
-            </aside>
+          {drawer && (
+            <div className="fixed inset-0 z-50 lg:hidden">
+              <button className="absolute inset-0 bg-black/60" aria-label="Close menu" onClick={() => setDrawer(false)} />
+              <aside className="absolute inset-y-0 left-0 w-72 border-r border-line bg-[#0c0c0d]">
+                <Sidebar staff={staff} onNavigate={() => setDrawer(false)} />
+              </aside>
+            </div>
+          )}
+
+          <div className="flex min-w-0 flex-col">
+            <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-line bg-app/80 px-4 backdrop-blur-md sm:px-6">
+              <button className="-ml-1 p-1.5 text-fg-2 lg:hidden" aria-label="Open menu" onClick={() => setDrawer((v) => !v)}>
+                {drawer ? <X size={20} /> : <MenuIcon size={20} />}
+              </button>
+              <Breadcrumbs staff={staff} />
+              <div className="ml-auto flex items-center gap-2 sm:gap-3">
+                <button type="button" onClick={() => setPalette(true)} aria-label="Search and jump"
+                  className="flex h-8 items-center gap-2 rounded-lg border border-line bg-surface px-2.5 text-xs text-fg-3 transition hover:border-line-strong hover:text-fg-2">
+                  <Search size={14} />
+                  <span className="hidden md:inline">Search</span>
+                  <span className="hidden md:inline-flex"><Kbd>Ctrl K</Kbd></span>
+                </button>
+                {!staff && <LiveDot />}
+                {currentOrg && can('alerts:read') && <AlertBell key={currentOrg.id} />}
+                <UserMenu />
+              </div>
+            </header>
+            <StatusBanner />
+            <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+              {/* keyed by org so every page starts fresh after switching organization */}
+              <div key={currentOrg?.id || 'none'} className="mx-auto w-full max-w-[1400px]">
+                <Outlet />
+              </div>
+            </main>
           </div>
-        )}
-
-        <div className="min-w-0 flex flex-col">
-          <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-panel-border bg-ink/85 backdrop-blur px-4 sm:px-6 py-3">
-            <button className="lg:hidden -ml-1 p-1.5 text-[#e0e0e0]" aria-label="Open menu" onClick={() => setDrawer((v) => !v)}>
-              {drawer ? <X size={20} /> : <Menu size={20} />}
-            </button>
-            <div className="ml-auto flex items-center gap-3">
-              {currentOrg && can('alerts:read') && <AlertBell key={currentOrg.id} />}
-              <UserMenu />
-            </div>
-          </header>
-          <StatusBanner />
-          <main className="flex-1 px-4 sm:px-6 lg:px-10 py-8">
-            {/* keyed by org so every page starts fresh after switching organization */}
-            <div key={currentOrg?.id || 'none'}>
-              <Outlet />
-            </div>
-          </main>
+          <CommandPalette open={palette} onClose={() => setPalette(false)} />
         </div>
-      </div>
+      </CrumbProvider>
     </LiveProvider>
   )
 }

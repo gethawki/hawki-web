@@ -53,7 +53,7 @@ function Share({ orgId, report, onChanged }) {
     <Panel title="Share" className="no-print">
       <div className="grid gap-3">
         {error && <Alert>{error}</Alert>}
-        <p className="text-sm text-grey">
+        <p className="text-sm text-fg-3">
           {report.shared
             ? `Anyone with the link can read this report until ${formatDateTime(report.share_expires_at)}.`
             : 'Make a read-only link for someone outside the organization, such as an auditor. It expires on its own and can be revoked.'}
@@ -61,7 +61,7 @@ function Share({ orgId, report, onChanged }) {
         {url && (
           <>
             <Alert tone="info">Copy the link now. It is shown only once; sharing again makes a new link and ends this one.</Alert>
-            <code className="block overflow-x-auto rounded-lg border border-panel-border bg-ink px-3 py-2 font-mono text-xs text-[#d9d9d9]">{url}</code>
+            <code className="block overflow-x-auto rounded-lg border border-line bg-surface-2 px-3 py-2 font-mono text-xs text-fg-2">{url}</code>
           </>
         )}
         <div className="flex flex-wrap items-end gap-3">
@@ -110,12 +110,13 @@ export default function ReportDetail() {
     }
   }
 
-  if (error) return <div className="max-w-5xl"><Alert>{error}</Alert></div>
+  if (error) return <div><Alert>{error}</Alert></div>
   if (!data) return <Spinner />
   const { report, document: doc } = data
   return (
-    <div className="max-w-5xl grid gap-6">
+    <div className="grid gap-6">
       <PageHeader
+        back={{ to: '/dashboard/reports', label: 'Reports' }}
         title={doc.title}
         description={`Snapshot of the ${doc.scan.type} scan finished ${formatDateTime(doc.scan.finished_at)}. Later triage does not change it.`}
         actions={
@@ -127,11 +128,11 @@ export default function ReportDetail() {
       />
       <ReportView doc={doc} />
       {can('settings:write') && <Share orgId={currentOrg.id} report={report} onChanged={(r) => setData({ ...data, report: r })} />}
-      <div className="no-print flex flex-wrap items-center gap-4 text-xs text-grey">
-        <Link to="/dashboard/reports" className="hover:text-white">All reports</Link>
-        {report.scan_id && <Link to={`/dashboard/scans/${report.scan_id}`} className="hover:text-white">The scan</Link>}
+      <div className="no-print flex flex-wrap items-center gap-4 text-xs text-fg-3">
+        <Link to="/dashboard/reports" className="hover:text-fg">All reports</Link>
+        {report.scan_id && <Link to={`/dashboard/scans/${report.scan_id}`} className="hover:text-fg">The scan</Link>}
         <span>sha256 {report.sha256.slice(0, 16)}...</span>
-        {can('settings:write') && <button type="button" onClick={remove} className="ml-auto text-copper hover:text-white">Delete report</button>}
+        {can('settings:write') && <button type="button" onClick={remove} className="ml-auto text-[#ff8b8b] hover:text-fg">Delete report</button>}
       </div>
     </div>
   )

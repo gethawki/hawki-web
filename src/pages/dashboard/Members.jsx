@@ -6,8 +6,13 @@ import { ROLE_LABELS } from '../../data/dashboardNav.js'
 import Alert, { errorMessage } from '../../components/common/Alert.jsx'
 import Button from '../../components/common/Button.jsx'
 import Field, { SelectField } from '../../components/common/Field.jsx'
-import Spinner from '../../components/common/Spinner.jsx'
-import PageHeader, { Panel } from '../../components/dashboard/PageHeader.jsx'
+import PageHeader from '../../components/dashboard/PageHeader.jsx'
+import { UserPlus } from 'lucide-react'
+import Card from '../../components/ui/Card.jsx'
+import Badge from '../../components/ui/Badge.jsx'
+import DataTable from '../../components/ui/DataTable.jsx'
+import Modal from '../../components/ui/Modal.jsx'
+import { initials } from '../../lib/format.js'
 import { formatDate, roleOptions } from './roles.js'
 
 function InviteForm({ orgId, callerRole, onCreated }) {
@@ -32,13 +37,13 @@ function InviteForm({ orgId, callerRole, onCreated }) {
   }
 
   return (
-    <Panel title="Invite people">
-      <form onSubmit={submit} className="grid gap-4 sm:grid-cols-[1fr_10rem_auto] sm:items-end">
+    <div>
+      <form onSubmit={submit} className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_10rem] sm:items-end">
         <Field id="invite-email" label="Email" type="email" placeholder="Leave empty for a shareable link" value={form.email}
           onChange={(e) => setForm({ ...form, email: e.target.value })} />
         <SelectField id="invite-role" label="Role" value={form.role} options={roleOptions(callerRole)}
           onChange={(e) => setForm({ ...form, role: e.target.value })} />
-        <Button type="submit" busy={busy}>{form.email ? 'Send invite' : 'Create link'}</Button>
+        <Button type="submit" busy={busy} className="sm:col-span-2 sm:justify-self-end">{form.email ? 'Send invite' : 'Create link'}</Button>
       </form>
       {error && <div className="mt-4"><Alert>{error}</Alert></div>}
       {created && (
@@ -46,10 +51,10 @@ function InviteForm({ orgId, callerRole, onCreated }) {
           <Alert tone="info">
             {created.email ? `Invitation emailed to ${created.email}.` : 'Share this link. Anyone with it can join until it expires or you revoke it.'}
           </Alert>
-          <code className="block overflow-x-auto rounded-lg border border-panel-border bg-ink px-3 py-2 font-mono text-xs text-[#d9d9d9]">{created.url}</code>
+          <code className="block overflow-x-auto rounded-lg border border-line bg-surface-2 px-3 py-2 font-mono text-xs text-fg-2">{created.url}</code>
         </div>
       )}
-    </Panel>
+    </div>
   )
 }
 
@@ -60,6 +65,7 @@ export default function Members() {
   const [members, setMembers] = useState(null)
   const [invites, setInvites] = useState([])
   const [error, setError] = useState(null)
+  const [inviting, setInviting] = useState(false)
 
   const load = useCallback(async () => {
     try {
@@ -97,55 +103,54 @@ export default function Members() {
     })
   const revoke = (inv) => act(() => api(`/api/v1/orgs/${currentOrg.id}/invites/${inv.id}`, { method: 'DELETE' }))
 
+  const roleCell = (m) => canManage && m.user_id !== user.id ? (
+    <select value={m.role} onChange={(e) => changeRole(m, e.target.value)} aria-label={`Role of ${m.email}`}
+      className="h-8 rounded-lg border border-line-strong bg-surface px-2 text-sm text-fg outline-none focus:border-accent/70">
+      {roleOptions(currentOrg.role).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+    </select>
+  ) : <Badge tone={m.role === 'org_admin' ? 'accent' : 'neutral'}>{ROLE_LABELS[m.role]}</Badge>
+
   return (
-    <div className="max-w-5xl grid gap-6">
-      <PageHeader title="Members" description={`People with access to ${currentOrg.name} and what they can do.`} />
+    <div className="grid gap-6">
+      <PageHeader title="Members" description={`People with access to ${currentOrg.name} and what they can do.`}
+        meta={members && <span>{members.length} {members.length === 1 ? 'member' : 'members'}{invites.length ? `, ${invites.length} open ${invites.length === 1 ? 'invitation' : 'invitations'}` : ''}</span>}
+        actions={canManage && <Button size="sm" onClick={() => setInviting(true)}><UserPlus size={14} /> Invite people</Button>} />
       {error && <Alert>{error}</Alert>}
-      {canManage && <InviteForm orgId={currentOrg.id} callerRole={currentOrg.role} onCreated={load} />}
-      <Panel>
-        {!members ? (
-          <Spinner />
-        ) : (
-          <ul className="divide-y divide-panel-border">
-            {members.map((m) => (
-              <li key={m.user_id} className="flex flex-col sm:flex-row sm:items-center gap-3 py-3 first:pt-0 last:pb-0">
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm text-white truncate">{m.name || m.email}{m.user_id === user.id && <span className="text-grey"> (you)</span>}</div>
-                  <div className="text-xs text-grey truncate">{m.email} · joined {formatDate(m.created_at)}</div>
+      <Card flush>
+        <DataTable rows={members} loading={!members} rowKey={(m) => m.user_id} columns={[
+          {
+            key: 'who', header: 'Member', cell: (m) => (
+              <div className="flex min-w-0 items-center gap-3">
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-surface-3 text-[0.7rem] font-semibold text-fg ring-1 ring-line-strong">{initials(m.name || m.email)}</span>
+                <div className="min-w-0">
+                  <div className="truncate font-medium text-fg">{m.name || m.email}{m.user_id === user.id && <span className="font-normal text-fg-3"> (you)</span>}</div>
+                  <div className="truncate text-xs text-fg-3">{m.email}</div>
                 </div>
-                {canManage && m.user_id !== user.id ? (
-                  <select value={m.role} onChange={(e) => changeRole(m, e.target.value)} aria-label={`Role of ${m.email}`}
-                    className="rounded-lg bg-ink border border-panel-border px-3 py-1.5 text-sm text-white outline-none focus:border-steel">
-                    {roleOptions(currentOrg.role).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                  </select>
-                ) : (
-                  <span className="font-mono text-xs uppercase tracking-wider text-grey">{ROLE_LABELS[m.role]}</span>
-                )}
-                {(canManage || m.user_id === user.id) && (
-                  <Button variant="danger" className="py-1.5" onClick={() => remove(m)}>
-                    {m.user_id === user.id ? 'Leave' : 'Remove'}
-                  </Button>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-      </Panel>
+              </div>
+            ),
+          },
+          { key: 'role', header: 'Role', cell: roleCell },
+          { key: 'joined', header: 'Joined', hide: 'md', cell: (m) => <span className="text-fg-3">{formatDate(m.created_at)}</span> },
+          {
+            key: 'act', header: '', align: 'right', cell: (m) => (canManage || m.user_id === user.id) && (
+              <Button variant={m.user_id === user.id ? 'ghost' : 'danger'} size="sm" onClick={() => remove(m)}>{m.user_id === user.id ? 'Leave' : 'Remove'}</Button>
+            ),
+          },
+        ]} />
+      </Card>
       {invites.length > 0 && (
-        <Panel title="Open invitations">
-          <ul className="divide-y divide-panel-border">
-            {invites.map((inv) => (
-              <li key={inv.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
-                <div className="flex-1 min-w-0 text-sm">
-                  <span className="text-white">{inv.email || 'Shareable link'}</span>
-                  <span className="text-grey"> · {ROLE_LABELS[inv.role]} · expires {formatDate(inv.expires_at)}</span>
-                </div>
-                {canManage && <Button variant="ghost" className="py-1.5" onClick={() => revoke(inv)}>Revoke</Button>}
-              </li>
-            ))}
-          </ul>
-        </Panel>
+        <Card title="Open invitations" flush>
+          <DataTable rows={invites} dense columns={[
+            { key: 'to', header: 'Invited', cell: (inv) => <span className="text-fg">{inv.email || 'Shareable link'}</span> },
+            { key: 'role', header: 'Role', cell: (inv) => <Badge>{ROLE_LABELS[inv.role]}</Badge> },
+            { key: 'exp', header: 'Expires', hide: 'sm', cell: (inv) => <span className="text-fg-3">{formatDate(inv.expires_at)}</span> },
+            { key: 'act', header: '', align: 'right', cell: (inv) => canManage && <Button variant="ghost" size="sm" onClick={() => revoke(inv)}>Revoke</Button> },
+          ]} />
+        </Card>
       )}
+      <Modal open={inviting} onClose={() => setInviting(false)} title="Invite people" description="Send an email invitation, or leave the email empty to create a link you can share.">
+        <InviteForm orgId={currentOrg.id} callerRole={currentOrg.role} onCreated={load} />
+      </Modal>
     </div>
   )
 }
