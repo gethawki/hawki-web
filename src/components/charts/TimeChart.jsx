@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { CHART, Legend, SrTable, Tooltip, columnPath, niceScale, useWidth, xTicks } from './chartKit.jsx'
 
 const PAD = { top: 12, right: 12, bottom: 24, left: 36 }
+const TIP_MS = 2500
 
 // TimeChart plots daily series as lines (optionally with a 10% area wash)
 // or as stacked columns, with one y axis, a crosshair or per-column hover,
@@ -12,6 +13,15 @@ const PAD = { top: 12, right: 12, bottom: 24, left: 36 }
 export default function TimeChart({ data, series, kind = 'line', area, height = 220, yMax, format = (v) => v, caption, stale }) {
   const [ref, width] = useWidth()
   const [hover, setHover] = useState(null)
+  // The readout shows for a moment each time the hovered day changes, then
+  // fades so it never sits on top of the chart; the crosshair stays.
+  const [tip, setTip] = useState(false)
+  useEffect(() => {
+    if (hover == null) return setTip(false)
+    setTip(true)
+    const t = setTimeout(() => setTip(false), TIP_MS)
+    return () => clearTimeout(t)
+  }, [hover])
   const n = data.length
   const innerW = Math.max(0, width - PAD.left - PAD.right)
   const innerH = height - PAD.top - PAD.bottom
@@ -100,7 +110,7 @@ export default function TimeChart({ data, series, kind = 'line', area, height = 
           </svg>
         )}
         {hover != null && width > 0 && (
-          <Tooltip x={cx(hover)} width={width} title={data[hover].title || data[hover].label}
+          <Tooltip visible={tip} x={cx(hover)} width={width} title={data[hover].title || data[hover].label}
             rows={[...series].reverse().map((s) => ({ label: s.label, color: s.color, value: format(data[hover][s.key] || 0) }))} />
         )}
       </div>

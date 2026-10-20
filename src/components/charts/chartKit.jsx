@@ -51,10 +51,10 @@ export function Legend({ series, kind = 'square' }) {
 
 // Tooltip is the one readout for every series at the hovered position:
 // value first and strong, the series name after it.
-export function Tooltip({ x, width, title, rows }) {
+export function Tooltip({ x, width, title, rows, visible = true }) {
   const left = Math.min(Math.max(x + 12, 0), Math.max(0, width - 180))
   return (
-    <div role="status" className="pointer-events-none absolute top-1 z-10 w-[168px] rounded-lg border border-line-strong bg-surface-2/95 px-3 py-2 shadow-xl backdrop-blur"
+    <div role="status" aria-hidden={!visible} className={`pointer-events-none absolute top-1 z-10 w-[168px] rounded-lg border border-line-strong bg-surface-2/95 px-3 py-2 shadow-xl backdrop-blur transition-opacity duration-300 ${visible ? 'opacity-100' : 'opacity-0'}`}
       style={{ left }}>
       <div className="mb-1 text-[0.7rem] text-fg-3">{title}</div>
       <ul className="grid gap-0.5">
