@@ -70,14 +70,18 @@ export function Tooltip({ x, width, title, rows, visible = true }) {
   )
 }
 
-// DataTable is the chart's table view, read by screen readers.
+// SrTable is the chart's data as a table for screen readers. It is hidden
+// through a wrapper: some browsers draw a table's caption outside the table
+// box, so hiding the table itself would leave the caption on screen.
 export function SrTable({ caption, columns, rows }) {
   return (
-    <table className="sr-only">
-      <caption>{caption}</caption>
-      <thead><tr>{columns.map((c) => <th key={c} scope="col">{c}</th>)}</tr></thead>
-      <tbody>{rows.map((r, i) => <tr key={i}>{r.map((v, j) => <td key={j}>{v}</td>)}</tr>)}</tbody>
-    </table>
+    <div className="sr-only">
+      <table>
+        <caption>{caption}</caption>
+        <thead><tr>{columns.map((c) => <th key={c} scope="col">{c}</th>)}</tr></thead>
+        <tbody>{rows.map((r, i) => <tr key={i}>{r.map((v, j) => <td key={j}>{v}</td>)}</tr>)}</tbody>
+      </table>
+    </div>
   )
 }
 
