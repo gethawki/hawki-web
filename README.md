@@ -52,20 +52,26 @@ src/
     docs/       DocsLayout (shared sidebar + TOC shell), DocsSections,
                 ChangelogSections, Pager
     common/     Section, Kicker, RiskBadge, Terminal, StatMeter, CountUp, Reveal,
-                CodeBlock, SocialIcon, Helmet, Logo, Button, Field, Alert, Spinner
+                CodeBlock, SocialIcon, Helmet, Logo, Button, Field, Alert, Spinner,
+                StatusBanner
     auth/       AuthLayout (sign-in frame with the site navbar), OAuthButtons,
                 RouteGuards (RequireAuth, GuestOnly, RequireAccess)
     dashboard/  DashboardLayout (sidebar from data/dashboardNav.js), PageHeader,
                 ScanBits (scan status, severity, scan rows)
+    account/    Security (email change, two-factor, sessions, account deletion)
+    admin/      shared admin bits (tables, stats, reason forms), PaymentForm
   data/         links.js, product.js, docsNav.js, changelogNav.js,
                 dashboardNav.js (dashboard sections and who may open them), seo.js
   lib/          api.js (Hawk-i Cloud API client), auth.jsx (session for the whole
                 site), access.js (access rule checks)
   pages/        Home, Docs, Changelog, NotFound
-    auth/       Login, Signup, ForgotPassword, ResetPassword, VerifyEmail, AcceptInvite
+    auth/       Login (with the two-factor step), Signup, ForgotPassword,
+                ResetPassword, VerifyEmail, ConfirmEmail, AcceptInvite
     dashboard/  Overview, Projects, ProjectDetail, Scans, ScanDetail, Findings,
                 FindingDetail, Members, ApiKeys, AuditLog, OrgSettings, Profile
-    admin/      AdminConsole (platform admins only)
+    admin/      AdminOverview, AdminUsers, AdminUser, AdminCustomers,
+                AdminCustomer, AdminPayments, AdminRevenue, AdminAudit,
+                AdminSwitches (platform admins only)
 ```
 
 - **Home** (`/`) is composed from the named sections above, each built on the
@@ -96,7 +102,12 @@ API.
   switches the access level.
 - **Routes.** Public: `/`, `/docs`, `/changelog`. Sign-in: `/login`,
   `/signup`, `/forgot-password`, `/reset-password`, `/verify-email`,
-  `/invite`. Signed in: `/dashboard/*`, `/admin`.
+  `/invite`, `/confirm-email`. Signed in: `/dashboard/*`, `/admin/*`.
+- **Platform console.** `/admin` is the owner's view: platform overview,
+  users (suspend, role, password reset, sign out, two-factor reset),
+  customers (plan, credits, exemption, notes, tags, payments), payments,
+  revenue, platform audit and emergency switches. `StatusBanner` shows the
+  site banner and maintenance notice to every signed-in user.
 - **Private pages are not indexed.** They are listed in `PRIVATE_PREFIXES`
   (`data/seo.js`), rendered client side from one `noindex` shell
   (`dist/app-shell.html`) through Netlify rewrites, kept out of the sitemap
