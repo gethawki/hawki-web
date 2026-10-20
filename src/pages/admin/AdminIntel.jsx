@@ -13,6 +13,7 @@ import Button from '../../components/common/Button.jsx'
 import { errorMessage } from '../../components/common/Alert.jsx'
 import { ReasonForm } from '../../components/admin/bits.jsx'
 import { Meter } from '../../components/charts/Small.jsx'
+import IntelContracts from '../../components/admin/IntelContracts.jsx'
 
 const STATUS = {
   ok: ['good', 'Healthy'],
@@ -235,6 +236,8 @@ export default function AdminIntel() {
             { key: 'at', header: 'Updated', align: 'right', hide: 'sm', cell: (x) => <span className="whitespace-nowrap text-fg-3">{x.updated_at ? ago(x.updated_at) : '-'}</span> },
           ]} />
       </Card>
+
+      <IntelContracts stats={data.contracts} recent={data.recent_contracts} />
 
       <Card title={<span className="flex items-center gap-2"><Wrench className="size-4 text-fg-3" aria-hidden />Repairs</span>}
         description="Ranges fetched again: gaps and broken links found by the integrity check, and reprocessing asked for by staff" flush>
