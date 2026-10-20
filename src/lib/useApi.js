@@ -22,5 +22,8 @@ export function useApi(path) {
   useEffect(() => {
     load()
   }, [load])
-  return { ...state, stale: state.loading && state.data != null, reload: load }
+  // setData replaces the shown data, for endpoints that answer a change
+  // with the new state.
+  const setData = useCallback((data) => setState((s) => ({ ...s, data, error: null })), [])
+  return { ...state, stale: state.loading && state.data != null, reload: load, setData }
 }
