@@ -19,6 +19,7 @@ const Signup = lazy(() => import('./pages/auth/Signup.jsx'))
 const ForgotPassword = lazy(() => import('./pages/auth/ForgotPassword.jsx'))
 const ResetPassword = lazy(() => import('./pages/auth/ResetPassword.jsx'))
 const VerifyEmail = lazy(() => import('./pages/auth/VerifyEmail.jsx'))
+const ConfirmEmail = lazy(() => import('./pages/auth/ConfirmEmail.jsx'))
 const AcceptInvite = lazy(() => import('./pages/auth/AcceptInvite.jsx'))
 
 // Dashboards (signed in). Which pages a user sees depends on their role:
@@ -44,7 +45,15 @@ const AuditLog = lazy(() => import('./pages/dashboard/AuditLog.jsx'))
 const OrgSettings = lazy(() => import('./pages/dashboard/OrgSettings.jsx'))
 const Profile = lazy(() => import('./pages/dashboard/Profile.jsx'))
 const DashboardNotFound = lazy(() => import('./pages/dashboard/DashboardNotFound.jsx'))
-const AdminConsole = lazy(() => import('./pages/admin/AdminConsole.jsx'))
+const AdminOverview = lazy(() => import('./pages/admin/AdminOverview.jsx'))
+const AdminUsers = lazy(() => import('./pages/admin/AdminUsers.jsx'))
+const AdminUser = lazy(() => import('./pages/admin/AdminUser.jsx'))
+const AdminCustomers = lazy(() => import('./pages/admin/AdminCustomers.jsx'))
+const AdminCustomer = lazy(() => import('./pages/admin/AdminCustomer.jsx'))
+const AdminPayments = lazy(() => import('./pages/admin/AdminPayments.jsx'))
+const AdminRevenue = lazy(() => import('./pages/admin/AdminRevenue.jsx'))
+const AdminAudit = lazy(() => import('./pages/admin/AdminAudit.jsx'))
+const AdminSwitches = lazy(() => import('./pages/admin/AdminSwitches.jsx'))
 
 const guarded = (path, element) => <RequireAccess access={accessFor(path)}>{element}</RequireAccess>
 
@@ -67,6 +76,7 @@ export default function App() {
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/invite" element={<AcceptInvite />} />
+          <Route path="/confirm-email" element={<ConfirmEmail />} />
           <Route path="/r/:token" element={<SharedReport />} />
 
           <Route element={<RequireAuth><DashboardLayout /></RequireAuth>}>
@@ -89,7 +99,15 @@ export default function App() {
             <Route path="/dashboard/settings" element={guarded('/dashboard/settings', <OrgSettings />)} />
             <Route path="/dashboard/profile" element={<Profile />} />
             <Route path="/dashboard/*" element={<DashboardNotFound />} />
-            <Route path="/admin" element={guarded('/admin', <AdminConsole />)} />
+            <Route path="/admin" element={guarded('/admin', <AdminOverview />)} />
+            <Route path="/admin/users" element={guarded('/admin/users', <AdminUsers />)} />
+            <Route path="/admin/users/:userId" element={guarded('/admin/users', <AdminUser />)} />
+            <Route path="/admin/customers" element={guarded('/admin/customers', <AdminCustomers />)} />
+            <Route path="/admin/customers/:orgId" element={guarded('/admin/customers', <AdminCustomer />)} />
+            <Route path="/admin/payments" element={guarded('/admin/payments', <AdminPayments />)} />
+            <Route path="/admin/revenue" element={guarded('/admin/revenue', <AdminRevenue />)} />
+            <Route path="/admin/audit" element={guarded('/admin/audit', <AdminAudit />)} />
+            <Route path="/admin/switches" element={guarded('/admin/switches', <AdminSwitches />)} />
           </Route>
 
           <Route path="*" element={<NotFound />} />

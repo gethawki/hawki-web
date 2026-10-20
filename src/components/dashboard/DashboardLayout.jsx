@@ -5,6 +5,7 @@ import { DASHBOARD_NAV } from '../../data/dashboardNav.js'
 import { useAuth } from '../../lib/auth.jsx'
 import { LiveProvider } from '../../lib/live.jsx'
 import { AlertBell } from './AlertBits.jsx'
+import StatusBanner from '../common/StatusBanner.jsx'
 import { hasAccess } from '../../lib/access.js'
 import Logo from '../common/Logo.jsx'
 
@@ -161,6 +162,7 @@ export default function DashboardLayout() {
               <UserMenu />
             </div>
           </header>
+          <StatusBanner />
           <main className="flex-1 px-4 sm:px-6 lg:px-10 py-8">
             {/* keyed by org so every page starts fresh after switching organization */}
             <div key={currentOrg?.id || 'none'}>

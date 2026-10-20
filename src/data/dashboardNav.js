@@ -12,7 +12,7 @@
 // `soon` marks sections that are planned but not built yet; they are shown
 // greyed out to users who will be able to open them.
 import {
-  Bell, CreditCard, Crosshair, FileText, FolderGit2, KeyRound, LayoutDashboard, Radar, ScanLine, ScrollText,
+  Bell, Building2, CreditCard, Crosshair, FileText, History, Power, Receipt, TrendingUp, UserCog, FolderGit2, KeyRound, LayoutDashboard, Radar, ScanLine, ScrollText,
   Settings, ShieldAlert, ShieldCheck, User, Users,
 } from 'lucide-react'
 
@@ -46,7 +46,15 @@ export const DASHBOARD_NAV = [
   },
   {
     title: 'Platform',
-    links: [{ to: '/admin', label: 'Admin console', icon: ShieldCheck, end: true, access: { platformAdmin: true } }],
+    links: [
+      { to: '/admin', label: 'Platform overview', icon: ShieldCheck, end: true, access: { platformAdmin: true } },
+      { to: '/admin/users', label: 'Users', icon: UserCog, access: { platformAdmin: true } },
+      { to: '/admin/customers', label: 'Customers', icon: Building2, access: { platformAdmin: true } },
+      { to: '/admin/payments', label: 'Payments', icon: Receipt, access: { platformAdmin: true } },
+      { to: '/admin/revenue', label: 'Revenue', icon: TrendingUp, access: { platformAdmin: true } },
+      { to: '/admin/audit', label: 'Platform audit', icon: History, access: { platformAdmin: true } },
+      { to: '/admin/switches', label: 'Emergency switches', icon: Power, access: { platformAdmin: true } },
+    ],
   },
 ]
 

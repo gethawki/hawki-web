@@ -69,6 +69,7 @@ export const PRIVATE_PREFIXES = [
   '/forgot-password',
   '/reset-password',
   '/verify-email',
+  '/confirm-email',
   '/invite',
   '/dashboard',
   '/admin',

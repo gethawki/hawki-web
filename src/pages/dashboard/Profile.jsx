@@ -6,6 +6,7 @@ import Button from '../../components/common/Button.jsx'
 import Field from '../../components/common/Field.jsx'
 import PageHeader, { Panel } from '../../components/dashboard/PageHeader.jsx'
 import { MIN_PASSWORD } from '../auth/shared.js'
+import { DeleteAccountPanel, EmailPanel, SessionsPanel, TwoFactorPanel, useSecurity } from '../../components/account/Security.jsx'
 
 function ProfileForm() {
   const { user, reload } = useAuth()
@@ -66,11 +67,16 @@ function PasswordForm() {
 }
 
 export default function Profile() {
+  const [security, reloadSecurity] = useSecurity()
   return (
     <div className="max-w-3xl grid gap-6">
-      <PageHeader title="Your account" />
+      <PageHeader title="Your account" description="Profile, sign-in and security." />
       <ProfileForm />
+      <EmailPanel security={security} onChanged={reloadSecurity} />
       <PasswordForm />
+      <TwoFactorPanel security={security} onChanged={reloadSecurity} />
+      <SessionsPanel />
+      <DeleteAccountPanel security={security} />
     </div>
   )
 }

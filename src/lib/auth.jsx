@@ -79,6 +79,8 @@ export function AuthProvider({ children }) {
   const signIn = useCallback(
     async (path, body) => {
       const data = await api(path, { method: 'POST', body, auth: false })
+      // Two-factor accounts get a challenge instead of a session.
+      if (data.mfa_required) return { mfaToken: data.mfa_token }
       setAccessToken(data.access_token)
       if (data.organization) {
         setOrgId(data.organization.id)
@@ -102,6 +104,7 @@ export function AuthProvider({ children }) {
       can: (perm) => permissions.has(perm),
       login: (email, password) => signIn('/api/v1/auth/login', { email, password }),
       signup: (name, email, password) => signIn('/api/v1/auth/signup', { name, email, password }),
+      completeMFA: (mfaToken, code) => signIn('/api/v1/auth/mfa', { mfa_token: mfaToken, code }),
       logout: async () => {
         try {
           await api('/api/v1/auth/logout', { method: 'POST' })
