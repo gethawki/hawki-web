@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Activity, Boxes, Network, ServerCrash } from 'lucide-react'
+import { Activity, Boxes, Layers, Network, ServerCrash, Wrench } from 'lucide-react'
 import { api } from '../../lib/api.js'
 import { useApi } from '../../lib/useApi.js'
 import { ago, dateTime, num } from '../../lib/format.js'
@@ -54,6 +54,66 @@ function PauseControl({ c, onChanged }) {
   )
 }
 
+const inputCls = 'h-9 min-w-0 rounded-lg bg-surface border border-line-strong px-3 text-sm text-fg placeholder:text-fg-3 outline-none focus:border-accent/70'
+
+// Reprocessing fetches a range again, replaces any stored block that differs
+// from the chain and sends every block to the indexers once more.
+function ReprocessForm({ c, onChanged }) {
+  const [from, setFrom] = useState('')
+  const [to, setTo] = useState('')
+  const [reason, setReason] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState(null)
+  const valid = /^\d+$/.test(from) && /^\d+$/.test(to) && Number(to) >= Number(from) && reason.trim().length >= 3
+  async function submit(e) {
+    e.preventDefault()
+    setBusy(true)
+    setError(null)
+    try {
+      onChanged(await api(`/api/v1/admin/intel/chains/${c.name}/reprocess`, { method: 'POST', body: { from: Number(from), to: Number(to), reason } }))
+      setFrom('')
+      setTo('')
+      setReason('')
+    } catch (err) {
+      setError(errorMessage(err))
+    }
+    setBusy(false)
+  }
+  return (
+    <form className="grid gap-2" onSubmit={submit}>
+      <div className="text-xs text-fg-3">Reprocess blocks (up to 100,000, at or below block {height(c.ingested_number)})</div>
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-[8rem_8rem_1fr_auto]">
+        <input aria-label={`${c.name} reprocess from block`} inputMode="numeric" placeholder="From block" value={from} onChange={(e) => setFrom(e.target.value.trim())} className={inputCls} />
+        <input aria-label={`${c.name} reprocess to block`} inputMode="numeric" placeholder="To block" value={to} onChange={(e) => setTo(e.target.value.trim())} className={inputCls} />
+        <input aria-label={`${c.name} reprocess reason`} placeholder="Reason" value={reason} onChange={(e) => setReason(e.target.value)} className={`${inputCls} col-span-2 sm:col-span-1`} />
+        <Button size="sm" type="submit" disabled={busy || !valid} className="col-span-2 sm:col-span-1">{busy ? 'Queueing' : 'Reprocess'}</Button>
+      </div>
+      {error && <p className="text-xs text-[#ff8b8b]">{error}</p>}
+    </form>
+  )
+}
+
+// Integrity: how far stored blocks have been re-checked for gaps and broken
+// parent links, and what was found.
+function Integrity({ c }) {
+  const i = c.integrity
+  const found = i ? i.gaps_found + i.breaks_found : 0
+  return (
+    <div className="mx-5 mb-4 flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg border border-line bg-surface-2/40 px-4 py-2.5 text-xs">
+      <span className="text-fg-3">Integrity</span>
+      {i ? (
+        <>
+          <span className="text-fg-2">verified through <span className="text-fg tnum">{height(i.checked_through)}</span>, checked {ago(i.last_run_at)}</span>
+          <span className="text-fg-2"><span className="text-fg tnum">{num(i.gaps_found)}</span> gaps · <span className="text-fg tnum">{num(i.breaks_found)}</span> broken links found</span>
+          {found > 0 ? <span className="text-fg-3">last problem {ago(i.last_problem_at)}, repaired automatically</span> : <Badge tone="good" dot>No problems found</Badge>}
+        </>
+      ) : <span className="text-fg-2">not checked yet</span>}
+    </div>
+  )
+}
+
+const REPAIR = { pending: ['warning', 'Running'], done: ['good', 'Done'], failed: ['danger', 'Failed'] }
+
 function Backfill({ c }) {
   if (c.backfill_next == null) return null
   const total = c.backfill_target - c.backfill_start
@@ -88,6 +148,7 @@ function ChainCard({ c, onChanged }) {
         <div><div className="text-xs text-fg-3">Endpoints</div><div className="text-lg font-semibold text-fg tnum">{healthy} / {c.endpoints.length}</div><div className="text-xs text-fg-3">{blockTime(c.block_time_ms)} blocks · start {c.start_policy}</div></div>
       </div>
       <Backfill c={c} />
+      <Integrity c={c} />
       {c.status_detail && c.status !== 'ok' && (
         <div className={`mx-5 mb-4 rounded-lg border px-3 py-2 text-xs ${c.status === 'degraded' ? 'border-warning/30 bg-warning/[0.06] text-[#f5dfae]' : 'border-critical/40 bg-critical/[0.06] text-[#f3c7c7]'}`}>{c.status_detail}</div>
       )}
@@ -103,14 +164,18 @@ function ChainCard({ c, onChanged }) {
             { key: 'at', header: 'Checked', align: 'right', hide: 'lg', cell: (e) => <span className="whitespace-nowrap text-fg-3">{ago(e.checked_at)}</span> },
           ]} />
       </div>
-      <div className="border-t border-line px-5 py-4"><PauseControl c={c} onChanged={onChanged} /></div>
+      <div className="grid gap-4 border-t border-line px-5 py-4 lg:grid-cols-2">
+        <PauseControl c={c} onChanged={onChanged} />
+        <ReprocessForm c={c} onChanged={onChanged} />
+      </div>
     </Card>
   )
 }
 
 // AdminIntel is the operations view of the Intel Engine: which chains it
-// follows, whether their RPC endpoints answer for the right chain, and every
-// change Intel made to its own state.
+// follows, whether their RPC endpoints answer for the right chain, how far
+// the indexers are, what was repaired, and every change Intel made to its
+// own state.
 export default function AdminIntel() {
   const { data, error, reload, setData } = useApi('/api/v1/admin/intel')
   useEffect(() => {
@@ -157,7 +222,38 @@ export default function AdminIntel() {
         </Card>
       )}
 
-      <Card title="Intel audit" description="Chains enabled or disabled, ingestion started, paused or resumed, reorgs and resets" flush>
+      <Card title={<span className="flex items-center gap-2"><Layers className="size-4 text-fg-3" aria-hidden />Indexers</span>}
+        description={<>Indexers turn ingested blocks into tables; they run in <code className="font-mono">intel index</code>. Messages that keep failing are set aside as dead letters.</>} flush>
+        <DataTable rows={data.indexers} rowKey={(x) => `${x.indexer}:${x.chain}`} dense
+          empty={<EmptyState compact title="No indexer has run yet">Start <code className="font-mono">intel index</code>.</EmptyState>}
+          columns={[
+            { key: 'name', header: 'Indexer', cell: (x) => <span className="font-mono text-xs text-fg">{x.indexer}</span> },
+            { key: 'chain', header: 'Chain', cell: (x) => <span className="capitalize text-fg-2">{x.chain || '-'}</span> },
+            { key: 'num', header: 'Indexed', align: 'right', cell: (x) => <span className="tnum">{height(x.number)}</span> },
+            { key: 'lag', header: 'Behind', align: 'right', cell: (x) => <span className={`whitespace-nowrap tnum ${x.lag > 100 ? 'text-[#f5dfae]' : ''}`}>{x.lag != null ? `${height(x.lag)} blocks` : '-'}</span> },
+            { key: 'dl', header: 'Dead letters', align: 'right', cell: (x) => x.dead_letters > 0 ? <Badge tone="danger">{num(x.dead_letters)}</Badge> : <span className="text-fg-3">0</span> },
+            { key: 'at', header: 'Updated', align: 'right', hide: 'sm', cell: (x) => <span className="whitespace-nowrap text-fg-3">{x.updated_at ? ago(x.updated_at) : '-'}</span> },
+          ]} />
+      </Card>
+
+      <Card title={<span className="flex items-center gap-2"><Wrench className="size-4 text-fg-3" aria-hidden />Repairs</span>}
+        description="Ranges fetched again: gaps and broken links found by the integrity check, and reprocessing asked for by staff" flush>
+        <DataTable rows={data.repairs} rowKey={(r) => r.id} dense empty={<EmptyState compact title="No repairs yet" />} columns={[
+          { key: 'when', header: 'Queued', cell: (r) => <span className="whitespace-nowrap text-fg-3" title={dateTime(r.created_at)}>{ago(r.created_at)}</span> },
+          { key: 'chain', header: 'Chain', cell: (r) => <span className="capitalize text-fg-2">{r.chain}</span> },
+          { key: 'kind', header: 'Kind', cell: (r) => <span className="font-mono text-xs text-fg">{r.kind}</span> },
+          { key: 'range', header: 'Blocks', cell: (r) => <span className="whitespace-nowrap tnum">{r.from === r.to ? height(r.from) : `${height(r.from)} to ${height(r.to)}`}</span> },
+          { key: 'status', header: 'Status', cell: (r) => {
+            const [tone, label] = REPAIR[r.status] || ['neutral', r.status]
+            const total = r.to - r.from + 1
+            return <span className="flex items-center gap-2"><Badge tone={tone} dot>{label}</Badge>{r.status === 'pending' && <span className="text-xs text-fg-3 tnum">{Math.floor(((r.next - r.from) / total) * 100)}%</span>}</span>
+          } },
+          { key: 'fix', header: 'Fixed', align: 'right', hide: 'sm', cell: (r) => <span className="whitespace-nowrap text-fg-2">{r.filled} filled · {r.replaced} replaced</span> },
+          { key: 'reason', header: 'Reason', hide: 'md', cell: (r) => <span className="text-fg-2">{r.error ? <span className="text-[#ff8b8b]">{r.error}</span> : r.reason}</span> },
+        ]} />
+      </Card>
+
+      <Card title="Intel audit" description="Chains enabled or disabled, ingestion started, paused or resumed, reorgs, resets, repairs and dead letters" flush>
         <DataTable rows={data.audit} dense empty={<EmptyState compact title="Nothing recorded yet" />} columns={[
           { key: 'when', header: 'When', cell: (a) => <span className="whitespace-nowrap text-fg-3" title={dateTime(a.occurred_at)}>{ago(a.occurred_at)}</span> },
           { key: 'chain', header: 'Chain', cell: (a) => <span className="capitalize text-fg-2">{a.chain || '-'}</span> },
