@@ -14,6 +14,7 @@ import { errorMessage } from '../../components/common/Alert.jsx'
 import { ReasonForm } from '../../components/admin/bits.jsx'
 import { Meter } from '../../components/charts/Small.jsx'
 import IntelContracts from '../../components/admin/IntelContracts.jsx'
+import IntelWallets from '../../components/admin/IntelWallets.jsx'
 
 const STATUS = {
   ok: ['good', 'Healthy'],
@@ -165,7 +166,7 @@ function ChainCard({ c, onChanged }) {
             { key: 'at', header: 'Checked', align: 'right', hide: 'lg', cell: (e) => <span className="whitespace-nowrap text-fg-3">{ago(e.checked_at)}</span> },
           ]} />
       </div>
-      <div className="grid gap-4 border-t border-line px-5 py-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 border-t border-line px-5 py-4 lg:grid-cols-2">
         <PauseControl c={c} onChanged={onChanged} />
         <ReprocessForm c={c} onChanged={onChanged} />
       </div>
@@ -194,7 +195,7 @@ export default function AdminIntel() {
   const eps = enabled.flatMap((c) => c.endpoints)
 
   return (
-    <div className="grid gap-4">
+    <div className="grid grid-cols-1 gap-4">
       <PageHeader title="Intel Engine" description="Chains Intel follows, the health of their RPC endpoints and every change Intel makes to its own state. Refreshes every 10 seconds."
         meta={<span>Configured in the Intel service (config/intel.yaml); start it with <code className="font-mono">intel ingest</code>.</span>} />
       <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
@@ -238,6 +239,8 @@ export default function AdminIntel() {
       </Card>
 
       <IntelContracts stats={data.contracts} recent={data.recent_contracts} />
+
+      <IntelWallets chains={enabled.map((c) => c.name)} wallets={data.wallets} tracked={data.tracked_tokens} recent={data.recent_tokens} onChanged={setData} />
 
       <Card title={<span className="flex items-center gap-2"><Wrench className="size-4 text-fg-3" aria-hidden />Repairs</span>}
         description="Ranges fetched again: gaps and broken links found by the integrity check, and reprocessing asked for by staff" flush>
