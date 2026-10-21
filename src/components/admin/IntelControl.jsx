@@ -43,8 +43,9 @@ export function change(e) {
 export default function IntelControl({ stats, changes }) {
   const [open, setOpen] = useState(null)
   return (
-    <Card title={<span className="flex items-center gap-2"><ShieldAlert className="size-4 text-fg-3" aria-hidden />Upgrades and admin changes</span>}
-      description="Who controls contracts and how that changes. Owners, admins and role members are classified as EOA, multisig, timelock or contract. Ownership set at deployment is left out of the feed." flush>
+    <>
+    <Card title={<span className="flex items-center gap-2"><ShieldAlert className="size-4 text-fg-3" aria-hidden />Last 24 hours by chain</span>}
+      description="Control changes per chain and the controllers classified so far" flush>
       <DataTable rows={stats} rowKey={(s) => s.chain} dense empty={<EmptyState compact title="No control changes yet" />} columns={[
         { key: 'chain', header: 'Chain', cell: (s) => <span className="capitalize text-fg">{s.chain}</span> },
         { key: 'u', header: 'Upgrades 24h', align: 'right', cell: (s) => <span className="tnum">{num(s.upgrades_24h)}</span> },
@@ -53,7 +54,8 @@ export default function IntelControl({ stats, changes }) {
         { key: 't', header: 'Timelock ops', align: 'right', hide: 'md', cell: (s) => <span className="tnum">{num(s.timelock_ops_24h)}</span> },
         { key: 'c', header: 'Controllers', align: 'right', hide: 'md', cell: (s) => <span className="tnum" title={`${num(s.multisigs)} multisigs, ${num(s.timelocks)} timelocks, ${num(s.controllers_queue)} waiting to be classified`}>{num(s.controllers)}</span> },
       ]} />
-      <div className="border-t border-line px-5 pb-1 pt-4 text-xs text-fg-3">Latest changes</div>
+    </Card>
+    <Card title="Latest changes" description="Ownership set at deployment is left out. Open a contract for who controls it now and how that came about." flush>
       <DataTable rows={changes} rowKey={(e) => `${e.chain}:${e.tx_hash}:${e.kind}:${e.contract}:${e.account}:${e.new}`} dense empty={<EmptyState compact title="Nothing yet" />} columns={[
         { key: 'k', header: 'Change', cell: (e) => { const [tone, label] = CONTROL_KIND[e.kind] || ['neutral', e.kind]; return <Badge tone={tone}>{label}</Badge> } },
         { key: 'c', header: 'Contract', cell: (e) => (
@@ -68,5 +70,6 @@ export default function IntelControl({ stats, changes }) {
       ]} />
       <Profile target={open} onClose={() => setOpen(null)} />
     </Card>
+    </>
   )
 }

@@ -108,8 +108,9 @@ export default function IntelProtocols({ stats, sources, top, links }) {
   const rows = found ?? top
   const llama = sources.find((s) => s.source === 'defillama')
   return (
-    <Card title={<span className="flex items-center gap-2"><Boxes className="size-4 text-fg-3" aria-hidden />Protocols</span>}
-      description="Protocols from DefiLlama, refreshed daily, with their core contracts and the contracts their factories created" flush
+    <>
+    <Card title={<span className="flex items-center gap-2"><Boxes className="size-4 text-fg-3" aria-hidden />By chain</span>}
+      description="Contracts mapped to protocols: curated core contracts, contracts their factories created and proxies of their implementations" flush
       actions={llama && <span className={`text-xs ${llama.error ? 'text-[#ff8b8b]' : 'text-fg-3'}`} title={llama.error || ''}>{llama.error ? 'Last DefiLlama sync failed' : `DefiLlama synced ${ago(llama.last_ok_at)} · ${num(llama.items)} protocols`}</span>}>
       <DataTable rows={stats} rowKey={(s) => s.chain} dense empty={<EmptyState compact title="No contract mapped to a protocol yet" />} columns={[
         { key: 'chain', header: 'Chain', cell: (s) => <span className="capitalize text-fg">{s.chain}</span> },
@@ -118,8 +119,9 @@ export default function IntelProtocols({ stats, sources, top, links }) {
         { key: 'f', header: 'From factories', align: 'right', cell: (s) => <span className="tnum">{num(s.factory)}</span> },
         { key: 'x', header: 'Proxies', align: 'right', hide: 'sm', cell: (s) => <span className="tnum">{num(s.proxy)}</span> },
       ]} />
-      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line px-5 pb-1 pt-4">
-        <span className="text-xs text-fg-3">{found ? `${num(found.length)} found` : 'Top protocols on followed chains'}</span>
+    </Card>
+    <Card title={found ? `${num(found.length)} protocols found` : 'Top protocols on followed chains'} description="Ranked by value locked on the chains Intel follows. Open one for its risk score, incidents and contracts." flush>
+      <div className="flex flex-wrap items-center justify-end gap-2 px-5 pb-1">
         <div className="w-full sm:w-64"><SearchInput id="intel-protocol-search" value={q} onChange={setQ} placeholder="Search protocols" label="Search protocols" /></div>
       </div>
       <DataTable rows={rows} rowKey={(p) => p.slug} dense empty={<EmptyState compact title="No protocols" />} columns={[
@@ -133,7 +135,8 @@ export default function IntelProtocols({ stats, sources, top, links }) {
         { key: 'a', header: 'Audits', align: 'right', hide: 'md', cell: (p) => <span className="tnum text-fg-2">{p.audits ?? '-'}</span> },
         { key: 'm', header: 'Contracts', align: 'right', cell: (p) => <span className="tnum">{num(p.contracts)}</span> },
       ]} />
-      <div className="border-t border-line px-5 pb-1 pt-4 text-xs text-fg-3">Customer project contracts</div>
+    </Card>
+    <Card title="Customer project contracts" description="Projects with a contract on a followed chain, with what Intel knows about it" flush>
       <DataTable rows={links} rowKey={(l) => l.project_id} dense empty={<EmptyState compact title="No project has a contract on a followed chain" />} columns={[
         { key: 'p', header: 'Project', cell: (l) => <span className="text-fg">{l.project_name}<span className="ml-2 text-xs text-fg-3">{l.org_name}</span></span> },
         { key: 'a', header: 'Contract', cell: (l) => <button type="button" className="font-mono text-xs text-fg hover:underline" onClick={() => setOpenAddr({ chain: l.chain, address: l.address })} aria-label={`Open contract ${l.address} on ${l.chain}`}>{short(l.address)}</button> },
@@ -151,5 +154,6 @@ export default function IntelProtocols({ stats, sources, top, links }) {
       <ProtocolDetail slug={openSlug} onClose={() => setOpenSlug(null)} onOpenAddress={(t) => { setOpenSlug(null); setOpenAddr(t) }} />
       <Profile target={openAddr} onClose={() => setOpenAddr(null)} />
     </Card>
+    </>
   )
 }

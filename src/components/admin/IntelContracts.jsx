@@ -91,8 +91,9 @@ function ContractDetail({ target, onClose }) {
 export default function IntelContracts({ stats, recent }) {
   const [open, setOpen] = useState(null)
   return (
-    <Card title={<span className="flex items-center gap-2"><FileCode2 className="size-4 text-fg-3" aria-hidden />Contracts</span>}
-      description="Contracts created on followed chains, with proxy and clone facts read from their code, verified source from Sourcify or Etherscan, and labels" flush>
+    <>
+    <Card title={<span className="flex items-center gap-2"><FileCode2 className="size-4 text-fg-3" aria-hidden />By chain</span>}
+      description="What the deployments indexer and the contract workers found on each chain; the code queue is contracts waiting for their code to be read" flush>
       <DataTable rows={stats} rowKey={(s) => s.chain} dense empty={<EmptyState compact title="No contracts indexed yet" />} columns={[
         { key: 'chain', header: 'Chain', cell: (s) => <span className="capitalize text-fg">{s.chain}</span> },
         { key: 'n', header: 'Contracts', align: 'right', cell: (s) => <span className="tnum text-fg">{num(s.contracts)}</span> },
@@ -104,7 +105,8 @@ export default function IntelContracts({ stats, recent }) {
         { key: 'l', header: 'Labeled', align: 'right', hide: 'lg', cell: (s) => <span className="tnum">{num(s.labeled)}</span> },
         { key: 'q', header: 'Code queue', align: 'right', hide: 'md', cell: (s) => <span className={`tnum ${s.code_pending > 500 ? 'text-[#f5dfae]' : 'text-fg-3'}`}>{num(s.code_pending)}</span> },
       ]} />
-      <div className="border-t border-line px-5 pb-1 pt-4 text-xs text-fg-3">Newest contracts</div>
+    </Card>
+    <Card title="Newest contracts" description="Open one for its creation, proxy facts, verified source and clones" flush>
       <DataTable rows={recent} rowKey={(c) => `${c.chain}:${c.address}`} dense empty={<EmptyState compact title="Nothing yet" />} columns={[
         { key: 'a', header: 'Contract', cell: (c) => (
           <button type="button" onClick={() => setOpen({ chain: c.chain, address: c.address })} className="text-left hover:underline" aria-label={`Open contract ${c.address} on ${c.chain}`}>
@@ -121,5 +123,6 @@ export default function IntelContracts({ stats, recent }) {
       ]} />
       <ContractDetail target={open} onClose={() => setOpen(null)} />
     </Card>
+    </>
   )
 }

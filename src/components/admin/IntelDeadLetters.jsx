@@ -25,7 +25,7 @@ function State({ d }) {
 // on. Staff replay them through the same indexer once the cause is fixed
 // (the index service picks the request up within seconds), or dismiss
 // them. Both need a reason and are audited.
-export default function IntelDeadLetters({ open, resolved, onChanged }) {
+export default function IntelDeadLetters({ open, resolved, query = '', onChanged }) {
   const [picked, setPicked] = useState(() => new Set())
   const [reason, setReason] = useState('')
   const [busy, setBusy] = useState(false)
@@ -46,7 +46,7 @@ export default function IntelDeadLetters({ open, resolved, onChanged }) {
     setBusy(true)
     setError(null)
     try {
-      onChanged(await api(`/api/v1/admin/intel/dead-letters/${kind}`, { method: 'POST', body: { ids: chosen, reason } }))
+      onChanged(await api(`/api/v1/admin/intel/dead-letters/${kind}${query}`, { method: 'POST', body: { ids: chosen, reason } }))
       setPicked(new Set())
       setReason('')
     } catch (err) {
@@ -70,7 +70,7 @@ export default function IntelDeadLetters({ open, resolved, onChanged }) {
         </div>
       )}
       <DataTable rows={open} rowKey={(d) => d.id} dense empty={<EmptyState compact title="No dead letters">Every indexer is keeping up.</EmptyState>} columns={[
-        { key: 'pick', header: <input type="checkbox" aria-label="Pick all dead letters" checked={all} onChange={() => setPicked(all ? new Set() : new Set(open.map((d) => d.id)))} />,
+        open.length > 0 && { key: 'pick', header: <input type="checkbox" aria-label="Pick all dead letters" checked={all} onChange={() => setPicked(all ? new Set() : new Set(open.map((d) => d.id)))} />,
           className: 'w-8', cell: (d) => <input type="checkbox" aria-label={`Pick dead letter ${d.id}`} checked={picked.has(d.id)} onChange={() => toggle(d.id)} /> },
         { key: 'ix', header: 'Indexer', cell: (d) => <button type="button" className="text-left font-mono text-xs text-fg hover:underline" onClick={() => setInspect(inspect === d.id ? null : d.id)} aria-expanded={inspect === d.id}>{d.indexer}</button> },
         { key: 'chain', header: 'Chain', hide: 'sm', cell: (d) => <span className="capitalize text-fg-2">{d.chain || '-'}</span> },
@@ -90,7 +90,7 @@ export default function IntelDeadLetters({ open, resolved, onChanged }) {
           </span>
         ) },
         { key: 'at', header: 'Stored', align: 'right', hide: 'sm', cell: (d) => <span className="whitespace-nowrap text-fg-3" title={dateTime(d.created_at)}>{ago(d.created_at)}</span> },
-      ]} />
+      ].filter(Boolean)} />
       {resolved.length > 0 && (
         <>
           <div className="border-t border-line px-5 pb-1 pt-4 text-xs text-fg-3">Resolved in the last week</div>

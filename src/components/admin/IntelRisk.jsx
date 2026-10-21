@@ -172,8 +172,8 @@ export default function IntelRisk({ stats, events, exploitStats, exploits, onCha
   }, [q])
   return (
     <>
-      <Card title={<span className="flex items-center gap-2"><ShieldAlert className="size-4 text-fg-3" aria-hidden />Risk events</span>}
-        description="Findings of the risk rules: upgrades and control changes on tracked contracts, fast governance, large transfers, contracts copying exploit code, tokens imitating well known ones. Published on the queue as intel.events.<kind>." flush>
+      <Card title={<span className="flex items-center gap-2"><ShieldAlert className="size-4 text-fg-3" aria-hidden />Last 24 hours by chain</span>}
+        description="Risk events per severity; unpublished ones are still waiting for the outbox to put them on the queue as intel.events.<kind>" flush>
         <DataTable rows={stats} rowKey={(s) => s.chain} dense empty={<EmptyState compact title="No risk event in the last 24 hours" />} columns={[
           { key: 'chain', header: 'Chain (24h)', cell: (s) => <span className="capitalize text-fg">{s.chain}</span> },
           { key: 'c', header: 'Critical', align: 'right', cell: (s) => <span className={`tnum ${s.critical ? 'text-[#ff8b8b]' : ''}`}>{num(s.critical)}</span> },
@@ -182,10 +182,9 @@ export default function IntelRisk({ stats, events, exploitStats, exploits, onCha
           { key: 'l', header: 'Low and info', align: 'right', hide: 'sm', cell: (s) => <span className="tnum">{num(s.low + s.info)}</span> },
           { key: 'p', header: 'Unpublished', align: 'right', hide: 'md', cell: (s) => <span className="tnum text-fg-3">{num(s.unpublished)}</span> },
         ]} />
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line px-5 pb-1 pt-4">
-          <span className="text-xs text-fg-3">Latest events</span>
-          <Segmented label="Minimum severity" options={LEVELS} value={level} onChange={setLevel} />
-        </div>
+      </Card>
+      <Card title="Latest events" description="Upgrades and control changes on tracked contracts, fast governance, large transfers, contracts copying exploit code and tokens imitating well known ones" flush>
+        <div className="overflow-x-auto px-5 pb-3 scrollbar-thin"><Segmented label="Minimum severity" options={LEVELS} value={level} onChange={setLevel} /></div>
         <DataTable rows={rows ?? events} rowKey={(e) => e.id} dense empty={<EmptyState compact title="No event at this level" />} columns={[
           { key: 's', header: 'Severity', cell: (e) => <SeverityTag severity={e.severity} /> },
           { key: 't', header: 'Event', cell: (e) => <span className="text-fg">{e.title}</span> },

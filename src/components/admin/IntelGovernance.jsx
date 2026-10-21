@@ -119,8 +119,9 @@ function ProposalDetail({ target, onClose }) {
 export default function IntelGovernance({ stats, proposals }) {
   const [open, setOpen] = useState(null)
   return (
-    <Card title={<span className="flex items-center gap-2"><Landmark className="size-4 text-fg-3" aria-hidden />Governance</span>}
-      description="Proposals on OpenZeppelin Governor, Compound Governor Bravo and Aave v2 governance contracts, with the votes and lifecycle seen since ingestion began" flush>
+    <>
+    <Card title={<span className="flex items-center gap-2"><Landmark className="size-4 text-fg-3" aria-hidden />By chain</span>}
+      description="Governors seen, proposals, votes and executions" flush>
       <DataTable rows={stats} rowKey={(s) => s.chain} dense empty={<EmptyState compact title="No governance activity yet" />} columns={[
         { key: 'chain', header: 'Chain', cell: (s) => <span className="capitalize text-fg">{s.chain}</span> },
         { key: 'g', header: 'Governors', align: 'right', cell: (s) => <span className="tnum">{num(s.governors)}</span> },
@@ -128,7 +129,8 @@ export default function IntelGovernance({ stats, proposals }) {
         { key: 'v', header: 'Votes 24h', align: 'right', cell: (s) => <span className="tnum">{num(s.votes_24h)}</span> },
         { key: 'x', header: 'Executed 7d', align: 'right', hide: 'sm', cell: (s) => <span className="tnum">{num(s.executed_7d)}</span> },
       ]} />
-      <div className="border-t border-line px-5 pb-1 pt-4 text-xs text-fg-3">Latest proposals</div>
+    </Card>
+    <Card title="Latest proposals" description="Open one for its actions, votes and lifecycle" flush>
       <DataTable rows={proposals} rowKey={(p) => `${p.chain}:${p.governor}:${p.proposal_id}`} dense empty={<EmptyState compact title="No proposals seen yet" />} columns={[
         { key: 't', header: 'Proposal', cell: (p) => (
           <button type="button" className="block max-w-[28rem] truncate text-left text-fg hover:underline" onClick={() => setOpen({ chain: p.chain, governor: p.governor, id: p.proposal_id })}
@@ -142,5 +144,6 @@ export default function IntelGovernance({ stats, proposals }) {
       ]} />
       <ProposalDetail target={open} onClose={() => setOpen(null)} />
     </Card>
+    </>
   )
 }

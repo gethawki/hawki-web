@@ -59,7 +59,20 @@ const AdminPayments = lazy(() => import('./pages/admin/AdminPayments.jsx'))
 const AdminRevenue = lazy(() => import('./pages/admin/AdminRevenue.jsx'))
 const AdminAudit = lazy(() => import('./pages/admin/AdminAudit.jsx'))
 const AdminSwitches = lazy(() => import('./pages/admin/AdminSwitches.jsx'))
-const AdminIntel = lazy(() => import('./pages/admin/AdminIntel.jsx'))
+const IntelLayout = lazy(() => import('./components/admin/IntelOps.jsx').then((m) => ({ default: m.IntelLayout })))
+const intelPage = (name) => lazy(() => import('./pages/admin/AdminIntel.jsx').then((m) => ({ default: m[name] })))
+const IntelOverview = intelPage('default')
+const IntelChains = intelPage('IntelChains')
+const IntelChain = intelPage('IntelChain')
+const IntelIndexing = intelPage('IntelIndexing')
+const IntelSources = intelPage('IntelSourcesPage')
+const IntelAudit = intelPage('IntelAuditPage')
+const IntelContracts = intelPage('IntelContractsPage')
+const IntelTokens = intelPage('IntelTokensPage')
+const IntelControl = intelPage('IntelControlPage')
+const IntelGovernance = intelPage('IntelGovernancePage')
+const IntelProtocols = intelPage('IntelProtocolsPage')
+const IntelRisk = intelPage('IntelRiskPage')
 
 const guarded = (path, element) => <RequireAccess access={accessFor(path)}>{element}</RequireAccess>
 
@@ -119,7 +132,20 @@ export default function App() {
             <Route path="/admin/revenue" element={guarded('/admin/revenue', <AdminRevenue />)} />
             <Route path="/admin/audit" element={guarded('/admin/audit', <AdminAudit />)} />
             <Route path="/admin/switches" element={guarded('/admin/switches', <AdminSwitches />)} />
-            <Route path="/admin/intel" element={guarded('/admin/intel', <AdminIntel />)} />
+            <Route path="/admin/intel" element={guarded('/admin/intel', <IntelLayout />)}>
+              <Route index element={<IntelOverview />} />
+              <Route path="chains" element={<IntelChains />} />
+              <Route path="chains/:chain" element={<IntelChain />} />
+              <Route path="indexing" element={<IntelIndexing />} />
+              <Route path="sources" element={<IntelSources />} />
+              <Route path="audit" element={<IntelAudit />} />
+              <Route path="contracts" element={<IntelContracts />} />
+              <Route path="tokens" element={<IntelTokens />} />
+              <Route path="control" element={<IntelControl />} />
+              <Route path="governance" element={<IntelGovernance />} />
+              <Route path="protocols" element={<IntelProtocols />} />
+              <Route path="risk" element={<IntelRisk />} />
+            </Route>
           </Route>
 
           <Route path="*" element={<NotFound />} />

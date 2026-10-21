@@ -238,8 +238,9 @@ export default function IntelWallets({ chains, wallets, tracked, recent, onChang
   }
 
   return (
-    <Card title={<span className="flex items-center gap-2"><Coins className="size-4 text-fg-3" aria-hidden />Wallets and tokens</span>}
-      description="Every address seen on followed chains, tokens found from their transfer events, and transfers and holders of the tokens you track" flush>
+    <>
+    <Card title={<span className="flex items-center gap-2"><Coins className="size-4 text-fg-3" aria-hidden />By chain</span>}
+      description="Addresses seen and tokens found from their transfer events; queues are addresses to classify, token metadata and holder balances to read" flush>
       <DataTable rows={wallets} rowKey={(w) => w.chain} dense empty={<EmptyState compact title="Nothing indexed yet" />} columns={[
         { key: 'chain', header: 'Chain', cell: (w) => <span className="capitalize text-fg">{w.chain}</span> },
         { key: 'a', header: 'Addresses', align: 'right', cell: (w) => <span className="tnum text-fg">{num(w.addresses)}</span> },
@@ -251,7 +252,9 @@ export default function IntelWallets({ chains, wallets, tracked, recent, onChang
         { key: 'q', header: 'Queues', align: 'right', hide: 'md', cell: (w) => <span className="whitespace-nowrap text-xs text-fg-3 tnum" title="addresses to classify · token metadata · holder balances">{num(w.unknown)} · {num(w.meta_pending)} · {num(w.holders_queue)}</span> },
       ]} />
 
-      <div className="grid grid-cols-1 gap-4 border-t border-line px-5 py-4 lg:grid-cols-2">
+    </Card>
+    <Card title="Look up and track" description="Open any address, or track a token so its transfers and holders are kept from now on">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <form className="grid min-w-0 gap-2" onSubmit={(e) => { e.preventDefault(); if (isAddress(look.trim())) setOpen({ chain: lookChain, address: look.trim().toLowerCase() }) }}>
           <div className="text-xs text-fg-3">Look up an address</div>
           <div className="flex gap-2">
@@ -272,7 +275,8 @@ export default function IntelWallets({ chains, wallets, tracked, recent, onChang
         </form>
       </div>
 
-      <div className="border-t border-line px-5 pb-1 pt-4 text-xs text-fg-3">Tracked tokens</div>
+    </Card>
+    <Card title="Tracked tokens" description="Transfers and holders are kept for these; large transfers become risk events" flush>
       <DataTable rows={tracked} rowKey={(t) => `${t.chain}:${t.address}`} dense empty={<EmptyState compact title="No token is tracked">Track one above to keep its transfers and holders.</EmptyState>} columns={[
         { key: 'n', header: 'Token', cell: (t) => (
           <button type="button" className="text-left hover:underline" onClick={() => setOpen({ chain: t.chain, address: t.address })} aria-label={`Open token ${t.address} on ${t.chain}`}>
@@ -286,7 +290,8 @@ export default function IntelWallets({ chains, wallets, tracked, recent, onChang
         { key: 'u', header: '', align: 'right', cell: (t) => <Button size="sm" variant="ghost" disabled={busy} onClick={() => setTracked(t.chain, t.address, false)} aria-label={`Stop tracking ${t.symbol || t.address}`}>Untrack</Button> },
       ]} />
 
-      <div className="border-t border-line px-5 pb-1 pt-4 text-xs text-fg-3">Newest tokens</div>
+    </Card>
+    <Card title="Newest tokens" flush>
       <DataTable rows={recent} rowKey={(t) => `${t.chain}:${t.address}`} dense empty={<EmptyState compact title="Nothing yet" />} columns={[
         { key: 'n', header: 'Token', cell: (t) => (
           <button type="button" className="min-w-0 text-left hover:underline" onClick={() => setOpen({ chain: t.chain, address: t.address })} aria-label={`Open token ${t.address} on ${t.chain}`}><TokenName t={t} /></button>
@@ -298,5 +303,6 @@ export default function IntelWallets({ chains, wallets, tracked, recent, onChang
       ]} />
       <Profile target={open} onClose={() => setOpen(null)} />
     </Card>
+    </>
   )
 }
