@@ -15,7 +15,7 @@ import { ScoreSection } from './intelBits.jsx'
 const short = (a) => (a ? `${a.slice(0, 8)}…${a.slice(-6)}` : '-')
 const SOURCE = { curated: 'Curated', factory: 'Created by its factory', proxy: 'Proxy of its implementation' }
 
-function usd(v) {
+export function usd(v) {
   if (v == null) return '-'
   if (v >= 1e9) return `$${(v / 1e9).toFixed(2)}B`
   if (v >= 1e6) return `$${(v / 1e6).toFixed(1)}M`
@@ -24,9 +24,9 @@ function usd(v) {
 }
 
 // TVL on the chains Intel follows.
-const followedTvl = (p) => Object.values(p.chain_tvls || {}).reduce((a, b) => a + b, 0)
+export const followedTvl = (p) => Object.values(p.chain_tvls || {}).reduce((a, b) => a + b, 0)
 
-function Flags({ p }) {
+export function Flags({ p }) {
   return (
     <>
       {p.rugged && <Badge tone="danger">Rugged</Badge>}

@@ -19,7 +19,7 @@ const SUPPORT = ['Against', 'For', 'Abstain']
 
 // Vote weights are token amounts in base units; most governance tokens
 // have 18 decimals, so they are shown in whole tokens.
-function weight(raw) {
+export function weight(raw) {
   try {
     const v = BigInt(raw)
     const whole = v / 10n ** 18n
@@ -29,12 +29,12 @@ function weight(raw) {
   }
 }
 
-function Status({ p }) {
+export function Status({ p }) {
   const [tone, label] = STATUS[p.status] || ['neutral', p.status]
   return <Badge tone={tone} dot={p.status === 'active'} pulse={p.status === 'active'}>{label}</Badge>
 }
 
-function Tally({ p }) {
+export function Tally({ p }) {
   if (!p.voters) return <span className="text-xs text-fg-3">no votes seen</span>
   return (
     <span className="whitespace-nowrap text-xs tnum">

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Activity, Boxes, Layers, Network, ServerCrash, Wrench } from 'lucide-react'
 import { api } from '../../lib/api.js'
 import { useApi } from '../../lib/useApi.js'
@@ -19,6 +20,8 @@ import IntelControl from '../../components/admin/IntelControl.jsx'
 import IntelGovernance from '../../components/admin/IntelGovernance.jsx'
 import IntelProtocols from '../../components/admin/IntelProtocols.jsx'
 import IntelRisk from '../../components/admin/IntelRisk.jsx'
+import IntelDeadLetters, { IntelSources } from '../../components/admin/IntelDeadLetters.jsx'
+import { ButtonTabs } from '../../components/ui/Controls.jsx'
 
 const STATUS = {
   ok: ['good', 'Healthy'],
@@ -109,9 +112,9 @@ function Integrity({ c }) {
       <span className="text-fg-3">Integrity</span>
       {i ? (
         <>
-          <span className="text-fg-2">verified through <span className="text-fg tnum">{height(i.checked_through)}</span>, checked {ago(i.last_run_at)}</span>
-          <span className="text-fg-2"><span className="text-fg tnum">{num(i.gaps_found)}</span> gaps · <span className="text-fg tnum">{num(i.breaks_found)}</span> broken links found</span>
-          {found > 0 ? <span className="text-fg-3">last problem {ago(i.last_problem_at)}, repaired automatically</span> : <Badge tone="good" dot>No problems found</Badge>}
+              <span className="text-fg-2">verified through <span className="text-fg tnum">{height(i.checked_through)}</span>, checked {ago(i.last_run_at)}</span>
+              <span className="text-fg-2"><span className="text-fg tnum">{num(i.gaps_found)}</span> gaps · <span className="text-fg tnum">{num(i.breaks_found)}</span> broken links found</span>
+              {found > 0 ? <span className="text-fg-3">last problem {ago(i.last_problem_at)}, repaired automatically</span> : <Badge tone="good" dot>No problems found</Badge>}
         </>
       ) : <span className="text-fg-2">not checked yet</span>}
     </div>
@@ -184,6 +187,10 @@ function ChainCard({ c, onChanged }) {
 // own state.
 export default function AdminIntel() {
   const { data, error, reload, setData } = useApi('/api/v1/admin/intel')
+  const [params, setParams] = useSearchParams()
+  const view = params.get('view') === 'data' ? 'data' : 'operations'
+  // Reprocessing answers 202 without a body; the next load shows it.
+  const changed = (st) => (st ? setData(st) : reload())
   useEffect(() => {
     const t = setInterval(reload, 10000)
     return () => clearInterval(t)
@@ -201,85 +208,99 @@ export default function AdminIntel() {
   return (
     <div className="grid grid-cols-1 gap-4">
       <PageHeader title="Intel Engine" description="Chains Intel follows, the health of their RPC endpoints and every change Intel makes to its own state. Refreshes every 10 seconds."
-        meta={<span>Configured in the Intel service (config/intel.yaml); start it with <code className="font-mono">intel ingest</code>.</span>} />
-      <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
-        <StatCard label="Chains followed" icon={Network} value={num(enabled.length)} sub={`${num(disabled.length)} configured but off`} />
-        <StatCard label="Healthy" icon={Activity} value={`${healthy} / ${enabled.length}`} sub="every endpoint answers" />
-        <StatCard label="Endpoints up" icon={Boxes} value={`${eps.filter((e) => e.healthy).length} / ${eps.length}`} sub="across followed chains" />
-        <StatCard label="Down or wrong chain" icon={ServerCrash} value={num(problems)} tone={problems ? 'danger' : undefined} sub={problems ? 'needs attention' : 'none'} />
-      </div>
+        meta={<span>Configured in the Intel service (config/intel.yaml); start it with <code className="font-mono">intel ingest</code>.</span>}>
+        <ButtonTabs value={view} onChange={(v) => setParams(v === 'operations' ? {} : { view: v }, { replace: true })}
+          tabs={[{ value: 'operations', label: 'Operations', count: data.dead_letters.length || null }, { value: 'data', label: 'Data' }]} />
+      </PageHeader>
+      {view === 'operations' ? (
+        <>
+          <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+            <StatCard label="Chains followed" icon={Network} value={num(enabled.length)} sub={`${num(disabled.length)} configured but off`} />
+            <StatCard label="Healthy" icon={Activity} value={`${healthy} / ${enabled.length}`} sub="every endpoint answers" />
+            <StatCard label="Endpoints up" icon={Boxes} value={`${eps.filter((e) => e.healthy).length} / ${eps.length}`} sub="across followed chains" />
+            <StatCard label="Down or wrong chain" icon={ServerCrash} value={num(problems)} tone={problems ? 'danger' : undefined} sub={problems ? 'needs attention' : 'none'} />
+          </div>
 
-      {data.chains.length === 0 ? (
-        <Card><EmptyState icon={Network} title="Intel has not started yet">Start the Intel service with <code className="font-mono">intel ingest</code>; its chains appear here.</EmptyState></Card>
+          {data.chains.length === 0 ? (
+            <Card><EmptyState icon={Network} title="Intel has not started yet">Start the Intel service with <code className="font-mono">intel ingest</code>; its chains appear here.</EmptyState></Card>
       ) : (
-        <div className="grid grid-cols-1 gap-4">
-          {enabled.map((c) => <ChainCard key={c.name} c={c} onChanged={setData} />)}
-        </div>
+            <div className="grid grid-cols-1 gap-4">
+              {enabled.map((c) => <ChainCard key={c.name} c={c} onChanged={changed} />)}
+            </div>
+          )}
+
+          {disabled.length > 0 && (
+            <Card title="Configured but off" description="Enable a chain in the Intel config once it has an endpoint that can keep up." flush>
+              <DataTable rows={disabled} rowKey={(c) => c.name} dense columns={[
+                { key: 'name', header: 'Chain', cell: (c) => <span className="capitalize text-fg">{c.name}</span> },
+                { key: 'id', header: 'Chain id', align: 'right', cell: (c) => c.chain_id },
+                { key: 'bt', header: 'Block time', align: 'right', cell: (c) => blockTime(c.block_time_ms) },
+                { key: 'conf', header: 'Confirmations', align: 'right', hide: 'sm', cell: (c) => c.confirmations },
+              ]} />
+            </Card>
+          )}
+
+          <Card title={<span className="flex items-center gap-2"><Layers className="size-4 text-fg-3" aria-hidden />Indexers</span>}
+            description={<>Indexers turn ingested blocks into tables; they run in <code className="font-mono">intel index</code>. Messages that keep failing are set aside as dead letters.</>} flush>
+            <DataTable rows={data.indexers} rowKey={(x) => `${x.indexer}:${x.chain}`} dense
+              empty={<EmptyState compact title="No indexer has run yet">Start <code className="font-mono">intel index</code>.</EmptyState>}
+              columns={[
+                { key: 'name', header: 'Indexer', cell: (x) => <span className="font-mono text-xs text-fg">{x.indexer}</span> },
+                { key: 'chain', header: 'Chain', cell: (x) => <span className="capitalize text-fg-2">{x.chain || '-'}</span> },
+                { key: 'num', header: 'Indexed', align: 'right', cell: (x) => <span className="tnum">{height(x.number)}</span> },
+                { key: 'lag', header: 'Behind', align: 'right', cell: (x) => <span className={`whitespace-nowrap tnum ${x.lag > 100 ? 'text-[#f5dfae]' : ''}`}>{x.lag != null ? `${height(x.lag)} blocks` : '-'}</span> },
+                { key: 'dl', header: 'Dead letters', align: 'right', cell: (x) => x.dead_letters > 0 ? <Badge tone="danger">{num(x.dead_letters)}</Badge> : <span className="text-fg-3">0</span> },
+                { key: 'at', header: 'Updated', align: 'right', hide: 'sm', cell: (x) => <span className="whitespace-nowrap text-fg-3">{x.updated_at ? ago(x.updated_at) : '-'}</span> },
+              ]} />
+          </Card>
+
+              <IntelDeadLetters open={data.dead_letters} resolved={data.resolved_dead_letters} onChanged={setData} />
+
+              <IntelSources sources={data.sources} />
+
+          <Card title={<span className="flex items-center gap-2"><Wrench className="size-4 text-fg-3" aria-hidden />Repairs</span>}
+            description="Ranges fetched again: gaps and broken links found by the integrity check, and reprocessing asked for by staff" flush>
+            <DataTable rows={data.repairs} rowKey={(r) => r.id} dense empty={<EmptyState compact title="No repairs yet" />} columns={[
+              { key: 'when', header: 'Queued', cell: (r) => <span className="whitespace-nowrap text-fg-3" title={dateTime(r.created_at)}>{ago(r.created_at)}</span> },
+              { key: 'chain', header: 'Chain', cell: (r) => <span className="capitalize text-fg-2">{r.chain}</span> },
+              { key: 'kind', header: 'Kind', cell: (r) => <span className="font-mono text-xs text-fg">{r.kind}</span> },
+              { key: 'range', header: 'Blocks', cell: (r) => <span className="whitespace-nowrap tnum">{r.from === r.to ? height(r.from) : `${height(r.from)} to ${height(r.to)}`}</span> },
+              { key: 'status', header: 'Status', cell: (r) => {
+                const [tone, label] = REPAIR[r.status] || ['neutral', r.status]
+                const total = r.to - r.from + 1
+                return <span className="flex items-center gap-2"><Badge tone={tone} dot>{label}</Badge>{r.status === 'pending' && <span className="text-xs text-fg-3 tnum">{Math.floor(((r.next - r.from) / total) * 100)}%</span>}</span>
+              } },
+              { key: 'fix', header: 'Fixed', align: 'right', hide: 'sm', cell: (r) => <span className="whitespace-nowrap text-fg-2">{r.filled} filled · {r.replaced} replaced</span> },
+              { key: 'reason', header: 'Reason', hide: 'md', cell: (r) => <span className="text-fg-2">{r.error ? <span className="text-[#ff8b8b]">{r.error}</span> : r.reason}</span> },
+            ]} />
+          </Card>
+
+          <Card title="Intel audit" description="Chains enabled or disabled, ingestion started, paused or resumed, reorgs, resets, repairs and dead letters" flush>
+            <DataTable rows={data.audit} dense empty={<EmptyState compact title="Nothing recorded yet" />} columns={[
+              { key: 'when', header: 'When', cell: (a) => <span className="whitespace-nowrap text-fg-3" title={dateTime(a.occurred_at)}>{ago(a.occurred_at)}</span> },
+              { key: 'chain', header: 'Chain', cell: (a) => <span className="capitalize text-fg-2">{a.chain || '-'}</span> },
+              { key: 'action', header: 'Action', cell: (a) => <span className="font-mono text-xs text-fg">{a.action}</span> },
+              { key: 'reason', header: 'Reason', hide: 'sm', cell: (a) => <span className="text-fg-2">{a.reason}</span> },
+              { key: 'actor', header: 'By', align: 'right', hide: 'md', cell: (a) => <span className="text-fg-3">{a.actor_email || a.actor}</span> },
+            ]} />
+          </Card>
+        </>
+      ) : (
+        <>
+          <IntelContracts stats={data.contracts} recent={data.recent_contracts} />
+
+          <IntelRisk stats={data.risk} events={data.risk_events} exploitStats={data.exploit_stats} exploits={data.recent_exploits} onChanged={reload} />
+
+          <IntelProtocols stats={data.protocols} sources={data.sources} top={data.top_protocols} links={data.project_links} />
+
+          <IntelControl stats={data.control} changes={data.control_changes} />
+
+          <IntelGovernance stats={data.governance} proposals={data.proposals} />
+
+          <IntelWallets chains={enabled.map((c) => c.name)} wallets={data.wallets} tracked={data.tracked_tokens} recent={data.recent_tokens} onChanged={changed} />
+
+        </>
       )}
-
-      {disabled.length > 0 && (
-        <Card title="Configured but off" description="Enable a chain in the Intel config once it has an endpoint that can keep up." flush>
-          <DataTable rows={disabled} rowKey={(c) => c.name} dense columns={[
-            { key: 'name', header: 'Chain', cell: (c) => <span className="capitalize text-fg">{c.name}</span> },
-            { key: 'id', header: 'Chain id', align: 'right', cell: (c) => c.chain_id },
-            { key: 'bt', header: 'Block time', align: 'right', cell: (c) => blockTime(c.block_time_ms) },
-            { key: 'conf', header: 'Confirmations', align: 'right', hide: 'sm', cell: (c) => c.confirmations },
-          ]} />
-        </Card>
-      )}
-
-      <Card title={<span className="flex items-center gap-2"><Layers className="size-4 text-fg-3" aria-hidden />Indexers</span>}
-        description={<>Indexers turn ingested blocks into tables; they run in <code className="font-mono">intel index</code>. Messages that keep failing are set aside as dead letters.</>} flush>
-        <DataTable rows={data.indexers} rowKey={(x) => `${x.indexer}:${x.chain}`} dense
-          empty={<EmptyState compact title="No indexer has run yet">Start <code className="font-mono">intel index</code>.</EmptyState>}
-          columns={[
-            { key: 'name', header: 'Indexer', cell: (x) => <span className="font-mono text-xs text-fg">{x.indexer}</span> },
-            { key: 'chain', header: 'Chain', cell: (x) => <span className="capitalize text-fg-2">{x.chain || '-'}</span> },
-            { key: 'num', header: 'Indexed', align: 'right', cell: (x) => <span className="tnum">{height(x.number)}</span> },
-            { key: 'lag', header: 'Behind', align: 'right', cell: (x) => <span className={`whitespace-nowrap tnum ${x.lag > 100 ? 'text-[#f5dfae]' : ''}`}>{x.lag != null ? `${height(x.lag)} blocks` : '-'}</span> },
-            { key: 'dl', header: 'Dead letters', align: 'right', cell: (x) => x.dead_letters > 0 ? <Badge tone="danger">{num(x.dead_letters)}</Badge> : <span className="text-fg-3">0</span> },
-            { key: 'at', header: 'Updated', align: 'right', hide: 'sm', cell: (x) => <span className="whitespace-nowrap text-fg-3">{x.updated_at ? ago(x.updated_at) : '-'}</span> },
-          ]} />
-      </Card>
-
-      <IntelContracts stats={data.contracts} recent={data.recent_contracts} />
-
-      <IntelRisk stats={data.risk} events={data.risk_events} exploitStats={data.exploit_stats} exploits={data.recent_exploits} onChanged={reload} />
-
-      <IntelProtocols stats={data.protocols} sources={data.sources} top={data.top_protocols} links={data.project_links} />
-
-      <IntelControl stats={data.control} changes={data.control_changes} />
-
-      <IntelGovernance stats={data.governance} proposals={data.proposals} />
-
-      <IntelWallets chains={enabled.map((c) => c.name)} wallets={data.wallets} tracked={data.tracked_tokens} recent={data.recent_tokens} onChanged={setData} />
-
-      <Card title={<span className="flex items-center gap-2"><Wrench className="size-4 text-fg-3" aria-hidden />Repairs</span>}
-        description="Ranges fetched again: gaps and broken links found by the integrity check, and reprocessing asked for by staff" flush>
-        <DataTable rows={data.repairs} rowKey={(r) => r.id} dense empty={<EmptyState compact title="No repairs yet" />} columns={[
-          { key: 'when', header: 'Queued', cell: (r) => <span className="whitespace-nowrap text-fg-3" title={dateTime(r.created_at)}>{ago(r.created_at)}</span> },
-          { key: 'chain', header: 'Chain', cell: (r) => <span className="capitalize text-fg-2">{r.chain}</span> },
-          { key: 'kind', header: 'Kind', cell: (r) => <span className="font-mono text-xs text-fg">{r.kind}</span> },
-          { key: 'range', header: 'Blocks', cell: (r) => <span className="whitespace-nowrap tnum">{r.from === r.to ? height(r.from) : `${height(r.from)} to ${height(r.to)}`}</span> },
-          { key: 'status', header: 'Status', cell: (r) => {
-            const [tone, label] = REPAIR[r.status] || ['neutral', r.status]
-            const total = r.to - r.from + 1
-            return <span className="flex items-center gap-2"><Badge tone={tone} dot>{label}</Badge>{r.status === 'pending' && <span className="text-xs text-fg-3 tnum">{Math.floor(((r.next - r.from) / total) * 100)}%</span>}</span>
-          } },
-          { key: 'fix', header: 'Fixed', align: 'right', hide: 'sm', cell: (r) => <span className="whitespace-nowrap text-fg-2">{r.filled} filled · {r.replaced} replaced</span> },
-          { key: 'reason', header: 'Reason', hide: 'md', cell: (r) => <span className="text-fg-2">{r.error ? <span className="text-[#ff8b8b]">{r.error}</span> : r.reason}</span> },
-        ]} />
-      </Card>
-
-      <Card title="Intel audit" description="Chains enabled or disabled, ingestion started, paused or resumed, reorgs, resets, repairs and dead letters" flush>
-        <DataTable rows={data.audit} dense empty={<EmptyState compact title="Nothing recorded yet" />} columns={[
-          { key: 'when', header: 'When', cell: (a) => <span className="whitespace-nowrap text-fg-3" title={dateTime(a.occurred_at)}>{ago(a.occurred_at)}</span> },
-          { key: 'chain', header: 'Chain', cell: (a) => <span className="capitalize text-fg-2">{a.chain || '-'}</span> },
-          { key: 'action', header: 'Action', cell: (a) => <span className="font-mono text-xs text-fg">{a.action}</span> },
-          { key: 'reason', header: 'Reason', hide: 'sm', cell: (a) => <span className="text-fg-2">{a.reason}</span> },
-          { key: 'actor', header: 'By', align: 'right', hide: 'md', cell: (a) => <span className="text-fg-3">{a.actor_email || a.actor}</span> },
-        ]} />
-      </Card>
     </div>
   )
 }

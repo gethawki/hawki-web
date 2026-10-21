@@ -14,7 +14,7 @@ import { ScoreSection, SeverityTag } from './intelBits.jsx'
 const inputCls = 'h-9 w-full min-w-0 rounded-lg bg-surface border border-line-strong px-3 text-sm text-fg placeholder:text-fg-3 outline-none focus:border-accent/70'
 const isAddress = (a) => /^0x[0-9a-fA-F]{40}$/.test(a)
 const short = (a) => (a ? `${a.slice(0, 8)}…${a.slice(-6)}` : '-')
-const STANDARD = { erc20: 'ERC-20', erc721: 'ERC-721', erc1155: 'ERC-1155' }
+export const STANDARD = { erc20: 'ERC-20', erc721: 'ERC-721', erc1155: 'ERC-1155' }
 const KIND = { eoa: 'Account (EOA)', contract: 'Contract', unknown: 'Not read yet' }
 
 // units shows an integer amount in base units with the token's decimals,
@@ -165,7 +165,7 @@ function duration(secs) {
 const OP = { pending: ['warning', 'Pending'], executed: ['good', 'Executed'], cancelled: ['neutral', 'Cancelled'] }
 
 // ControlSection is who controls a contract now and how that came about.
-function ControlSection({ ctl }) {
+export function ControlSection({ ctl }) {
   const info = (a) => ctl.controllers?.[a]
   return (
     <div className="grid gap-3 rounded-lg border border-line p-4">

@@ -39,6 +39,37 @@ function Health({ o }) {
   )
 }
 
+// IntelSummary is the Intel Engine at a glance; problems link to the
+// operations view.
+function IntelSummary({ i }) {
+  const healthy = i.chains > 0 && i.chains_healthy === i.chains && i.dead_letters === 0
+  const blocks = (n) => (n == null ? '-' : `${num(n)} blocks`)
+  const figures = [
+    ['Chains healthy', `${i.chains_healthy} / ${i.chains}`, i.chains_healthy < i.chains, i.chains_paused ? `${i.chains_paused} paused` : 'followed'],
+    ['Endpoints up', `${i.endpoints_up} / ${i.endpoints}`, i.endpoints_up < i.endpoints, 'RPC'],
+    ['Ingestion lag', blocks(i.ingest_lag), false, 'worst chain'],
+    ['Indexer lag', blocks(i.indexer_lag), i.indexer_lag > 100, 'worst indexer'],
+    ['Dead letters', num(i.dead_letters), i.dead_letters > 0, i.repairs_pending ? `${i.repairs_pending} repairs running` : 'open'],
+    ['Contracts 24h', num(i.contracts_24h), false, 'deployed'],
+    ['Risk events 24h', num(i.risk_events_24h), false, `${num(i.high_risk_24h)} high or critical`],
+    ['Exploits recorded', num(i.exploits), false, `${num(i.protocols)} protocols`],
+  ]
+  return (
+    <Card title="Intel Engine" description="Chain ingestion, indexing and what Intel found in the last day"
+      actions={<><Badge tone={healthy ? 'good' : 'warning'} dot>{i.chains === 0 ? 'Not started' : healthy ? 'Healthy' : 'Needs attention'}</Badge><CardLink to="/admin/intel">Operations</CardLink></>}>
+      <div className="grid grid-cols-2 gap-x-4 gap-y-4 sm:grid-cols-4">
+        {figures.map(([label, value, bad, sub]) => (
+          <div key={label} className="min-w-0">
+            <div className="truncate text-xs text-fg-3">{label}</div>
+            <div className={`mt-1 text-lg font-semibold tnum ${bad ? 'text-[#f5dfae]' : 'text-fg'}`}>{value}</div>
+            <div className="truncate text-[0.7rem] text-fg-3">{sub}</div>
+          </div>
+        ))}
+      </div>
+    </Card>
+  )
+}
+
 export default function AdminOverview() {
   const [days, setDays] = useState(30)
   const { data: o, error } = useApi('/api/v1/admin/overview')
@@ -107,6 +138,8 @@ export default function AdminOverview() {
           </Card>
           <Health o={o} />
         </div>
+
+        {o.intel && <IntelSummary i={o.intel} />}
 
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-5">
           <Card className="xl:col-span-3" title="Most active organizations" description={`By scans in the last ${days} days`} actions={<CardLink to="/admin/customers" />} flush>

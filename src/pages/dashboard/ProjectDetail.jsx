@@ -21,6 +21,7 @@ import { useApi } from '../../lib/useApi.js'
 import { ago, num } from '../../lib/format.js'
 import { postureScore, projectSource, scanDuration, scoreBand } from '../../lib/dashboard.js'
 import ProjectHistory from '../../components/reports/ProjectHistory.jsx'
+import ProjectIntel from '../../components/intel/ProjectIntel.jsx'
 
 function RunScan({ orgId, project, onStarted }) {
   const { can } = useAuth()
@@ -299,6 +300,7 @@ const TABS = [
   { value: 'overview', label: 'Overview' },
   { value: 'scans', label: 'Scans' },
   { value: 'history', label: 'History' },
+  { value: 'intel', label: 'Intel' },
   { value: 'settings', label: 'Settings' },
 ]
 
@@ -307,8 +309,10 @@ export default function ProjectDetail() {
   const { currentOrg, can } = useAuth()
   const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
-  const tab = TABS.some((t) => t.value === params.get('tab')) ? params.get('tab') : 'overview'
   const [project, setProject] = useState(null)
+  // Intel needs a deployed contract to look at.
+  const tabs = TABS.filter((t) => t.value !== 'intel' || (project?.contract_address && can('intel:read')))
+  const tab = tabs.some((t) => t.value === params.get('tab')) ? params.get('tab') : 'overview'
   const [scans, setScans] = useState(null)
   const [error, setError] = useState(null)
 
@@ -385,7 +389,7 @@ export default function ProjectDetail() {
         actions={<Button variant="ghost" size="sm" to={`/dashboard/findings?project=${project.id}`}>View findings</Button>}
       >
         <ButtonTabs value={tab} onChange={(v) => setParams(v === 'overview' ? {} : { tab: v }, { replace: true })}
-          tabs={TABS.map((t) => (t.value === 'scans' ? { ...t, count: scans?.length } : t))} />
+          tabs={tabs.map((t) => (t.value === 'scans' ? { ...t, count: scans?.length } : t))} />
       </PageHeader>
 
       {tab === 'overview' && (
@@ -403,6 +407,7 @@ export default function ProjectDetail() {
       )}
       {tab === 'scans' && <Card flush>{!scans ? <div className="h-32" /> : scanTable(scans)}</Card>}
       {tab === 'history' && can('scans:read') && <ProjectHistory orgId={currentOrg.id} projectId={project.id} />}
+      {tab === 'intel' && <ProjectIntel chain={project.chain} address={project.contract_address} />}
       {tab === 'settings' && settings}
     </div>
   )

@@ -45,6 +45,11 @@ const AuditLog = lazy(() => import('./pages/dashboard/AuditLog.jsx'))
 const OrgSettings = lazy(() => import('./pages/dashboard/OrgSettings.jsx'))
 const Profile = lazy(() => import('./pages/dashboard/Profile.jsx'))
 const DashboardNotFound = lazy(() => import('./pages/dashboard/DashboardNotFound.jsx'))
+const Intel = lazy(() => import('./pages/dashboard/Intel.jsx'))
+const IntelAddress = lazy(() => import('./pages/dashboard/IntelAddress.jsx'))
+const IntelExploit = lazy(() => import('./pages/dashboard/IntelExploit.jsx'))
+const IntelProtocol = lazy(() => import('./pages/dashboard/IntelProtocol.jsx'))
+const IntelProposal = lazy(() => import('./pages/dashboard/IntelProposal.jsx'))
 const AdminOverview = lazy(() => import('./pages/admin/AdminOverview.jsx'))
 const AdminUsers = lazy(() => import('./pages/admin/AdminUsers.jsx'))
 const AdminUser = lazy(() => import('./pages/admin/AdminUser.jsx'))
@@ -93,6 +98,11 @@ export default function App() {
             <Route path="/dashboard/alerts" element={guarded('/dashboard/alerts', <Alerts />)} />
             <Route path="/dashboard/alerts/channels" element={guarded('/dashboard/settings', <AlertChannels />)} />
             <Route path="/dashboard/alerts/:alertId" element={guarded('/dashboard/alerts', <AlertDetail />)} />
+            <Route path="/dashboard/intel" element={guarded('/dashboard/intel', <Intel />)} />
+            <Route path="/dashboard/intel/address/:chain/:address" element={guarded('/dashboard/intel', <IntelAddress />)} />
+            <Route path="/dashboard/intel/exploits/:id" element={guarded('/dashboard/intel', <IntelExploit />)} />
+            <Route path="/dashboard/intel/protocols/:slug" element={guarded('/dashboard/intel', <IntelProtocol />)} />
+            <Route path="/dashboard/intel/proposals/:chain/:governor/:id" element={guarded('/dashboard/intel', <IntelProposal />)} />
             <Route path="/dashboard/members" element={guarded('/dashboard/members', <Members />)} />
             <Route path="/dashboard/api-keys" element={guarded('/dashboard/api-keys', <ApiKeys />)} />
             <Route path="/dashboard/billing" element={guarded('/dashboard/billing', <Billing />)} />

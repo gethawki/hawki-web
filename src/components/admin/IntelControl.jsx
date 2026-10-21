@@ -10,7 +10,7 @@ import { Profile, CONTROLLER } from './IntelWallets.jsx'
 const short = (a) => (a ? `${a.slice(0, 8)}…${a.slice(-6)}` : '-')
 const ZERO = '0x0000000000000000000000000000000000000000'
 
-const KIND = {
+export const CONTROL_KIND = {
   upgraded: ['warning', 'Upgraded'], beacon_upgraded: ['warning', 'Beacon upgraded'], diamond_cut: ['warning', 'Diamond cut'],
   admin_changed: ['warning', 'Admin changed'], ownership_transferred: ['accent', 'Owner changed'], ownership_transfer_started: ['accent', 'Owner handover started'],
   role_granted: ['accent', 'Role granted'], role_revoked: ['neutral', 'Role revoked'], role_admin_changed: ['accent', 'Role admin changed'],
@@ -19,7 +19,7 @@ const KIND = {
 }
 
 // What changed, in words.
-function change(e) {
+export function change(e) {
   const to = (a) => (a === ZERO ? 'nobody' : short(a))
   const kind = e.new_kind ? ` (${CONTROLLER[e.new_kind] || e.new_kind})` : ''
   switch (e.kind) {
@@ -55,7 +55,7 @@ export default function IntelControl({ stats, changes }) {
       ]} />
       <div className="border-t border-line px-5 pb-1 pt-4 text-xs text-fg-3">Latest changes</div>
       <DataTable rows={changes} rowKey={(e) => `${e.chain}:${e.tx_hash}:${e.kind}:${e.contract}:${e.account}:${e.new}`} dense empty={<EmptyState compact title="Nothing yet" />} columns={[
-        { key: 'k', header: 'Change', cell: (e) => { const [tone, label] = KIND[e.kind] || ['neutral', e.kind]; return <Badge tone={tone}>{label}</Badge> } },
+        { key: 'k', header: 'Change', cell: (e) => { const [tone, label] = CONTROL_KIND[e.kind] || ['neutral', e.kind]; return <Badge tone={tone}>{label}</Badge> } },
         { key: 'c', header: 'Contract', cell: (e) => (
           <button type="button" className="text-left hover:underline" onClick={() => setOpen({ chain: e.chain, address: e.contract })} aria-label={`Open contract ${e.contract} on ${e.chain}`}>
             <span className="font-mono text-xs text-fg">{short(e.contract)}</span>
