@@ -15,6 +15,7 @@ import { ReasonForm } from '../../components/admin/bits.jsx'
 import { Meter } from '../../components/charts/Small.jsx'
 import IntelContracts from '../../components/admin/IntelContracts.jsx'
 import IntelWallets from '../../components/admin/IntelWallets.jsx'
+import IntelControl from '../../components/admin/IntelControl.jsx'
 
 const STATUS = {
   ok: ['good', 'Healthy'],
@@ -239,6 +240,8 @@ export default function AdminIntel() {
       </Card>
 
       <IntelContracts stats={data.contracts} recent={data.recent_contracts} />
+
+      <IntelControl stats={data.control} changes={data.control_changes} />
 
       <IntelWallets chains={enabled.map((c) => c.name)} wallets={data.wallets} tracked={data.tracked_tokens} recent={data.recent_tokens} onChanged={setData} />
 

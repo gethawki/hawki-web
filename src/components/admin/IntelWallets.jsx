@@ -40,7 +40,7 @@ function TokenName({ t }) {
 
 // Profile shows everything Intel knows about one address: the registry
 // row, token facts with tracked transfers and holders, and contract facts.
-function Profile({ target, onClose }) {
+export function Profile({ target, onClose }) {
   const [data, setData] = useState(null)
   const [error, setError] = useState(null)
   useEffect(() => {
@@ -53,6 +53,7 @@ function Profile({ target, onClose }) {
   const a = data?.address
   const t = data?.token
   const c = data?.contract
+  const ctl = data?.control
   const labels = [...new Set([...(a?.labels || []), ...(t?.labels || []), ...(c?.labels || [])])]
   return (
     <Modal open onClose={onClose} width="max-w-3xl" title={t ? (t.symbol || t.name || 'Token') : c?.name || labels[0] || 'Address'} description={`${target.address} on ${target.chain}`}>
@@ -82,6 +83,7 @@ function Profile({ target, onClose }) {
             c?.implementation && ['Implementation', <span className="break-all font-mono text-xs">{c.implementation}</span>],
             c && ['Source', c.verification === 'verified' ? `${c.name || 'verified'} (${c.verified_by})` : c.verification || '-'],
           ]} />
+          {ctl && <ControlSection ctl={ctl} />}
           {t?.tracked && (
             <div className="grid gap-4 lg:grid-cols-2">
               <div className="min-w-0">
@@ -108,6 +110,83 @@ function Profile({ target, onClose }) {
         </div>
       )}
     </Modal>
+  )
+}
+
+export const CONTROLLER = { eoa: 'EOA', multisig: 'Multisig', timelock: 'Timelock', contract: 'Contract', unknown: 'Checking' }
+
+// Who is the controller: its kind, threshold or delay, and labels.
+export function ControllerTag({ address, info }) {
+  if (!address) return <span className="text-fg-3">-</span>
+  const extra = info?.kind === 'multisig' && info.threshold ? ` ${info.threshold} of ${info.signers}`
+    : info?.kind === 'timelock' && info.min_delay != null ? ` ${duration(info.min_delay)}` : ''
+  return (
+    <span className="flex flex-wrap items-center gap-1.5">
+      <span className="break-all font-mono text-xs text-fg" title={address}>{short(address)}</span>
+      {info && <Badge tone={controllerTone(info)}>{CONTROLLER[info.kind] || info.kind}{extra}</Badge>}
+      {info?.delegate && <Badge tone="warning">7702</Badge>}
+      {info?.owner && <span className="text-xs text-fg-3">owned by {short(info.owner)}</span>}
+      {info?.labels?.map((l) => <Badge key={l}>{l}</Badge>)}
+    </span>
+  )
+}
+
+// A single key (an EOA, or a 1 of N multisig) is a warning; a multisig
+// needing two or more signers, or a timelock, is the safer setup.
+function controllerTone(info) {
+  if (info.kind === 'eoa' || (info.kind === 'multisig' && info.threshold === 1)) return 'warning'
+  if (info.kind === 'multisig' || info.kind === 'timelock') return 'good'
+  return 'neutral'
+}
+
+function duration(secs) {
+  const s = Number(secs)
+  if (s >= 86400) return `${+(s / 86400).toFixed(1)}d`
+  if (s >= 3600) return `${+(s / 3600).toFixed(1)}h`
+  if (s >= 60) return `${Math.round(s / 60)}m`
+  return `${s}s`
+}
+
+const OP = { pending: ['warning', 'Pending'], executed: ['good', 'Executed'], cancelled: ['neutral', 'Cancelled'] }
+
+// ControlSection is who controls a contract now and how that came about.
+function ControlSection({ ctl }) {
+  const info = (a) => ctl.controllers?.[a]
+  return (
+    <div className="grid gap-3 rounded-lg border border-line p-4">
+      <div className="text-xs font-medium text-fg-2">Control</div>
+      <DefinitionList items={[
+        ['Owner', ctl.renounced ? <Badge tone="good">Renounced</Badge> : <ControllerTag address={ctl.owner} info={info(ctl.owner)} />],
+        ctl.pending_owner && ['Pending owner (two step)', <ControllerTag address={ctl.pending_owner} info={info(ctl.pending_owner)} />],
+        ctl.proxy_admin && ['Proxy admin', <ControllerTag address={ctl.proxy_admin} info={info(ctl.proxy_admin)} />],
+        ctl.implementation && ['Implementation', <span className="break-all font-mono text-xs">{ctl.implementation}</span>],
+        ctl.beacon && ['Beacon', <ControllerTag address={ctl.beacon} info={info(ctl.beacon)} />],
+        ['Upgrades seen', <span className="tnum">{num(ctl.upgrades)}</span>],
+        ctl.min_delay && ['Timelock delay', duration(ctl.min_delay)],
+      ]} />
+      {ctl.roles.length > 0 && (
+        <div className="grid gap-2">
+          <div className="text-xs text-fg-3">Roles</div>
+          {ctl.roles.map((r) => (
+            <div key={r.role} className="grid gap-1 sm:grid-cols-[12rem_1fr]">
+              <span className="truncate font-mono text-xs text-fg-2" title={r.role}>{r.name || short(r.role)}</span>
+              <span className="grid gap-1">{r.members.length ? r.members.map((m) => <ControllerTag key={m} address={m} info={info(m)} />) : <span className="text-xs text-fg-3">no members</span>}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      {ctl.timelock_ops.length > 0 && (
+        <div className="overflow-hidden rounded-lg border border-line">
+          <DataTable rows={ctl.timelock_ops} rowKey={(o) => o.id} dense columns={[
+            { key: 'id', header: 'Operation', cell: (o) => <span className="font-mono text-xs" title={o.id}>{short(o.id)}</span> },
+            { key: 't', header: 'Target', hide: 'sm', cell: (o) => <span className="font-mono text-xs text-fg-2">{short(o.target)}</span> },
+            { key: 's', header: 'Status', cell: (o) => { const [tone, label] = OP[o.status] || ['neutral', o.status]; return <Badge tone={tone} dot>{label}</Badge> } },
+            { key: 'r', header: 'Ready', align: 'right', cell: (o) => <span className="whitespace-nowrap text-fg-3">{o.ready_at ? dateTime(o.ready_at) : '-'}</span> },
+          ]} />
+        </div>
+      )}
+      <div className="text-xs text-fg-3">{num(ctl.history.length)} control events recorded{ctl.history[0] ? `, latest ${ago(ctl.history[0].at)}` : ''}</div>
+    </div>
   )
 }
 
