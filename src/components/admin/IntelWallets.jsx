@@ -9,6 +9,7 @@ import Modal from '../ui/Modal.jsx'
 import { EmptyState } from '../ui/Feedback.jsx'
 import Button from '../common/Button.jsx'
 import { errorMessage } from '../common/Alert.jsx'
+import { ScoreSection, SeverityTag } from './intelBits.jsx'
 
 const inputCls = 'h-9 w-full min-w-0 rounded-lg bg-surface border border-line-strong px-3 text-sm text-fg placeholder:text-fg-3 outline-none focus:border-accent/70'
 const isAddress = (a) => /^0x[0-9a-fA-F]{40}$/.test(a)
@@ -84,6 +85,19 @@ export function Profile({ target, onClose }) {
             c?.implementation && ['Implementation', <span className="break-all font-mono text-xs">{c.implementation}</span>],
             c && ['Source', c.verification === 'verified' ? `${c.name || 'verified'} (${c.verified_by})` : c.verification || '-'],
           ]} />
+          {data.score && <ScoreSection score={data.score} />}
+          {(data.exploits || []).length > 0 && (
+            <div className="grid gap-1 rounded-lg border border-critical/40 bg-critical/[0.05] p-4 text-xs">
+              <div className="font-medium text-[#ff8b8b]">In recorded incidents</div>
+              {data.exploits.map((x) => <div key={`${x.id}:${x.role}`} className="text-fg-2">{x.name} ({x.occurred_on ? x.occurred_on.slice(0, 10) : 'undated'}) as {x.role.replace('_', ' ')}</div>)}
+            </div>
+          )}
+          {(data.risk_events || []).length > 0 && (
+            <div className="grid gap-1.5">
+              <div className="text-xs text-fg-3">Risk events</div>
+              {data.risk_events.slice(0, 8).map((e) => <div key={e.id} className="flex flex-wrap items-center gap-2 text-xs"><SeverityTag severity={e.severity} /><span className="text-fg-2">{e.title}</span><span className="text-fg-3">{ago(e.created_at)}</span></div>)}
+            </div>
+          )}
           {ctl && <ControlSection ctl={ctl} />}
           {t?.tracked && (
             <div className="grid gap-4 lg:grid-cols-2">

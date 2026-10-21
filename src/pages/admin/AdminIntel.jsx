@@ -18,6 +18,7 @@ import IntelWallets from '../../components/admin/IntelWallets.jsx'
 import IntelControl from '../../components/admin/IntelControl.jsx'
 import IntelGovernance from '../../components/admin/IntelGovernance.jsx'
 import IntelProtocols from '../../components/admin/IntelProtocols.jsx'
+import IntelRisk from '../../components/admin/IntelRisk.jsx'
 
 const STATUS = {
   ok: ['good', 'Healthy'],
@@ -242,6 +243,8 @@ export default function AdminIntel() {
       </Card>
 
       <IntelContracts stats={data.contracts} recent={data.recent_contracts} />
+
+      <IntelRisk stats={data.risk} events={data.risk_events} exploitStats={data.exploit_stats} exploits={data.recent_exploits} onChanged={reload} />
 
       <IntelProtocols stats={data.protocols} sources={data.sources} top={data.top_protocols} links={data.project_links} />
 

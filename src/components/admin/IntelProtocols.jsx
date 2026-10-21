@@ -10,6 +10,7 @@ import { EmptyState } from '../ui/Feedback.jsx'
 import { SearchInput } from '../ui/Controls.jsx'
 import { errorMessage } from '../common/Alert.jsx'
 import { Profile, CONTROLLER } from './IntelWallets.jsx'
+import { ScoreSection } from './intelBits.jsx'
 
 const short = (a) => (a ? `${a.slice(0, 8)}…${a.slice(-6)}` : '-')
 const SOURCE = { curated: 'Curated', factory: 'Created by its factory', proxy: 'Proxy of its implementation' }
@@ -54,6 +55,13 @@ function ProtocolDetail({ slug, onClose, onOpenAddress }) {
         <div className="grid gap-5">
           <div className="flex flex-wrap gap-1.5"><Flags p={p} />{p.parent && <Badge>{p.parent}</Badge>}</div>
           {p.description && <p className="text-sm text-fg-2">{p.description}</p>}
+          <ScoreSection score={data.score} title="Protocol risk score" />
+          {data.exploits?.length > 0 && (
+            <div className="grid gap-1 rounded-lg border border-critical/40 bg-critical/[0.05] p-4 text-xs">
+              <div className="font-medium text-[#ff8b8b]">Recorded incidents</div>
+              {data.exploits.map((x) => <div key={x.id} className="text-fg-2">{x.name} ({x.occurred_on ? x.occurred_on.slice(0, 10) : 'undated'}){x.loss_usd != null ? ` · ${usd(x.loss_usd)}` : ''}</div>)}
+            </div>
+          )}
           <DefinitionList items={[
             ['TVL (all chains)', usd(p.tvl)],
             ['On followed chains', Object.keys(p.chain_tvls || {}).length ? Object.entries(p.chain_tvls).sort((a, b) => b[1] - a[1]).map(([c, v]) => `${c} ${usd(v)}`).join(' · ') : '-'],
