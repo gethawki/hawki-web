@@ -68,6 +68,7 @@ export function Profile({ target, onClose }) {
             {t?.tracked && <Badge tone="good" dot>Tracked</Badge>}
             {c?.proxy_kind && <Badge tone="accent">Proxy</Badge>}
             {labels.map((l) => <Badge key={l}>{l}</Badge>)}
+            {(data.protocols || []).map((pc) => <Badge key={pc.protocol} tone="accent" title={pc.role}>{pc.protocol_name}</Badge>)}
           </div>
           <DefinitionList items={[
             a && ['First seen', <span className="tnum">block {a.first_block.toLocaleString('en')} · {dateTime(a.first_seen_at)}</span>],
