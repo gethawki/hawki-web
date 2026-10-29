@@ -12,6 +12,10 @@ import { IntelError, isAddress, nodePath, short } from './IntelKit.jsx'
 // it, expand it to load its neighbours, ask for the shortest path to
 // another address. The layout is a small force simulation in SVG; graphs
 // here stay at a few hundred nodes, so no graph library is needed.
+//
+// With data ({ nodes, edges } in the same shape) it draws that graph
+// instead of loading one, as Hunt's fund traces do; expanding a node still
+// loads its Threat Graph neighbours.
 
 const KIND_COLOR = {
   address: 'var(--color-steel-light)',
@@ -86,7 +90,7 @@ function tick(nodes, edges, alpha) {
   }
 }
 
-export default function GraphExplorer({ start, height = 'h-[26rem] sm:h-[32rem]', fullLink = true }) {
+export default function GraphExplorer({ start, data, height = 'h-[26rem] sm:h-[32rem]', fullLink = true }) {
   const { currentOrg } = useAuth()
   const base = `/api/v1/orgs/${currentOrg.id}/intel/graph`
   const graph = useRef({ nodes: new Map(), edges: [] })
@@ -163,9 +167,15 @@ export default function GraphExplorer({ start, height = 'h-[26rem] sm:h-[32rem]'
   useEffect(() => {
     if (!start) return
     setSelected(start)
+    if (data) {
+      graph.current = { nodes: new Map(), edges: [] }
+      setExpanded(new Set())
+      merge(data, start)
+      return
+    }
     expand(start, true)
     // Filters change what is loaded: start over from the start node.
-  }, [start, types, depth]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [start, types, depth, data]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function findPath(e) {
     e?.preventDefault()
@@ -238,10 +248,10 @@ export default function GraphExplorer({ start, height = 'h-[26rem] sm:h-[32rem]'
   const selEdges = useMemo(() => g.edges.filter((e) => e.from === selected || e.to === selected), [g.edges, selected, nodes.length]) // eslint-disable-line react-hooks/exhaustive-deps
   const to = sel && nodePath(sel.id)
 
-  if (failure && nodes.length === 0) return <IntelError {...failure} what="The Threat Graph" onRetry={() => expand(start, true)} />
+  if (failure && nodes.length === 0 && !data) return <IntelError {...failure} what="The Threat Graph" onRetry={() => expand(start, true)} />
   return (
     <div className="grid gap-3">
-      <div className="flex flex-wrap items-center gap-2">
+      {!data && <div className="flex flex-wrap items-center gap-2">
         <FilterSelect id="graph-types" label="Show" value={types} onChange={setTypes} options={RELATIONS} />
         <FilterSelect id="graph-depth" label="Depth" value={depth} onChange={setDepth} options={[{ value: '1', label: '1 hop' }, { value: '2', label: '2 hops' }]} />
         <form onSubmit={findPath} className="flex min-w-0 flex-1 items-center gap-2 sm:max-w-sm">
@@ -250,11 +260,11 @@ export default function GraphExplorer({ start, height = 'h-[26rem] sm:h-[32rem]'
           <Button size="sm" variant="ghost" type="submit" disabled={busy || !pathTo.trim()}><Route size={14} aria-hidden /> Path</Button>
         </form>
         {fullLink && <Button size="sm" variant="ghost" to={`/dashboard/intel/graph?node=${encodeURIComponent(start)}`}><Maximize2 size={14} aria-hidden /> Full screen</Button>}
-      </div>
+      </div>}
       {(note || busy || failure) && <p className="text-xs text-fg-3" role="status">{busy ? 'Loading the graph' : failure ? failure.error : note}</p>}
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_16rem]">
         <div className={`relative overflow-hidden rounded-lg border border-line bg-app ${height}`}>
-          <svg ref={svg} viewBox={`0 0 ${W} ${H}`} className="h-full w-full touch-none select-none" role="img" aria-label={`Threat Graph around ${sel ? nodeName(sel) : 'the node'}: ${nodes.length} nodes, ${g.edges.length} relationships`}
+          <svg ref={svg} viewBox={`0 0 ${W} ${H}`} className="h-full w-full touch-none select-none" role="img" aria-label={`${data ? 'Fund trace' : 'Threat Graph'} around ${sel ? nodeName(sel) : 'the node'}: ${nodes.length} nodes, ${g.edges.length} relationships`}
             onWheel={onWheel} onPointerDown={(e) => onPointerDown(e, null)} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerLeave={onPointerUp}>
             <g transform={`translate(${view.x} ${view.y}) scale(${view.k})`}>
               {g.edges.map((e) => {

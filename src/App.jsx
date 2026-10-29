@@ -46,6 +46,10 @@ const OrgSettings = lazy(() => import('./pages/dashboard/OrgSettings.jsx'))
 const Profile = lazy(() => import('./pages/dashboard/Profile.jsx'))
 const DashboardNotFound = lazy(() => import('./pages/dashboard/DashboardNotFound.jsx'))
 const Intel = lazy(() => import('./pages/dashboard/Intel.jsx'))
+const Hunt = lazy(() => import('./pages/dashboard/Hunt.jsx'))
+const HuntCluster = lazy(() => import('./pages/dashboard/HuntCluster.jsx'))
+const HuntAddressPage = lazy(() => import('./pages/dashboard/HuntAddressPage.jsx'))
+const HuntRequest = lazy(() => import('./pages/dashboard/HuntRequest.jsx'))
 const IntelAddress = lazy(() => import('./pages/dashboard/IntelAddress.jsx'))
 const IntelExploit = lazy(() => import('./pages/dashboard/IntelExploit.jsx'))
 const IntelProtocol = lazy(() => import('./pages/dashboard/IntelProtocol.jsx'))
@@ -60,6 +64,7 @@ const AdminCustomers = lazy(() => import('./pages/admin/AdminCustomers.jsx'))
 const AdminCustomer = lazy(() => import('./pages/admin/AdminCustomer.jsx'))
 const AdminPayments = lazy(() => import('./pages/admin/AdminPayments.jsx'))
 const AdminRevenue = lazy(() => import('./pages/admin/AdminRevenue.jsx'))
+const AdminHunt = lazy(() => import('./pages/admin/AdminHunt.jsx'))
 const AdminAudit = lazy(() => import('./pages/admin/AdminAudit.jsx'))
 const AdminSwitches = lazy(() => import('./pages/admin/AdminSwitches.jsx'))
 const IntelLayout = lazy(() => import('./components/admin/IntelOps.jsx').then((m) => ({ default: m.IntelLayout })))
@@ -126,6 +131,10 @@ export default function App() {
             <Route path="/dashboard/intel/search" element={guarded('/dashboard/intel', <IntelSearch />)} />
             <Route path="/dashboard/intel/insights/:id" element={guarded('/dashboard/intel', <IntelInsight />)} />
             <Route path="/dashboard/intel/graph" element={guarded('/dashboard/intel', <IntelGraph />)} />
+            <Route path="/dashboard/hunt" element={guarded('/dashboard/hunt', <Hunt />)} />
+            <Route path="/dashboard/hunt/clusters/:code" element={guarded('/dashboard/hunt', <HuntCluster />)} />
+            <Route path="/dashboard/hunt/address/:chain/:address" element={guarded('/dashboard/hunt', <HuntAddressPage />)} />
+            <Route path="/dashboard/hunt/requests/:id" element={guarded('/dashboard/hunt', <HuntRequest />)} />
             <Route path="/dashboard/members" element={guarded('/dashboard/members', <Members />)} />
             <Route path="/dashboard/api-keys" element={guarded('/dashboard/api-keys', <ApiKeys />)} />
             <Route path="/dashboard/billing" element={guarded('/dashboard/billing', <Billing />)} />
@@ -142,6 +151,7 @@ export default function App() {
             <Route path="/admin/revenue" element={guarded('/admin/revenue', <AdminRevenue />)} />
             <Route path="/admin/audit" element={guarded('/admin/audit', <AdminAudit />)} />
             <Route path="/admin/switches" element={guarded('/admin/switches', <AdminSwitches />)} />
+            <Route path="/admin/hunt" element={guarded('/admin/hunt', <AdminHunt />)} />
             <Route path="/admin/intel" element={guarded('/admin/intel', <IntelLayout />)}>
               <Route index element={<IntelOverview />} />
               <Route path="chains" element={<IntelChains />} />

@@ -27,7 +27,7 @@ export const DASHBOARD_NAV = [
       { to: '/dashboard/reports', label: 'Reports', icon: FileText, access: { permission: 'reports:read' } },
       { to: '/dashboard/alerts', label: 'Alerts', icon: Bell, access: { permission: 'alerts:read' } },
       { to: '/dashboard/intel', label: 'Intel', icon: Telescope, access: { permission: 'intel:read' } },
-      { label: 'Hunt', icon: Crosshair, soon: true, access: { permission: 'hunt:read' } },
+      { to: '/dashboard/hunt', label: 'Hunt', icon: Crosshair, access: { permission: 'hunt:read' } },
       { label: 'Watch', icon: Radar, soon: true, access: { permission: 'watch:read' } },
     ],
   },
@@ -62,6 +62,7 @@ export const ADMIN_NAV = [
     title: 'Engines',
     links: [
       { to: '/admin/intel', label: 'Intel', icon: Network, access: { platformAdmin: true } },
+      { to: '/admin/hunt', label: 'Hunt', icon: Crosshair, access: { platformAdmin: true } },
     ],
   },
   {

@@ -25,8 +25,8 @@ export function setAccessToken(token) {
   accessToken = token
 }
 
-async function send(path, { method = 'GET', body, auth = true } = {}) {
-  const headers = {}
+async function send(path, { method = 'GET', body, auth = true, headers: extra } = {}) {
+  const headers = { ...extra }
   if (body !== undefined) headers['Content-Type'] = 'application/json'
   if (auth && accessToken) headers.Authorization = `Bearer ${accessToken}`
 

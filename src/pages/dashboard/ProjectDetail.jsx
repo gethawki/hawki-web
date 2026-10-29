@@ -22,6 +22,7 @@ import { ago, num } from '../../lib/format.js'
 import { postureScore, projectSource, scanDuration, scoreBand } from '../../lib/dashboard.js'
 import ProjectHistory from '../../components/reports/ProjectHistory.jsx'
 import ProjectIntel from '../../components/intel/ProjectIntel.jsx'
+import ProjectHunt from '../../components/hunt/ProjectHunt.jsx'
 
 function RunScan({ orgId, project, onStarted }) {
   const { can } = useAuth()
@@ -301,6 +302,7 @@ const TABS = [
   { value: 'scans', label: 'Scans' },
   { value: 'history', label: 'History' },
   { value: 'intel', label: 'Intel' },
+  { value: 'hunt', label: 'Hunt' },
   { value: 'settings', label: 'Settings' },
 ]
 
@@ -311,7 +313,7 @@ export default function ProjectDetail() {
   const [params, setParams] = useSearchParams()
   const [project, setProject] = useState(null)
   // Intel needs a deployed contract to look at.
-  const tabs = TABS.filter((t) => t.value !== 'intel' || (project?.contract_address && can('intel:read')))
+  const tabs = TABS.filter((t) => (t.value !== 'intel' || (project?.contract_address && can('intel:read'))) && (t.value !== 'hunt' || (project?.contract_address && can('hunt:read'))))
   const tab = tabs.some((t) => t.value === params.get('tab')) ? params.get('tab') : 'overview'
   const [scans, setScans] = useState(null)
   const [error, setError] = useState(null)
@@ -408,6 +410,7 @@ export default function ProjectDetail() {
       {tab === 'scans' && <Card flush>{!scans ? <div className="h-32" /> : scanTable(scans)}</Card>}
       {tab === 'history' && can('scans:read') && <ProjectHistory orgId={currentOrg.id} projectId={project.id} />}
       {tab === 'intel' && <ProjectIntel chain={project.chain} address={project.contract_address} />}
+      {tab === 'hunt' && <ProjectHunt projectId={project.id} />}
       {tab === 'settings' && settings}
     </div>
   )
