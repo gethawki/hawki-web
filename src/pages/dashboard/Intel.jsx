@@ -16,9 +16,12 @@ import { SeverityTag } from '../../components/admin/intelBits.jsx'
 import { CONTROL_KIND, change } from '../../components/admin/IntelControl.jsx'
 import { Status, Tally } from '../../components/admin/IntelGovernance.jsx'
 import { Flags, followedTvl, usd } from '../../components/admin/IntelProtocols.jsx'
-import { AccessBadge, AddressLink, ChainName, IntelError, Locked, addressPath, isAddress, short, useIntelAccess } from '../../components/intel/IntelKit.jsx'
+import { AccessBadge, AddressLink, ChainName, IntelError, Locked, nodePath, short, useIntelAccess } from '../../components/intel/IntelKit.jsx'
+import SearchBox from '../../components/intel/SearchBox.jsx'
+import { insightColumns } from '../../components/intel/Insights.jsx'
 
 const TABS = [
+  { value: 'insights', label: 'Insights', need: 'full' },
   { value: 'risk', label: 'Risk events', need: 'full' },
   { value: 'control', label: 'Upgrades and admin', need: 'full' },
   { value: 'deployments', label: 'Deployments', need: 'full' },
@@ -67,7 +70,7 @@ function Feed({ path, params, field, cursor, columns, rowKey, empty, what }) {
     let live = true
     setRows(null)
     setFailure(null)
-    api(base).then((d) => { if (live) { setRows(d[field]); setMore(d[field].length === 50) } },
+    api(base).then((d) => { if (live) { setRows(d[field]); setMore(Boolean(cursor) && d[field].length === 50) } },
       (err) => { if (live) setFailure({ status: err.status, error: errorMessage(err) }) })
     return () => { live = false }
   }, [base, field, tick])
@@ -191,6 +194,42 @@ function GovernanceTab({ chains }) {
   )
 }
 
+const INSIGHT_KINDS = [
+  { value: '', label: 'All kinds' },
+  { value: 'pattern', label: 'Patterns' },
+  { value: 'relationship', label: 'Relationships' },
+  { value: 'anomaly', label: 'Anomalies' },
+  { value: 'risk', label: 'Risk rises' },
+]
+const INSIGHT_SEVERITY = [
+  { value: '', label: 'Any severity' },
+  { value: 'critical', label: 'Critical' },
+  { value: 'high,critical', label: 'High and up' },
+  { value: 'medium,high,critical', label: 'Medium and up' },
+]
+
+function InsightsTab({ chains }) {
+  const [chain, setChain] = useState('')
+  const [kind, setKind] = useState('')
+  const [severity, setSeverity] = useState('')
+  const [status, setStatus] = useState('open')
+  const [sort, setSort] = useState('priority')
+  return (
+    <Card flush title="Insights" description="What Intel's analysis concluded: contracts copying exploit code, deployments by known attackers, risky upgrades, control handed to flagged addresses, large movements and scores rising into high risk. Each has a confidence and a priority.">
+      <div className="px-5 pb-4"><Toolbar>
+        <FilterSelect id="ins-chain" label="Chain" value={chain} onChange={setChain} options={chainOptions(chains)} />
+        <FilterSelect id="ins-kind" label="Kind" value={kind} onChange={setKind} options={INSIGHT_KINDS} />
+        <FilterSelect id="ins-severity" label="Severity" value={severity} onChange={setSeverity} options={INSIGHT_SEVERITY} />
+        <FilterSelect id="ins-status" label="Status" value={status} onChange={setStatus} options={[{ value: 'open', label: 'Open' }, { value: '', label: 'All' }, { value: 'resolved', label: 'Resolved' }]} />
+        <FilterSelect id="ins-sort" label="Order" value={sort} onChange={setSort} options={[{ value: 'priority', label: 'By priority' }, { value: 'recent', label: 'Newest first' }]} />
+      </Toolbar></div>
+      <Feed path="/insights" params={{ chain, kind, severity, status, sort }} field="insights" cursor={sort === 'recent' ? (i) => i.id : null} rowKey={(i) => i.id}
+        what="Insights" empty={<EmptyState compact title="No insight matches">Insights appear as Intel's detectors find patterns, ties to incidents and anomalies.</EmptyState>}
+        columns={insightColumns()} />
+    </Card>
+  )
+}
+
 // Searchable lists: the term is sent after a short pause.
 function useSearch(path, field, term) {
   const { currentOrg } = useAuth()
@@ -248,59 +287,14 @@ function ProtocolsTab() {
   )
 }
 
-const HIT = { address: 'Address', contract: 'Contract', token: 'Token', protocol: 'Protocol', exploit: 'Incident', label: 'Label' }
-const hitPath = (h) => h.kind === 'protocol' ? `/dashboard/intel/protocols/${h.slug}`
-  : h.kind === 'exploit' ? `/dashboard/intel/exploits/${h.id}`
-    : h.address ? addressPath(h.chain, h.address) : null
-
-// Lookup finds an address on every chain Intel follows, or protocols,
-// tokens, incidents and labels by name, tolerating typos.
+// Lookup searches all of Intel: an address on every chain, or names,
+// symbols and (Professional and above) security terms, on the results page.
 function Lookup() {
-  const { currentOrg } = useAuth()
   const navigate = useNavigate()
-  const [q, setQ] = useState('')
-  const [hits, setHits] = useState(null)
-  const [failure, setFailure] = useState(null)
-  const [busy, setBusy] = useState(false)
-  async function search() {
-    const term = q.trim()
-    if (term.length < 2) return
-    setBusy(true)
-    setFailure(null)
-    try {
-      const d = await api(`/api/v1/orgs/${currentOrg.id}/intel/lookup?q=${encodeURIComponent(term)}`)
-      const exact = isAddress(term) && d.results.filter((h) => h.address?.toLowerCase() === term.toLowerCase() && h.chain)
-      if (exact && new Set(exact.map((h) => h.chain)).size === 1) navigate(addressPath(exact[0].chain, term))
-      else setHits(d.results)
-    } catch (err) {
-      setFailure({ status: err.status, error: errorMessage(err) })
-    }
-    setBusy(false)
-  }
   return (
     <Card>
-      <div className="flex flex-col gap-2 sm:flex-row">
-        <SearchInput id="intel-lookup" className="min-w-0 flex-1" value={q} onChange={setQ} onSubmit={search}
-          placeholder="Look up an address, protocol, token or incident" label="Look up" />
-        <Button size="sm" onClick={search} disabled={busy || q.trim().length < 2}>{busy ? 'Searching' : 'Look up'}</Button>
-      </div>
-      {failure && <div className="mt-3"><IntelError {...failure} what="Lookup" onRetry={search} /></div>}
-      {hits && (
-        <div className="mt-4 overflow-hidden rounded-lg border border-line">
-          <DataTable rows={hits} dense rowKey={(h) => `${h.kind}:${h.chain}:${h.address}:${h.slug}:${h.id}:${h.name}`} rowHref={hitPath}
-            empty={<EmptyState compact title="Nothing found">Intel knows nothing by that name or address yet.</EmptyState>}
-            columns={[
-              { key: 'k', header: 'Kind', className: 'w-28', cell: (h) => <Badge>{HIT[h.kind] || h.kind}</Badge> },
-              { key: 'n', header: 'Name', cell: (h) => {
-                const to = hitPath(h)
-                const label = h.name || short(h.address)
-                return to ? <Link to={to} className="text-fg hover:underline">{label}</Link> : <span className="text-fg">{label}</span>
-              } },
-              { key: 'd', header: 'Detail', hide: 'sm', cell: (h) => <span className="text-xs text-fg-3">{h.detail || (h.address ? short(h.address) : '')}</span> },
-              { key: 'c', header: 'Chain', align: 'right', cell: (h) => <ChainName chain={h.chain} /> },
-            ]} />
-        </div>
-      )}
+      <SearchBox onSearch={(t) => navigate(`/dashboard/intel/search?q=${encodeURIComponent(t.trim())}`)}
+        onPick={(s) => { const to = nodePath(s.id); if (to) navigate(to) }} />
     </Card>
   )
 }
@@ -338,8 +332,9 @@ export default function Intel() {
   return (
     <div className="grid grid-cols-1 gap-4">
       {header}
-      {full && <Lookup />}
+      <Lookup />
       {!open(tab) ? <Card><Locked need={tab.need} what={tab.label} /></Card>
+        : tab.value === 'insights' ? <InsightsTab chains={chains} />
         : tab.value === 'risk' ? <RiskTab chains={chains} />
           : tab.value === 'control' ? <ControlTab chains={chains} />
             : tab.value === 'deployments' ? <DeploymentsTab chains={chains} />

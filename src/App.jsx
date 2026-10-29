@@ -50,6 +50,9 @@ const IntelAddress = lazy(() => import('./pages/dashboard/IntelAddress.jsx'))
 const IntelExploit = lazy(() => import('./pages/dashboard/IntelExploit.jsx'))
 const IntelProtocol = lazy(() => import('./pages/dashboard/IntelProtocol.jsx'))
 const IntelProposal = lazy(() => import('./pages/dashboard/IntelProposal.jsx'))
+const IntelSearch = lazy(() => import('./pages/dashboard/IntelSearch.jsx'))
+const IntelInsight = lazy(() => import('./pages/dashboard/IntelInsight.jsx'))
+const IntelGraph = lazy(() => import('./pages/dashboard/IntelGraph.jsx'))
 const AdminOverview = lazy(() => import('./pages/admin/AdminOverview.jsx'))
 const AdminUsers = lazy(() => import('./pages/admin/AdminUsers.jsx'))
 const AdminUser = lazy(() => import('./pages/admin/AdminUser.jsx'))
@@ -61,6 +64,10 @@ const AdminAudit = lazy(() => import('./pages/admin/AdminAudit.jsx'))
 const AdminSwitches = lazy(() => import('./pages/admin/AdminSwitches.jsx'))
 const IntelLayout = lazy(() => import('./components/admin/IntelOps.jsx').then((m) => ({ default: m.IntelLayout })))
 const intelPage = (name) => lazy(() => import('./pages/admin/AdminIntel.jsx').then((m) => ({ default: m[name] })))
+const enginePage = (name) => lazy(() => import('./components/admin/IntelEngines.jsx').then((m) => ({ default: m[name] })))
+const IntelGraphAdmin = enginePage('AdminIntelGraph')
+const IntelSearchAdmin = enginePage('AdminIntelSearch')
+const IntelInsightsAdmin = enginePage('AdminIntelInsights')
 const IntelOverview = intelPage('default')
 const IntelChains = intelPage('IntelChains')
 const IntelChain = intelPage('IntelChain')
@@ -116,6 +123,9 @@ export default function App() {
             <Route path="/dashboard/intel/exploits/:id" element={guarded('/dashboard/intel', <IntelExploit />)} />
             <Route path="/dashboard/intel/protocols/:slug" element={guarded('/dashboard/intel', <IntelProtocol />)} />
             <Route path="/dashboard/intel/proposals/:chain/:governor/:id" element={guarded('/dashboard/intel', <IntelProposal />)} />
+            <Route path="/dashboard/intel/search" element={guarded('/dashboard/intel', <IntelSearch />)} />
+            <Route path="/dashboard/intel/insights/:id" element={guarded('/dashboard/intel', <IntelInsight />)} />
+            <Route path="/dashboard/intel/graph" element={guarded('/dashboard/intel', <IntelGraph />)} />
             <Route path="/dashboard/members" element={guarded('/dashboard/members', <Members />)} />
             <Route path="/dashboard/api-keys" element={guarded('/dashboard/api-keys', <ApiKeys />)} />
             <Route path="/dashboard/billing" element={guarded('/dashboard/billing', <Billing />)} />
@@ -145,6 +155,9 @@ export default function App() {
               <Route path="governance" element={<IntelGovernance />} />
               <Route path="protocols" element={<IntelProtocols />} />
               <Route path="risk" element={<IntelRisk />} />
+              <Route path="graph" element={<IntelGraphAdmin />} />
+              <Route path="search" element={<IntelSearchAdmin />} />
+              <Route path="insights" element={<IntelInsightsAdmin />} />
             </Route>
           </Route>
 

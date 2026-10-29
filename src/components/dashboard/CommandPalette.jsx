@@ -1,14 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CornerDownLeft, FolderGit2, Search, ShieldCheck } from 'lucide-react'
+import { CornerDownLeft, FolderGit2, Search, ShieldCheck, Telescope } from 'lucide-react'
 import { ADMIN_NAV, DASHBOARD_NAV } from '../../data/dashboardNav.js'
 import { useAuth } from '../../lib/auth.jsx'
 import { hasAccess } from '../../lib/access.js'
 import { api } from '../../lib/api.js'
 import { Kbd } from '../ui/Badge.jsx'
+import { nodePath } from '../intel/IntelKit.jsx'
+import { suggestionChain, useSuggest } from '../intel/SearchBox.jsx'
+
+const TYPE = { contract: 'Contract', token: 'Token', address: 'Account', protocol: 'Protocol', exploit: 'Incident', proposal: 'Proposal', risk_event: 'Risk event' }
 
 // CommandPalette (Ctrl or Cmd + K) jumps to any page the user may open, any
-// project in the current organization and, for staff, the admin console.
+// project in the current organization, for staff the admin console, and,
+// when the plan includes Intel, anything Intel knows by name or address.
 export default function CommandPalette({ open, onClose }) {
   const auth = useAuth()
   const navigate = useNavigate()
@@ -16,8 +21,11 @@ export default function CommandPalette({ open, onClose }) {
   const [active, setActive] = useState(0)
   const [projects, setProjects] = useState([])
   const inputRef = useRef(null)
+  const [intel, setIntel] = useState(false)
   const orgId = auth.currentOrg?.id
   const canProjects = auth.can('projects:read')
+  const canIntel = auth.can('intel:read')
+  const suggestions = useSuggest(q, open && intel)
 
   useEffect(() => {
     if (!open) return
@@ -27,7 +35,10 @@ export default function CommandPalette({ open, onClose }) {
     if (orgId && canProjects) {
       api(`/api/v1/orgs/${orgId}/projects`).then((d) => setProjects(d.projects || [])).catch(() => setProjects([]))
     }
-  }, [open, orgId, canProjects])
+    if (orgId && canIntel) {
+      api(`/api/v1/orgs/${orgId}/intel/access`).then((a) => setIntel(a.level !== 'none'), () => setIntel(false))
+    }
+  }, [open, orgId, canProjects, canIntel])
 
   const items = useMemo(() => {
     const pages = DASHBOARD_NAV.flatMap((s) => s.links.filter((l) => l.to && hasAccess(auth, l.access)).map((l) => ({ group: 'Pages', label: l.label, hint: s.title, to: l.to, icon: l.icon })))
@@ -37,8 +48,13 @@ export default function CommandPalette({ open, onClose }) {
     const projs = projects.map((p) => ({ group: 'Projects', label: p.name, hint: p.repository_url?.replace(/^https?:\/\//, '') || p.contract_address, to: `/dashboard/projects/${p.id}`, icon: FolderGit2 }))
     const all = [...pages, ...projs, ...admin]
     const needle = q.trim().toLowerCase()
-    return needle ? all.filter((i) => `${i.label} ${i.hint || ''} ${i.group}`.toLowerCase().includes(needle)) : all
-  }, [auth, projects, q])
+    const local = needle ? all.filter((i) => `${i.label} ${i.hint || ''} ${i.group}`.toLowerCase().includes(needle)) : all
+    if (!intel || needle.length < 2) return local
+    const found = suggestions.filter((sg) => nodePath(sg.id)).map((sg) => ({ group: 'Intel', label: sg.text, hint: [TYPE[sg.type] || sg.type, suggestionChain(sg)].filter(Boolean).join(' · '),
+      to: nodePath(sg.id), icon: Telescope, key: sg.id }))
+    const searchAll = { group: 'Intel', label: `Search Intel for "${q.trim()}"`, hint: 'All results', to: `/dashboard/intel/search?q=${encodeURIComponent(q.trim())}`, icon: Search }
+    return [...local, ...found, searchAll]
+  }, [auth, projects, q, intel, suggestions])
 
   if (!open) return null
   const go = (i) => {
@@ -61,7 +77,7 @@ export default function CommandPalette({ open, onClose }) {
         <div className="flex items-center gap-3 border-b border-line px-4">
           <Search size={16} className="text-fg-3" />
           <input ref={inputRef} value={q} onChange={(e) => { setQ(e.target.value); setActive(0) }} onKeyDown={onKey}
-            placeholder="Search pages and projects" aria-label="Search pages and projects"
+            placeholder={intel ? 'Search pages, projects and Intel' : 'Search pages and projects'} aria-label="Search pages, projects and Intel"
             className="h-12 flex-1 bg-transparent text-sm text-fg placeholder:text-fg-3 outline-none" />
           <Kbd>Esc</Kbd>
         </div>
@@ -71,7 +87,7 @@ export default function CommandPalette({ open, onClose }) {
             const header = it.group !== lastGroup ? (lastGroup = it.group) : null
             const Icon = it.icon
             return (
-              <li key={`${it.group}-${it.to}`}>
+              <li key={`${it.group}-${it.key || it.to}`}>
                 {header && <div className="px-2.5 pb-1 pt-2.5 text-[0.7rem] font-medium text-fg-3">{header}</div>}
                 <button type="button" role="option" aria-selected={i === active} onMouseEnter={() => setActive(i)} onClick={() => go(it)}
                   className={`flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left text-sm ${i === active ? 'bg-surface-3 text-fg' : 'text-fg-2'}`}>

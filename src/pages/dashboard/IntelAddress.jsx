@@ -9,6 +9,8 @@ import { EmptyState, PageSkeleton } from '../../components/ui/Feedback.jsx'
 import { ScoreSection, SeverityTag } from '../../components/admin/intelBits.jsx'
 import { ControlSection, STANDARD, units } from '../../components/admin/IntelWallets.jsx'
 import { AddressLink, IntelError, Locked, isAddress, short, useIntel, useIntelAccess } from '../../components/intel/IntelKit.jsx'
+import { EntityInsights, ScoreHistory } from '../../components/intel/Insights.jsx'
+import GraphExplorer from '../../components/intel/GraphExplorer.jsx'
 
 const KIND = { eoa: 'Account (EOA)', contract: 'Contract', unknown: 'Not read yet' }
 const PROXY = { eip1967: 'EIP-1967 proxy', beacon: 'Beacon proxy', eip1822: 'UUPS proxy (EIP-1822)', eip1167: 'Minimal proxy (EIP-1167)' }
@@ -82,7 +84,7 @@ function Facts({ p }) {
 export default function IntelAddress() {
   const { chain, address } = useParams()
   const valid = isAddress(address)
-  const { access, full, basic, error: accessError, status: accessStatus, reload } = useIntelAccess()
+  const { access, full, basic, graph, error: accessError, status: accessStatus, reload } = useIntelAccess()
   const base = valid ? `/addresses/${chain}/${address}` : null
   const profile = useIntel(full ? base : null)
   const vuln = useIntel(basic ? `${base}/vulnerability` : null)
@@ -126,11 +128,18 @@ export default function IntelAddress() {
               ]} />
             </Card>
           )}
+          {full && p && <EntityInsights query={`chain=${chain}&address=${address.toLowerCase()}`} />}
+          {graph && p ? (
+            <Card title="Threat Graph" description="How this address connects to contracts, protocols, incidents and other accounts">
+              <GraphExplorer start={`address:${chain}:${address.toLowerCase()}`} />
+            </Card>
+          ) : full && p && <Card><Locked need="graph" what="The Threat Graph" compact /></Card>}
           {similar.data && <SimilarContracts chain={chain} rows={similar.data.similar} total={similar.data.contract.clone_group - 1} />}
           {!full && <Card><Locked need="full" what="The full address profile" compact /></Card>}
         </div>
         <div className="grid min-w-0 gap-4">
-          {p?.score && <div className="rounded-lg bg-surface"><ScoreSection score={p.score} /></div>}
+          {p?.score && <div className="rounded-lg bg-surface"><ScoreSection score={p.score} title={c ? 'Risk score' : 'Account risk score'} /></div>}
+          {p?.score && <ScoreHistory path={`/scores/${c ? 'contracts' : 'wallets'}/${chain}/${address.toLowerCase()}`} />}
           {vuln.data ? <Vulnerability v={vuln.data} /> : vuln.error && <IntelError status={vuln.status} error={vuln.error} onRetry={vuln.reload} />}
         </div>
       </div>

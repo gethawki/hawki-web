@@ -16,7 +16,21 @@ export const short = (a) => (a ? `${a.slice(0, 8)}…${a.slice(-6)}` : '-')
 export const isAddress = (a) => /^0x[0-9a-fA-F]{40}$/.test(a)
 export const addressPath = (chain, address) => `/dashboard/intel/address/${chain}/${address.toLowerCase()}`
 
-const NEEDS = { basic: 'Builder', full: 'Professional' }
+const NEEDS = { basic: 'Builder', full: 'Professional', graph: 'Security' }
+
+// nodePath is the page of a Threat Graph node or search document ID:
+// address:<chain>:<0x>, protocol:<slug>, exploit:<id>,
+// proposal:<chain>:<governor>:<id>. Others have no page.
+export function nodePath(id) {
+  const [kind, ...rest] = (id || '').split(':')
+  if (kind === 'address' && rest.length === 2 && rest[0]) return addressPath(rest[0], rest[1])
+  if (kind === 'protocol') return `/dashboard/intel/protocols/${encodeURIComponent(rest.join(':'))}`
+  if (kind === 'exploit') return `/dashboard/intel/exploits/${rest[0]}`
+  if (kind === 'proposal' && rest.length === 3) return `/dashboard/intel/proposals/${rest[0]}/${rest[1]}/${rest[2]}`
+  return null
+}
+
+const LEVELS = { none: 0, basic: 1, full: 2, graph: 3 }
 
 // useIntel loads an Intel endpoint of the current organization. A null
 // path loads nothing.
@@ -46,7 +60,8 @@ export function useIntel(path) {
 export function useIntelAccess() {
   const r = useIntel('/access')
   const a = r.data
-  return { ...r, access: a, full: a?.level === 'full', basic: a?.level === 'basic' || a?.level === 'full' }
+  const level = LEVELS[a?.level] || 0
+  return { ...r, access: a, basic: level >= 1, full: level >= 2, graph: level >= 3 }
 }
 
 export function AccessBadge({ access }) {
@@ -54,7 +69,7 @@ export function AccessBadge({ access }) {
   if (access.level === 'none') return <Badge>Not in your plan</Badge>
   return (
     <span className="inline-flex flex-wrap items-center gap-2">
-      <Badge tone={access.level === 'full' ? 'good' : 'accent'} dot>{access.level === 'full' ? 'Full Intel' : 'Basic Intel'}</Badge>
+      <Badge tone={access.level === 'basic' ? 'accent' : 'good'} dot>{{ basic: 'Basic Intel', full: 'Full Intel', graph: 'Full Intel and Threat Graph' }[access.level] || access.level}</Badge>
       <span>{access.unlimited ? 'No request limit' : `${access.per_minute} requests a minute`}</span>
     </span>
   )
@@ -68,9 +83,11 @@ export function Locked({ need = 'full', what, compact }) {
       <span className="grid size-10 place-items-center rounded-full border border-line bg-surface-2 text-fg-3"><Lock size={16} aria-hidden /></span>
       <div className="grid max-w-md gap-1">
         <p className="text-sm font-medium text-fg">{what ? `${what} needs` : 'This needs'} the {NEEDS[need]} plan or above</p>
-        <p className="text-xs text-fg-3">{need === 'full'
-          ? 'Professional, Security and Enterprise include all of Intel: lookup, address profiles, protocols, upgrade and admin changes, governance, deployments and risk events.'
-          : 'Builder includes similar contracts, the exploit database and vulnerability lookup. Professional and above include all of Intel.'}</p>
+        <p className="text-xs text-fg-3">{need === 'graph'
+          ? 'Security and Enterprise include the Threat Graph: how addresses, contracts, protocols and incidents connect, paths between two addresses and same-actor clusters.'
+          : need === 'full'
+            ? 'Professional, Security and Enterprise include all of Intel: full search, address profiles, insights, protocols, upgrade and admin changes, governance, deployments and risk events.'
+            : 'Builder includes search by address and name, similar contracts, the exploit database and vulnerability lookup. Professional and above include all of Intel.'}</p>
       </div>
       {can('billing:read') && <Button size="sm" to="/dashboard/billing">See plans</Button>}
     </div>
@@ -80,7 +97,7 @@ export function Locked({ need = 'full', what, compact }) {
 // IntelError shows an Intel failure: a plan gate, the rate limit or an
 // error to retry.
 export function IntelError({ status, error, onRetry, what }) {
-  if (status === 402) return <Locked what={what} need={/Builder/.test(error || '') ? 'basic' : 'full'} />
+  if (status === 402) return <Locked what={what} need={/Builder/.test(error || '') ? 'basic' : /Security|graph/i.test(error || '') ? 'graph' : 'full'} />
   if (status === 429) return <ErrorState onRetry={onRetry}>Your organization used its Intel requests for this minute. Try again in a moment.</ErrorState>
   return <ErrorState onRetry={onRetry}>{error}</ErrorState>
 }

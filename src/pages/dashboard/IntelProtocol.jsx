@@ -7,7 +7,9 @@ import DataTable from '../../components/ui/DataTable.jsx'
 import { EmptyState, PageSkeleton } from '../../components/ui/Feedback.jsx'
 import { ScoreSection } from '../../components/admin/intelBits.jsx'
 import { Flags, usd } from '../../components/admin/IntelProtocols.jsx'
-import { AddressLink, ChainName, IntelError, useIntel } from '../../components/intel/IntelKit.jsx'
+import { AddressLink, ChainName, IntelError, Locked, useIntel, useIntelAccess } from '../../components/intel/IntelKit.jsx'
+import { EntityInsights, ScoreHistory } from '../../components/intel/Insights.jsx'
+import GraphExplorer from '../../components/intel/GraphExplorer.jsx'
 
 const SOURCE = { curated: 'Curated', factory: 'Created by its factory', proxy: 'Proxy of its implementation' }
 const ext = (href, text) => <a href={href} target="_blank" rel="noreferrer noopener" className="break-all text-accent hover:underline">{text}</a>
@@ -17,6 +19,7 @@ const ext = (href, text) => <a href={href} target="_blank" rel="noreferrer noope
 export default function IntelProtocol() {
   const { slug } = useParams()
   const { data, error, status, reload } = useIntel(`/protocols/${encodeURIComponent(slug)}`)
+  const { graph } = useIntelAccess()
   const back = { to: '/dashboard/intel?tab=protocols', label: 'Protocols' }
   if (status === 404) return <><PageHeader back={back} title="Protocol not found" /><EmptyState title="Intel does not know this protocol" /></>
   if (error) return <IntelError status={status} error={error} onRetry={reload} what="Protocols" />
@@ -48,9 +51,16 @@ export default function IntelProtocol() {
               { key: 'c', header: 'Chain', align: 'right', cell: (c) => <ChainName chain={c.chain} /> },
             ]} />
           </Card>
+          <EntityInsights query={`protocol=${encodeURIComponent(slug)}`} />
+          {graph ? (
+            <Card title="Threat Graph" description="The protocol's contracts, who controls them, forks and incidents">
+              <GraphExplorer start={`protocol:${slug}`} />
+            </Card>
+          ) : <Card><Locked need="graph" what="The Threat Graph" compact /></Card>}
         </div>
         <div className="grid min-w-0 gap-4">
           <div className="rounded-lg bg-surface"><ScoreSection score={data.score} title="Protocol risk score" /></div>
+          <ScoreHistory path={`/scores/protocols/${encodeURIComponent(slug)}`} />
           <Card title="Incidents">
             {data.exploits.length === 0 ? <p className="text-sm text-fg-2">No recorded incident.</p> : (
               <div className="grid gap-2">

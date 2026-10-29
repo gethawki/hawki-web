@@ -1,6 +1,6 @@
 import { Suspense, useEffect, useState } from 'react'
 import { Link, NavLink, Outlet } from 'react-router-dom'
-import { Activity, Boxes, FileCode2, Gauge, History, Inbox, Landmark, Network, Plug, ShieldAlert, Coins, Skull } from 'lucide-react'
+import { Activity, Boxes, FileCode2, Gauge, GitBranch, History, Inbox, Landmark, Lightbulb, Network, Plug, Search, ShieldAlert, Coins, Skull } from 'lucide-react'
 import { api } from '../../lib/api.js'
 import { useApi } from '../../lib/useApi.js'
 import { useDetailCrumb } from '../../lib/crumbs.jsx'
@@ -25,6 +25,14 @@ const SECTIONS = [
       { to: '/admin/intel/indexing', label: 'Indexing', icon: Inbox },
       { to: '/admin/intel/sources', label: 'Data sources', icon: Plug },
       { to: '/admin/intel/audit', label: 'Audit', icon: History },
+    ],
+  },
+  {
+    title: 'Graph and search',
+    links: [
+      { to: '/admin/intel/graph', label: 'Threat Graph', icon: GitBranch },
+      { to: '/admin/intel/search', label: 'Search', icon: Search },
+      { to: '/admin/intel/insights', label: 'Insights', icon: Lightbulb },
     ],
   },
   {
