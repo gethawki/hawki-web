@@ -1,11 +1,10 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Activity, AlertTriangle, BarChart3, Bell, Building2, CreditCard, DollarSign, HeartPulse, History, Power, ScanLine, ShieldCheck, UserPlus, Users } from 'lucide-react'
+import { Activity, AlertTriangle, BarChart3, Bell, Building2, CreditCard, DollarSign, HeartPulse, History, Power, ScanLine, UserPlus, Users } from 'lucide-react'
 import { useApi } from '../../lib/useApi.js'
 import { ago, change, day, num, pct, usd } from '../../lib/format.js'
 import { formatCredits } from '../../lib/credits.js'
-import PageHeader, { KpiStrip } from '../../components/dashboard/PageHeader.jsx'
-import { ScoreRing, SummaryList } from '../../components/ui/Viz.jsx'
+import PageHeader from '../../components/dashboard/PageHeader.jsx'
 import Card, { CardLink } from '../../components/ui/Card.jsx'
 import StatCard, { Delta } from '../../components/ui/Stat.jsx'
 import Badge from '../../components/ui/Badge.jsx'
@@ -149,53 +148,6 @@ function QuickActions() {
   )
 }
 
-// PlatformPanel is the reference's top panel for the whole platform: the
-// estate, the share of services up as a ring, users, organizations and
-// the system's state at a glance.
-function PlatformPanel({ o }) {
-  const health = Object.values(o.health)
-  const up = health.filter((x) => x === 'ok').length
-  const ok = up === health.length
-  const plans = Object.entries(o.organizations.by_plan || {}).sort((a, b) => b[1] - a[1]).slice(0, 4)
-  return (
-    <section className="app-card grid grid-cols-1 divide-y divide-line rounded-2xl border border-line md:grid-cols-2 md:divide-y-0 xl:grid-cols-[1.2fr_auto_1fr_1fr_1fr] xl:divide-x">
-      <div className="grid content-start gap-2 p-5">
-        <div className="flex flex-wrap items-center gap-2"><span className="text-lg font-semibold text-fg">Hawk-i Cloud</span><Badge tone="staff">Platform</Badge></div>
-        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm">
-          <dt className="text-fg-3">Users</dt><dd className="text-fg tnum">{num(o.users.total)}</dd>
-          <dt className="text-fg-3">Organizations</dt><dd className="text-fg tnum">{num(o.organizations.total)}</dd>
-          <dt className="text-fg-3">Projects</dt><dd className="text-fg tnum">{num(o.projects)}</dd>
-          <dt className="text-fg-3">Reports</dt><dd className="text-fg tnum">{num(o.reports)}</dd>
-        </dl>
-      </div>
-      <div className="grid place-items-center p-5">
-        <ScoreRing value={health.length ? up : null} max={health.length || 1} label="Services up" sub={ok ? 'All up' : `${health.length - up} down`} />
-      </div>
-      <div className="p-5">
-        <h3 className="mb-3 text-sm font-semibold text-fg">Users</h3>
-        <SummaryList items={[
-          { label: 'Active, 7 days', value: num(o.users.active_7d), tone: 'good' },
-          { label: 'New, 7 days', value: num(o.users.new_7d) },
-          { label: 'Two-factor on', value: num(o.users.two_factor) },
-          { label: 'Suspended', value: num(o.users.suspended), tone: o.users.suspended ? 'bad' : undefined },
-        ]} />
-      </div>
-      <div className="p-5">
-        <h3 className="mb-3 text-sm font-semibold text-fg">Organizations by plan</h3>
-        <SummaryList items={plans.map(([plan, n]) => ({ label: plan.charAt(0).toUpperCase() + plan.slice(1), value: num(n) }))
-          .concat([{ label: 'Exempt', value: num(o.organizations.exempt) }])} />
-      </div>
-      <div className="grid content-start justify-items-center gap-2 p-5 text-center">
-        <h3 className="justify-self-stretch text-left text-sm font-semibold text-fg">System status</h3>
-        {ok ? <ShieldCheck size={36} className="text-good" /> : <AlertTriangle size={36} className="text-critical" />}
-        <Badge tone={ok ? 'good' : 'danger'} dot>{ok ? 'All systems normal' : 'Degraded'}</Badge>
-        <span className="text-xs text-fg-3">{num(o.scans.running)} scans running, {num(o.scans.queued)} queued</span>
-        <Link to="/admin/health" className="text-xs text-accent hover:underline">System health</Link>
-      </div>
-    </section>
-  )
-}
-
 export default function AdminOverview() {
   const [days, setDays] = useState(30)
   const { data: o, error } = useApi('/api/v1/admin/overview')
@@ -216,7 +168,7 @@ export default function AdminOverview() {
 
   return (
     <div>
-      <PageHeader title="Platform overview" icon={Activity} description="Growth, usage, revenue and health across every organization on Hawk-i Cloud."
+      <PageHeader title="Platform overview" description="Growth, usage, revenue and health across every organization on Hawk-i Cloud."
         actions={<Segmented label="Time range" options={RANGES} value={days} onChange={setDays} />} />
 
       {o.switches_on.length > 0 && (
@@ -227,16 +179,7 @@ export default function AdminOverview() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-4">
-        <KpiStrip items={[
-          { label: 'Users', value: num(o.users.total), note: `${num(o.users.new_24h)} new today` },
-          { label: 'Organizations', value: num(o.organizations.total), note: `${num(o.revenue.paying_customers)} paying` },
-          { label: 'MRR', value: usd(o.revenue.mrr_cents), note: `ARR ${usd(o.revenue.arr_cents)}` },
-          { label: 'Scans, 24h', value: num(Object.values(o.scans.last_24h || {}).reduce((x, y) => x + y, 0)), note: `${num(o.scans.failed_24h)} failed`, tone: o.scans.failed_24h ? 'warn' : undefined },
-          { label: 'Open alerts', value: num(o.alerts.open), note: `${num(o.alerts.failed_deliveries_24h)} deliveries failed`, tone: o.alerts.open ? 'warn' : undefined },
-          { label: 'Switches on', value: num(o.switches_on.length), tone: o.switches_on.length ? 'bad' : 'good' },
-        ]} />
-        <PlatformPanel o={o} />
+      <div className="grid gap-4">
         <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
           <StatCard label="Sign-ups" icon={UserPlus} value={num(c.signups)} trend={spark('signups')} to="/admin/users"
             delta={<Delta value={change(c.signups, p.signups)} period={period} />} sub={`${num(o.users.total)} users in total`} />
