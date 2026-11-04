@@ -165,9 +165,9 @@ function Sidebar({ staff, collapsed, onToggle, onNavigate }) {
   return (
     <div className="flex h-full flex-col">
       <div className={`flex h-14 shrink-0 items-center gap-2 border-b border-line px-4 ${collapsed ? 'justify-center px-2' : ''}`}>
-        <Link to={staff ? '/admin' : '/dashboard'} className="flex items-center gap-2.5" onClick={onNavigate}>
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-steel to-steel-dark text-white"><ShieldCheck size={17} /></span>
-          {!collapsed && <span className="font-display text-lg text-white tracking-tight">Hawk<span className="text-accent italic">i</span></span>}
+        <Link to={staff ? '/admin' : '/dashboard'} className="flex items-center gap-2.5" onClick={onNavigate} aria-label="Hawk-i home">
+          <img src="/favicon.svg" alt="" width="32" height="32" className="h-8 w-8 shrink-0 rounded-lg ring-1 ring-line-strong" />
+          {!collapsed && <span className="font-display text-lg text-white tracking-tight">Hawk<span className="text-steel italic">i</span></span>}
         </Link>
         {!collapsed && (staff ? <Badge tone="staff">Admin</Badge> : <span className="text-[0.7rem] text-fg-3">Cloud</span>)}
       </div>
