@@ -1,36 +1,28 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { ShieldCheck } from 'lucide-react'
+import { ShieldAlert, ShieldCheck } from 'lucide-react'
 import { useAuth } from '../../lib/auth.jsx'
 import { useApi } from '../../lib/useApi.js'
 import { useRefresh } from '../../lib/live.jsx'
 import { ago, num } from '../../lib/format.js'
 import { FINDING_STATUSES, SEVERITIES } from '../../data/dashboardNav.js'
-import PageHeader from '../../components/dashboard/PageHeader.jsx'
+import PageHeader, { KpiStrip } from '../../components/dashboard/PageHeader.jsx'
 import Card from '../../components/ui/Card.jsx'
 import DataTable, { Pager } from '../../components/ui/DataTable.jsx'
 import { FindingStatusBadge, SEVERITY_COLOR, SeverityBadge } from '../../components/ui/Badge.jsx'
-import { FilterSelect, SearchInput, Toolbar } from '../../components/ui/Controls.jsx'
+import { FilterSelect, PillFilter, SearchInput, Toolbar } from '../../components/ui/Controls.jsx'
 import { EmptyState, ErrorState } from '../../components/ui/Feedback.jsx'
 
-const PAGE = 50
+const PAGE = 25
 
-// SeverityFacets is the row of severity choices with how many findings each
+// SeverityFacets is the row of severity pills with how many findings each
 // would show under the other filters.
 function SeverityFacets({ facets, value, onChange }) {
   const total = Object.values(facets || {}).reduce((a, b) => a + b, 0)
-  const opts = [{ key: '', label: 'All', count: total }, ...SEVERITIES.map((s) => ({ key: s, label: s, count: facets?.[s] || 0 }))]
   return (
-    <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Severity">
-      {opts.map((o) => (
-        <button key={o.key || 'all'} type="button" role="radio" aria-checked={value === o.key} onClick={() => onChange(o.key)}
-          className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm transition ${value === o.key ? 'border-accent/60 bg-accent/10 text-fg' : 'border-line bg-surface text-fg-2 hover:border-line-strong hover:text-fg'}`}>
-          {o.key && <span className="h-2 w-2 rounded-[2px]" style={{ background: SEVERITY_COLOR[o.key.toLowerCase()] }} />}
-          {o.label}
-          <span className="text-xs text-fg-3 tnum">{facets ? num(o.count) : '-'}</span>
-        </button>
-      ))}
-    </div>
+    <PillFilter label="Severity" value={value} onChange={onChange}
+      options={[{ value: '', label: 'All', count: facets ? num(total) : '-' },
+        ...SEVERITIES.map((s) => ({ value: s, label: s, count: facets ? num(facets[s] || 0) : '-', color: SEVERITY_COLOR[s.toLowerCase()] }))]} />
   )
 }
 
@@ -56,12 +48,23 @@ export default function Findings() {
   }
 
   const statusCounts = page?.facets?.status || {}
+  const sev = page?.facets?.severity || {}
   const filtered = filters.q || filters.project || filters.status || filters.severity
   return (
     <div>
-      <PageHeader title="Findings" description="Every issue found across your projects, most severe first. Each finding is tracked across scans, so triage carries over."
+      <PageHeader title="Findings" icon={ShieldAlert} description="Every issue found across your projects, most severe first. Each finding is tracked across scans, so triage carries over."
         meta={page && <span className="tnum">{num(page.total)} {page.total === 1 ? 'finding' : 'findings'}{filtered ? ' match these filters' : ''}</span>} />
-      <div className="grid gap-4">
+      <div className="grid grid-cols-1 gap-4">
+        {page?.facets && (
+          <KpiStrip items={[
+            { label: 'Critical', value: num(sev.Critical || 0), tone: sev.Critical ? 'bad' : undefined },
+            { label: 'High', value: num(sev.High || 0), tone: sev.High ? 'bad' : undefined },
+            { label: 'Medium', value: num(sev.Medium || 0) },
+            { label: 'Low', value: num(sev.Low || 0) },
+            { label: 'New', value: num(statusCounts.new || 0), note: 'not triaged yet', tone: statusCounts.new ? 'warn' : undefined },
+            { label: 'Resolved', value: num(statusCounts.resolved || 0), tone: 'good' },
+          ]} />
+        )}
         <SeverityFacets facets={page?.facets?.severity} value={filters.severity} onChange={(v) => set('severity', v)} />
         <Toolbar>
           <SearchInput className="w-full sm:w-72" value={q} onChange={setQ} onSubmit={() => set('q', q.trim())} placeholder="Search title or file" label="Search findings" />
