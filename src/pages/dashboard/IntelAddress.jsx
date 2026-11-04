@@ -23,7 +23,7 @@ const ROLE = { vulnerable: 'vulnerable contract', attacker: 'attacker', attack_c
 export function Vulnerability({ v }) {
   const exposed = v.vulnerable || v.findings.length > 0 || v.exploits.length > 0
   return (
-    <Card title={<span className="flex items-center gap-2">{exposed ? <ShieldAlert className="size-4 text-[#ff8b8b]" aria-hidden /> : <ShieldCheck className="size-4 text-[#8fd6a5]" aria-hidden />}Vulnerability lookup</span>}
+    <Card title={<span className="flex items-center gap-2">{exposed ? <ShieldAlert className="size-4 text-bad" aria-hidden /> : <ShieldCheck className="size-4 text-ok" aria-hidden />}Vulnerability lookup</span>}
       description="Past incidents and exploit code matches">
       {!exposed ? <p className="text-sm text-fg-2">No recorded incident involves this address and its code matches no known exploit.</p> : (
         <div className="grid gap-3">

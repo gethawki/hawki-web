@@ -46,7 +46,7 @@ function VerifyBanner() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <span className="flex-1">
           {state === 'sent' ? 'A new confirmation link is on its way.' : 'Confirm your email address to keep your account secure.'}
-          {error && <span className="mt-1 block text-[#ff8b8b]">{error}</span>}
+          {error && <span className="mt-1 block text-bad">{error}</span>}
         </span>
         {state !== 'sent' && <Button variant="ghost" size="sm" onClick={resend} busy={state === 'sending'}>Resend link</Button>}
       </div>
@@ -175,7 +175,7 @@ function Analytics({ orgId, days, auth }) {
               { key: 'name', header: 'Project', cell: (p) => <Link to={`/dashboard/projects/${p.id}`} className="font-medium text-fg hover:underline">{p.name}</Link> },
               { key: 'open', header: 'Open', cell: (p) => <div className="w-40"><SeverityBar counts={p.open} legend={false} height={6} /></div>, hide: 'sm' },
               { key: 'count', header: 'Findings', align: 'right', cell: (p) => num(p.open.critical + p.open.high + p.open.medium + p.open.low) },
-              { key: 'score', header: 'Score', align: 'right', cell: (p) => <span className={p.score < 50 ? 'text-[#ff8b8b]' : 'text-fg'}>{p.score}</span> },
+              { key: 'score', header: 'Score', align: 'right', cell: (p) => <span className={p.score < 50 ? 'text-bad' : 'text-fg'}>{p.score}</span> },
               { key: 'last', header: 'Last scan', align: 'right', hide: 'md', cell: (p) => <span className="text-fg-3">{ago(p.last_scan_at)}</span> },
             ]} />
         </Card>

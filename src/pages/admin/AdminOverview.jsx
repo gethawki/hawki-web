@@ -24,7 +24,7 @@ function Health({ o }) {
         {Object.entries(o.health).map(([name, status]) => (
           <li key={name} className="flex items-center justify-between gap-2">
             <span className="capitalize text-fg-2">{name.replace(/_/g, ' ')}</span>
-            <span className={`inline-flex items-center gap-1.5 text-xs ${status === 'ok' ? 'text-[#5fd35f]' : 'text-[#ff8b8b]'}`}>
+            <span className={`inline-flex items-center gap-1.5 text-xs ${status === 'ok' ? 'text-ok' : 'text-bad'}`}>
               <span className="h-1.5 w-1.5 rounded-full bg-current" />{status === 'ok' ? 'Up' : status}
             </span>
           </li>
@@ -61,7 +61,7 @@ function IntelSummary({ i }) {
         {figures.map(([label, value, bad, sub]) => (
           <div key={label} className="min-w-0">
             <div className="truncate text-xs text-fg-3">{label}</div>
-            <div className={`mt-1 text-lg font-semibold tnum ${bad ? 'text-[#f5dfae]' : 'text-fg'}`}>{value}</div>
+            <div className={`mt-1 text-lg font-semibold tnum ${bad ? 'text-warn' : 'text-fg'}`}>{value}</div>
             <div className="truncate text-[0.7rem] text-fg-3">{sub}</div>
           </div>
         ))}
@@ -81,7 +81,7 @@ function Figures({ title, to, items }) {
         {items.map(([label, value, sub, bad]) => (
           <div key={label} className="min-w-0">
             <dt className="truncate text-[0.7rem] text-fg-3">{label}</dt>
-            <dd className={`text-base font-semibold tnum ${bad ? 'text-[#f5dfae]' : 'text-fg'}`}>{value}</dd>
+            <dd className={`text-base font-semibold tnum ${bad ? 'text-warn' : 'text-fg'}`}>{value}</dd>
             {sub && <dd className="truncate text-[0.68rem] text-fg-3">{sub}</dd>}
           </div>
         ))}
@@ -172,7 +172,7 @@ export default function AdminOverview() {
         actions={<Segmented label="Time range" options={RANGES} value={days} onChange={setDays} />} />
 
       {o.switches_on.length > 0 && (
-        <div className="mb-4 flex items-center gap-3 rounded-xl border border-warning/40 bg-warning/[0.07] px-4 py-3 text-sm text-[#f5dfae]">
+        <div className="mb-4 flex items-center gap-3 rounded-xl border border-warning/40 bg-warning/[0.07] px-4 py-3 text-sm text-warn">
           <AlertTriangle size={16} className="shrink-0" />
           <span className="flex-1">Emergency switches on: {o.switches_on.map((s) => s.key.replace(/_/g, ' ')).join(', ')}.</span>
           <Link to="/admin/switches" className="text-xs underline hover:text-fg">Manage</Link>
@@ -251,7 +251,7 @@ export default function AdminOverview() {
               columns={[
                 { key: 'name', header: 'Organization', cell: (r) => <Link to={`/admin/customers/${r.id}`} className="font-medium text-fg hover:underline">{r.name}</Link> },
                 { key: 'scans', header: 'Scans', align: 'right', cell: (r) => num(r.scans) },
-                { key: 'failed', header: 'Failed', align: 'right', cell: (r) => <span className={r.failed ? 'text-[#ff8b8b]' : 'text-fg-3'}>{num(r.failed)}</span> },
+                { key: 'failed', header: 'Failed', align: 'right', cell: (r) => <span className={r.failed ? 'text-bad' : 'text-fg-3'}>{num(r.failed)}</span> },
                 { key: 'findings', header: 'Findings', align: 'right', hide: 'sm', cell: (r) => num(r.findings) },
               ]} />
           </Card>

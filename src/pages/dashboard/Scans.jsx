@@ -70,7 +70,7 @@ export default function Scans() {
               },
               {
                 key: 'result', header: 'Result', hide: 'md', cell: (s) => s.status === 'completed' ? <SeverityCounts summary={s.summary} />
-                  : s.status === 'failed' ? <span className="block max-w-xs truncate text-xs text-[#ff8b8b]" title={s.error}>{s.error || 'Failed'}</span>
+                  : s.status === 'failed' ? <span className="block max-w-xs truncate text-xs text-bad" title={s.error}>{s.error || 'Failed'}</span>
                     : <span className="text-xs text-fg-3">{s.status === 'running' ? 'Scanning now' : 'Waiting for a worker'}</span>,
               },
               { key: 'duration', header: 'Duration', hide: 'lg', align: 'right', cell: (s) => <span className="text-fg-2">{scanDuration(s)}</span> },

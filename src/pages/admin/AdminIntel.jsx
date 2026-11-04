@@ -73,13 +73,13 @@ export default function IntelOverview() {
             </Card>
             <Card className="xl:col-span-2" title="Needs attention" actions={attention.length > 0 && <Badge tone="warning">{attention.length}</Badge>}>
               {attention.length === 0 ? (
-                <div className="flex items-center gap-2 text-sm text-fg-2"><CheckCircle2 size={16} className="text-[#8fd6a5]" aria-hidden />Nothing needs attention.</div>
+                <div className="flex items-center gap-2 text-sm text-fg-2"><CheckCircle2 size={16} className="text-ok" aria-hidden />Nothing needs attention.</div>
               ) : (
                 <ul className="grid gap-2">
                   {attention.map((a) => (
                     <li key={a.key}>
                       <Link to={a.to} className="flex gap-3 rounded-lg border border-warning/30 bg-warning/[0.05] px-3 py-2 hover:border-warning/60">
-                        <AlertTriangle size={15} className="mt-0.5 shrink-0 text-[#f5dfae]" aria-hidden />
+                        <AlertTriangle size={15} className="mt-0.5 shrink-0 text-warn" aria-hidden />
                         <span className="grid min-w-0 gap-0.5"><span className="text-sm text-fg first-letter:uppercase">{a.text}</span>{a.detail && <span className="truncate text-xs text-fg-3">{a.detail}</span>}</span>
                       </Link>
                     </li>
@@ -105,7 +105,7 @@ function ChainsTable({ rows, compact }) {
       { key: 'status', header: 'Status', cell: (c) => <span className="flex flex-wrap gap-1"><ChainStatus status={c.status} />{c.paused && <Badge tone="warning">Paused</Badge>}</span> },
       { key: 'head', header: 'Head', align: 'right', hide: compact ? 'lg' : 'md', cell: (c) => height(chainHead(c)) },
       { key: 'ingested', header: 'Ingested', align: 'right', hide: compact ? 'xl' : 'md', cell: (c) => height(c.ingested_number) },
-      { key: 'lag', header: 'Behind', align: 'right', cell: (c) => { const lag = chainLag(c); return <span className={`whitespace-nowrap ${lagIsHigh(c) ? 'text-[#f5dfae]' : ''}`}>{lag == null ? '-' : `${height(lag)} blocks`}</span> } },
+      { key: 'lag', header: 'Behind', align: 'right', cell: (c) => { const lag = chainLag(c); return <span className={`whitespace-nowrap ${lagIsHigh(c) ? 'text-warn' : ''}`}>{lag == null ? '-' : `${height(lag)} blocks`}</span> } },
       { key: 'ep', header: 'Endpoints', align: 'right', hide: 'sm', cell: (c) => `${c.endpoints.filter((e) => e.healthy).length} / ${c.endpoints.length}` },
       !compact && { key: 'bt', header: 'Block time', align: 'right', hide: 'lg', cell: (c) => blockTime(c.block_time_ms) },
       !compact && { key: 'conf', header: 'Confirmations', align: 'right', hide: 'lg', cell: (c) => c.confirmations },
@@ -157,7 +157,7 @@ export function IntelChain() {
       <PageHeader back={back} title={<span className="capitalize">{c.name}</span>}
         meta={<><ChainStatus status={c.status} />{c.paused && <Badge tone="warning" dot>Paused</Badge>}<span>chain {c.chain_id}</span><span>{blockTime(c.block_time_ms)} blocks</span><span>start {c.start_policy}</span>{c.traces && <span>traces on</span>}</>} />
       {c.status_detail && c.status !== 'ok' && (
-        <div className={`rounded-lg border px-3 py-2 text-sm ${c.status === 'degraded' ? 'border-warning/30 bg-warning/[0.06] text-[#f5dfae]' : 'border-critical/40 bg-critical/[0.06] text-[#f3c7c7]'}`}>{c.status_detail}</div>
+        <div className={`rounded-lg border px-3 py-2 text-sm ${c.status === 'degraded' ? 'border-warning/30 bg-warning/[0.06] text-warn' : 'border-critical/40 bg-critical/[0.06] text-bad'}`}>{c.status_detail}</div>
       )}
       <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
         <StatCard label="Chain head" icon={Network} value={height(head)} sub={c.head_seen_at ? `seen ${ago(c.head_seen_at)}` : 'not seen yet'} />

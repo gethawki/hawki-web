@@ -45,7 +45,7 @@ function Finding({ f, index, open }) {
         {steps(f.exploit_steps).length > 0 && (
           <div>
             <div className="font-mono text-[0.65rem] uppercase tracking-wider text-grey mb-1">Exploit steps</div>
-            <ol className="list-decimal pl-5 text-[#cfcfcf]">{steps(f.exploit_steps).map((s, i) => <li key={i}>{s}</li>)}</ol>
+            <ol className="list-decimal pl-5 text-fg-2">{steps(f.exploit_steps).map((s, i) => <li key={i}>{s}</li>)}</ol>
           </div>
         )}
       </div>
@@ -56,14 +56,14 @@ function Finding({ f, index, open }) {
 const Text = ({ label, text }) => (
   <div>
     <div className="font-mono text-[0.65rem] uppercase tracking-wider text-grey mb-1">{label}</div>
-    <p className="text-[#cfcfcf] whitespace-pre-line">{text}</p>
+    <p className="text-fg-2 whitespace-pre-line">{text}</p>
   </div>
 )
 
 const Code = ({ label, text }) => (
   <div>
     <div className="font-mono text-[0.65rem] uppercase tracking-wider text-grey mb-1">{label}</div>
-    <pre className="overflow-x-auto rounded-lg border border-panel-border bg-ink px-3 py-2 font-mono text-xs text-[#d9d9d9]">{text}</pre>
+    <pre className="overflow-x-auto rounded-lg border border-panel-border bg-ink px-3 py-2 font-mono text-xs text-fg">{text}</pre>
   </div>
 )
 
@@ -77,19 +77,19 @@ export default function ReportView({ doc }) {
     <div className="report-sheet grid gap-8">
       <section>
         <h2 className="text-white font-medium mb-3">Executive summary</h2>
-        <p className="text-sm text-[#cfcfcf] max-w-3xl">{doc.overview}</p>
+        <p className="text-sm text-fg-2 max-w-3xl">{doc.overview}</p>
         <div className="mt-4 grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
           {s.score != null && <Card label="Score" value={s.score} note={s.classification} />}
           <Card label="Findings" value={s.total} note={`${s.new} new`} />
           {SEVERITIES.filter((v) => s.by_severity?.[v]).map((v) => <Card key={v} label={v} value={s.by_severity[v]} />)}
         </div>
         <dl className="mt-4 grid gap-x-6 gap-y-1 text-sm sm:grid-cols-[8rem_1fr]">
-          <dt className="text-grey">Organization</dt><dd className="text-[#cfcfcf] break-words">{doc.organization}</dd>
-          <dt className="text-grey">Project</dt><dd className="text-[#cfcfcf] break-words">{doc.project.name}</dd>
-          {target && (<><dt className="text-grey">Target</dt><dd className="text-[#cfcfcf] break-all">{target}</dd></>)}
-          <dt className="text-grey">Scan</dt><dd className="text-[#cfcfcf] capitalize">{doc.scan.type} scan{doc.scan.scanner ? `, ${doc.scan.scanner}` : ''}</dd>
-          {doc.scan.finished_at && (<><dt className="text-grey">Finished</dt><dd className="text-[#cfcfcf]">{fmt(doc.scan.finished_at)}</dd></>)}
-          <dt className="text-grey">Generated</dt><dd className="text-[#cfcfcf]">{fmt(doc.generated_at)}</dd>
+          <dt className="text-grey">Organization</dt><dd className="text-fg-2 break-words">{doc.organization}</dd>
+          <dt className="text-grey">Project</dt><dd className="text-fg-2 break-words">{doc.project.name}</dd>
+          {target && (<><dt className="text-grey">Target</dt><dd className="text-fg-2 break-all">{target}</dd></>)}
+          <dt className="text-grey">Scan</dt><dd className="text-fg-2 capitalize">{doc.scan.type} scan{doc.scan.scanner ? `, ${doc.scan.scanner}` : ''}</dd>
+          {doc.scan.finished_at && (<><dt className="text-grey">Finished</dt><dd className="text-fg-2">{fmt(doc.scan.finished_at)}</dd></>)}
+          <dt className="text-grey">Generated</dt><dd className="text-fg-2">{fmt(doc.generated_at)}</dd>
         </dl>
       </section>
 
@@ -133,7 +133,7 @@ export default function ReportView({ doc }) {
           <ul className="grid gap-1 text-sm">
             {doc.evidence.map((e) => (
               <li key={e.kind + e.sha256} className="flex flex-col sm:flex-row sm:gap-4">
-                <span className="text-[#cfcfcf] w-24">{e.kind}</span>
+                <span className="text-fg-2 w-24">{e.kind}</span>
                 <span className="text-grey w-28">{e.size.toLocaleString()} bytes</span>
                 <span className="font-mono text-xs text-grey break-all">sha256 {e.sha256}</span>
               </li>

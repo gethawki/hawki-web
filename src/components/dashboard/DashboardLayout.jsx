@@ -46,11 +46,11 @@ function NavItem({ link, collapsed, onNavigate, staff }) {
   return (
     <NavLink to={to} end={end} onClick={onNavigate} title={collapsed ? label : undefined}
       className={({ isActive }) => `group relative flex items-center gap-3 rounded-lg px-2.5 py-[7px] text-sm transition ${
-        isActive ? 'bg-surface-3 text-fg' : 'text-fg-2 hover:bg-surface-2 hover:text-fg'}`}>
+        isActive ? 'bg-surface-3 font-medium text-fg' : 'text-fg-2 hover:bg-surface-2 hover:text-fg'}`}>
       {({ isActive }) => (
         <>
-          {isActive && <span className={`absolute left-0 top-1.5 bottom-1.5 w-[2px] rounded-full ${staff ? 'bg-staff' : 'bg-accent'}`} />}
-          <Icon size={16} className={`shrink-0 ${isActive ? (staff ? 'text-staff' : 'text-accent') : ''}`} />
+          {isActive && staff && <span className="absolute -left-3 top-1.5 bottom-1.5 w-[3px] rounded-r-full bg-staff" />}
+          <Icon size={16} className={`shrink-0 ${isActive ? (staff ? 'text-staff' : 'text-accent') : 'text-fg-3 group-hover:text-fg-2'}`} />
           {!collapsed && <span className="truncate">{label}</span>}
         </>
       )}
@@ -67,7 +67,7 @@ function NavSections({ sections, collapsed, onNavigate, staff }) {
         if (links.length === 0) return null
         return (
           <div key={section.title}>
-            {!collapsed && <div className="mb-1 px-2.5 text-[0.7rem] font-medium text-fg-3">{section.title}</div>}
+            {!collapsed && <div className="mb-1.5 px-2.5 text-[0.66rem] font-semibold uppercase tracking-[0.12em] text-fg-3">{section.title}</div>}
             <ul className="grid gap-px">
               {links.map((l) => <li key={l.label}><NavItem link={l} collapsed={collapsed} onNavigate={onNavigate} staff={staff} /></li>)}
             </ul>
@@ -145,14 +145,29 @@ function Usage() {
   )
 }
 
+// StatusCard is the sidebar's footer status, as in the reference: whether
+// live updates are connected and which environment this is.
+function StatusCard({ staff }) {
+  const { connected } = useLive()
+  return (
+    <div className="rounded-xl border border-line bg-surface/70 px-3 py-2.5 text-xs">
+      <div className="flex items-center gap-2">
+        <span className={`h-2 w-2 rounded-full ${connected ? 'bg-good shadow-[0_0_8px_var(--color-good)]' : 'bg-fg-3'}`} />
+        <span className={connected ? 'font-medium text-ok' : 'text-fg-3'}>{connected ? 'Connected' : 'Reconnecting'}</span>
+      </div>
+      <div className="mt-1.5 flex justify-between gap-2 text-fg-3"><span>Mode</span><span className="text-fg-2">{staff ? 'Platform admin' : 'Workspace'}</span></div>
+    </div>
+  )
+}
+
 function Sidebar({ staff, collapsed, onToggle, onNavigate }) {
   const auth = useAuth()
   return (
     <div className="flex h-full flex-col">
       <div className={`flex h-14 shrink-0 items-center gap-2 border-b border-line px-4 ${collapsed ? 'justify-center px-2' : ''}`}>
-        <Link to={staff ? '/admin' : '/dashboard'} className="flex items-center gap-2" onClick={onNavigate}>
-          <span className="h-2 w-2 rounded-full bg-steel" />
-          {!collapsed && <span className="font-display text-lg text-white tracking-tight">Hawk<span className="text-steel italic">i</span></span>}
+        <Link to={staff ? '/admin' : '/dashboard'} className="flex items-center gap-2.5" onClick={onNavigate}>
+          <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-steel to-steel-dark text-white"><ShieldCheck size={17} /></span>
+          {!collapsed && <span className="font-display text-lg text-white tracking-tight">Hawk<span className="text-accent italic">i</span></span>}
         </Link>
         {!collapsed && (staff ? <Badge tone="staff">Admin</Badge> : <span className="text-[0.7rem] text-fg-3">Cloud</span>)}
       </div>
@@ -177,6 +192,7 @@ function Sidebar({ staff, collapsed, onToggle, onNavigate }) {
       </div>
 
       <div className={`grid gap-2 border-t border-line ${collapsed ? 'p-2' : 'p-3'}`}>
+        {!collapsed && <StatusCard staff={staff} />}
         {!staff && !collapsed && <Usage />}
         {auth.isPlatformAdmin && (
           <Link to={staff ? '/dashboard' : '/admin'} onClick={onNavigate} title={collapsed ? (staff ? 'Back to workspace' : 'Admin console') : undefined}
@@ -293,21 +309,21 @@ export default function DashboardLayout() {
       <CrumbProvider>
         <div className={`app-root min-h-screen lg:grid ${collapsed ? 'lg:grid-cols-[4rem_1fr]' : 'lg:grid-cols-[15.5rem_1fr]'}`}>
           {staff && <div className="fixed inset-x-0 top-0 z-[70] h-[2px] bg-staff" aria-hidden="true" />}
-          <aside className="sticky top-0 hidden h-screen border-r border-line bg-[#0c0c0d] lg:block">
+          <aside className="sticky top-0 hidden h-screen border-r border-line bg-sidebar/95 lg:block">
             <Sidebar staff={staff} collapsed={collapsed} onToggle={toggle} />
           </aside>
 
           {drawer && (
             <div className="fixed inset-0 z-50 lg:hidden">
               <button className="absolute inset-0 bg-black/60" aria-label="Close menu" onClick={() => setDrawer(false)} />
-              <aside className="absolute inset-y-0 left-0 w-72 border-r border-line bg-[#0c0c0d]">
+              <aside className="absolute inset-y-0 left-0 w-72 border-r border-line bg-sidebar">
                 <Sidebar staff={staff} onNavigate={() => setDrawer(false)} />
               </aside>
             </div>
           )}
 
           <div className="flex min-w-0 flex-col">
-            <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-line bg-app/80 px-4 backdrop-blur-md sm:px-6">
+            <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-line bg-app/75 px-4 backdrop-blur-md sm:px-6">
               <button className="-ml-1 p-1.5 text-fg-2 lg:hidden" aria-label="Open menu" onClick={() => setDrawer((v) => !v)}>
                 {drawer ? <X size={20} /> : <MenuIcon size={20} />}
               </button>

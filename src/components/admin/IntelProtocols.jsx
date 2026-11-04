@@ -49,7 +49,7 @@ function ProtocolDetail({ slug, onClose, onOpenAddress }) {
   const p = data?.protocol
   return (
     <Modal open onClose={onClose} width="max-w-3xl" title={p?.name || slug} description={p ? `${p.category || 'Uncategorised'} · data from DefiLlama, updated ${ago(p.updated_at)}` : ''}>
-      {error && <p className="text-sm text-[#ff8b8b]">{error}</p>}
+      {error && <p className="text-sm text-bad">{error}</p>}
       {!data && !error && <p className="text-sm text-fg-3">Loading</p>}
       {p && (
         <div className="grid gap-5">
@@ -58,7 +58,7 @@ function ProtocolDetail({ slug, onClose, onOpenAddress }) {
           <ScoreSection score={data.score} title="Protocol risk score" />
           {data.exploits?.length > 0 && (
             <div className="grid gap-1 rounded-lg border border-critical/40 bg-critical/[0.05] p-4 text-xs">
-              <div className="font-medium text-[#ff8b8b]">Recorded incidents</div>
+              <div className="font-medium text-bad">Recorded incidents</div>
               {data.exploits.map((x) => <div key={x.id} className="text-fg-2">{x.name} ({x.occurred_on ? x.occurred_on.slice(0, 10) : 'undated'}){x.loss_usd != null ? ` · ${usd(x.loss_usd)}` : ''}</div>)}
             </div>
           )}
@@ -111,7 +111,7 @@ export default function IntelProtocols({ stats, sources, top, links }) {
     <>
     <Card title={<span className="flex items-center gap-2"><Boxes className="size-4 text-fg-3" aria-hidden />By chain</span>}
       description="Contracts mapped to protocols: curated core contracts, contracts their factories created and proxies of their implementations" flush
-      actions={llama && <span className={`text-xs ${llama.error ? 'text-[#ff8b8b]' : 'text-fg-3'}`} title={llama.error || ''}>{llama.error ? 'Last DefiLlama sync failed' : `DefiLlama synced ${ago(llama.last_ok_at)} · ${num(llama.items)} protocols`}</span>}>
+      actions={llama && <span className={`text-xs ${llama.error ? 'text-bad' : 'text-fg-3'}`} title={llama.error || ''}>{llama.error ? 'Last DefiLlama sync failed' : `DefiLlama synced ${ago(llama.last_ok_at)} · ${num(llama.items)} protocols`}</span>}>
       <DataTable rows={stats} rowKey={(s) => s.chain} dense empty={<EmptyState compact title="No contract mapped to a protocol yet" />} columns={[
         { key: 'chain', header: 'Chain', cell: (s) => <span className="capitalize text-fg">{s.chain}</span> },
         { key: 'p', header: 'Protocols', align: 'right', cell: (s) => <span className="tnum">{num(s.protocols)}</span> },

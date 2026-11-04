@@ -189,7 +189,7 @@ export default function AdminCustomer() {
                     <p className="whitespace-pre-line text-fg">{n.body}</p>
                     <div className="mt-2 flex gap-3 text-xs text-fg-3">
                       <span>{n.author_email} · {when(n.created_at)}</span>
-                      <button type="button" className="hover:text-[#ff8b8b]" onClick={() => act(`${base}/notes/${n.id}`, 'DELETE', undefined, 'Note deleted.')}>Delete</button>
+                      <button type="button" className="hover:text-bad" onClick={() => act(`${base}/notes/${n.id}`, 'DELETE', undefined, 'Note deleted.')}>Delete</button>
                     </div>
                   </li>
                 ))}
@@ -235,7 +235,7 @@ export default function AdminCustomer() {
             <DataTable rows={data.ledger} dense empty={<EmptyState compact title="No credit activity" />} columns={[
               { key: 'when', header: 'When', cell: (e) => <span className="whitespace-nowrap text-fg-3">{when(e.occurred_at)}</span> },
               { key: 'reason', header: 'Details', cell: (e) => <span className="text-fg-2">{e.reason}</span> },
-              { key: 'amount', header: 'Credits', align: 'right', cell: (e) => <span className={e.amount_mc > 0 ? 'text-[#5fd35f]' : 'text-fg'}>{e.amount_mc >= 0 ? '+' : '-'}{formatCredits(Math.abs(e.amount_mc))}</span> },
+              { key: 'amount', header: 'Credits', align: 'right', cell: (e) => <span className={e.amount_mc > 0 ? 'text-ok' : 'text-fg'}>{e.amount_mc >= 0 ? '+' : '-'}{formatCredits(Math.abs(e.amount_mc))}</span> },
             ]} />
           </Card>
         )}

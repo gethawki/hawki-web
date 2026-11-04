@@ -34,7 +34,7 @@ export function EmptyState({ icon: Icon, title, children, action, compact }) {
 
 export function ErrorState({ children, onRetry }) {
   return (
-    <div role="alert" className="flex items-center gap-3 rounded-xl border border-critical/40 bg-critical/5 px-4 py-3 text-sm text-[#f3c7c7]">
+    <div role="alert" className="flex items-center gap-3 rounded-xl border border-critical/40 bg-critical/5 px-4 py-3 text-sm text-bad">
       <AlertTriangle size={16} className="shrink-0" />
       <span className="flex-1">{children}</span>
       {onRetry && <button type="button" onClick={onRetry} className="text-xs underline hover:text-white">Try again</button>}

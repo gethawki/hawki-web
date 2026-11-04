@@ -3,9 +3,9 @@
 const TONES = {
   neutral: 'bg-surface-3 text-fg-2 ring-line-strong',
   accent: 'bg-accent/10 text-accent ring-accent/30',
-  good: 'bg-good/10 text-[#5fd35f] ring-good/30',
+  good: 'bg-good/10 text-ok ring-good/30',
   warning: 'bg-warning/10 text-warning ring-warning/30',
-  danger: 'bg-critical/10 text-[#ff8b8b] ring-critical/35',
+  danger: 'bg-critical/10 text-bad ring-critical/35',
   staff: 'bg-staff/10 text-staff ring-staff/35',
 }
 
@@ -27,13 +27,16 @@ export const SEVERITY_COLOR = {
   info: 'var(--color-sev-info)',
 }
 
-// SeverityBadge shows the level with a colored square key.
+// SeverityBadge is a tinted chip in the level's hue with its name, as in
+// the reference ("High" in red, "Medium" in orange).
 export function SeverityBadge({ value, className = '' }) {
   const v = (value || 'info').toLowerCase()
-  const label = v.charAt(0).toUpperCase() + v.slice(1)
+  const label = v === 'info' ? 'Info' : v.charAt(0).toUpperCase() + v.slice(1)
+  const c = SEVERITY_COLOR[v] || SEVERITY_COLOR.info
   return (
-    <span className={`inline-flex items-center gap-1.5 whitespace-nowrap text-xs text-fg ${className}`}>
-      <span className="h-2 w-2 rounded-[2px]" style={{ background: SEVERITY_COLOR[v] || SEVERITY_COLOR.info }} />
+    <span className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-1.5 py-0.5 text-[0.7rem] font-semibold ${className}`}
+      style={{ color: `color-mix(in oklab, ${c} 75%, white)`, background: `color-mix(in oklab, ${c} 16%, transparent)`, boxShadow: `inset 0 0 0 1px color-mix(in oklab, ${c} 40%, transparent)` }}>
+      <span className="h-1.5 w-1.5 rounded-full" style={{ background: c }} />
       {label}
     </span>
   )

@@ -9,7 +9,7 @@ function Wrap({ id, label, error, hint, children }) {
       {label && <span className="block text-[0.8rem] font-medium text-fg-2 mb-1.5">{label}</span>}
       {children}
       {error ? (
-        <span className="block mt-1.5 text-xs text-[#ff8b8b]">{error}</span>
+        <span className="block mt-1.5 text-xs text-bad">{error}</span>
       ) : hint ? (
         <span className="block mt-1.5 text-xs text-fg-3">{hint}</span>
       ) : null}

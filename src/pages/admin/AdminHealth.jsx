@@ -163,7 +163,7 @@ function Performance() {
           columns={[
             { key: 'r', header: 'Route', cell: (r) => <span className="block max-w-[26rem] truncate font-mono text-xs text-fg" title={r.route}>{r.route}</span> },
             { key: 'n', header: 'Requests', align: 'right', cell: (r) => num(r.requests) },
-            { key: 'e', header: 'Errors', align: 'right', hide: 'sm', cell: (r) => <span className={r.errors ? 'text-[#ff8b8b]' : 'text-fg-3'}>{num(r.errors)}</span> },
+            { key: 'e', header: 'Errors', align: 'right', hide: 'sm', cell: (r) => <span className={r.errors ? 'text-bad' : 'text-fg-3'}>{num(r.errors)}</span> },
             { key: 'p50', header: 'p50', align: 'right', hide: 'md', cell: (r) => ms(r.p50_ms) },
             { key: 'p95', header: 'p95', align: 'right', cell: (r) => ms(r.p95_ms) },
             { key: 'p99', header: 'p99', align: 'right', hide: 'sm', cell: (r) => ms(r.p99_ms) },
@@ -223,7 +223,7 @@ function Resources() {
         <Card flush title="Object storage" description="Counted at most every 10 minutes">
           <DataTable rows={p.storage} rowKey={(b) => b.bucket} dense empty={<EmptyState compact title="No buckets" />} columns={[
             { key: 'b', header: 'Bucket', cell: (b) => <span className="font-mono text-xs text-fg">{b.bucket}</span> },
-            { key: 'o', header: 'Objects', align: 'right', cell: (b) => (b.error ? <span className="text-xs text-[#ff8b8b]">{b.error}</span> : `${num(b.objects)}${b.partial ? '+' : ''}`) },
+            { key: 'o', header: 'Objects', align: 'right', cell: (b) => (b.error ? <span className="text-xs text-bad">{b.error}</span> : `${num(b.objects)}${b.partial ? '+' : ''}`) },
             { key: 's', header: 'Size', align: 'right', cell: (b) => (b.error ? '-' : `${bytes(b.bytes)}${b.partial ? '+' : ''}`) },
           ]} />
         </Card>
@@ -231,7 +231,7 @@ function Resources() {
       <Card flush title="Engine processes" description="From each engine's metrics page (HAWKI_ADMIN_METRICS_URLS)">
         <DataTable rows={p.engine_metrics} rowKey={(s) => s.name} dense empty={<EmptyState compact title="No metrics pages configured" />} columns={[
           { key: 'n', header: 'Engine', cell: (s) => <span className="text-fg">{serviceLabel(s.name)}</span> },
-          { key: 'm', header: 'Memory', align: 'right', cell: (s) => (s.error ? <span className="text-xs text-[#ff8b8b]" title={s.error}>unreachable</span> : bytes(s.resident_bytes)) },
+          { key: 'm', header: 'Memory', align: 'right', cell: (s) => (s.error ? <span className="text-xs text-bad" title={s.error}>unreachable</span> : bytes(s.resident_bytes)) },
           { key: 'h', header: 'Heap', align: 'right', hide: 'sm', cell: (s) => bytes(s.heap_bytes) },
           { key: 'g', header: 'Goroutines', align: 'right', hide: 'sm', cell: (s) => num(s.goroutines) },
           { key: 'c', header: 'CPU time', align: 'right', hide: 'md', cell: (s) => (s.cpu_seconds != null ? `${Math.round(s.cpu_seconds)} s` : '-') },

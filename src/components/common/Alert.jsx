@@ -1,7 +1,7 @@
 import { AlertTriangle, Info } from 'lucide-react'
 
 const TONES = {
-  error: ['border-critical/40 bg-critical/[0.06] text-[#f3c7c7]', AlertTriangle],
+  error: ['border-critical/40 bg-critical/[0.06] text-bad', AlertTriangle],
   info: ['border-accent/30 bg-accent/[0.06] text-[#d3dde8]', Info],
 }
 

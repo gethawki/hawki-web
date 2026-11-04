@@ -132,7 +132,7 @@ export default function ReportDetail() {
         <Link to="/dashboard/reports" className="hover:text-fg">All reports</Link>
         {report.scan_id && <Link to={`/dashboard/scans/${report.scan_id}`} className="hover:text-fg">The scan</Link>}
         <span>sha256 {report.sha256.slice(0, 16)}...</span>
-        {can('settings:write') && <button type="button" onClick={remove} className="ml-auto text-[#ff8b8b] hover:text-fg">Delete report</button>}
+        {can('settings:write') && <button type="button" onClick={remove} className="ml-auto text-bad hover:text-fg">Delete report</button>}
       </div>
     </div>
   )

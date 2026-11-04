@@ -21,7 +21,7 @@ function Deliveries({ deliveries }) {
       {deliveries.map((d) => (
         <li key={d.id} className="py-2.5 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4">
           <span className="text-fg min-w-40">{d.channel_name} <span className="text-fg-3 capitalize">({d.channel_kind})</span></span>
-          <span className={d.status === 'failed' ? 'text-[#ff8b8b]' : d.status === 'sent' ? 'text-fg-2' : 'text-accent'}>
+          <span className={d.status === 'failed' ? 'text-bad' : d.status === 'sent' ? 'text-fg-2' : 'text-accent'}>
             {DELIVERY_LABELS[d.status] || d.status}
             {d.digest && d.status !== 'sent' ? ` in the digest of ${formatDateTime(d.next_attempt_at)}` : ''}
             {d.status === 'sent' && d.sent_at ? ` ${formatDateTime(d.sent_at)}` : ''}

@@ -61,7 +61,7 @@ export function ConfirmDelete({ what, confirmText, onSubmit, idPrefix }) {
       <input id={`${idPrefix}-confirm`} value={typed} onChange={(e) => setTyped(e.target.value)} autoComplete="off" spellCheck="false" className={field} />
       <input id={`${idPrefix}-reason`} aria-label="Reason" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Reason (kept in the audit log)" className={field} />
       <button type="submit" disabled={!ready || busy}
-        className="h-9 rounded-lg border border-critical/50 px-3.5 text-sm text-[#ff8b8b] transition hover:bg-critical hover:text-fg disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-[#ff8b8b]">
+        className="h-9 rounded-lg border border-critical/50 px-3.5 text-sm text-bad transition hover:bg-critical hover:text-fg disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-bad">
         {busy ? 'Deleting' : `Delete ${what}`}
       </button>
     </form>

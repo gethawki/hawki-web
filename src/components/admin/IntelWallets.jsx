@@ -58,7 +58,7 @@ export function Profile({ target, onClose }) {
   const labels = [...new Set([...(a?.labels || []), ...(t?.labels || []), ...(c?.labels || [])])]
   return (
     <Modal open onClose={onClose} width="max-w-3xl" title={t ? (t.symbol || t.name || 'Token') : c?.name || labels[0] || 'Address'} description={`${target.address} on ${target.chain}`}>
-      {error && <p className="text-sm text-[#ff8b8b]">{error}</p>}
+      {error && <p className="text-sm text-bad">{error}</p>}
       {!data && !error && <p className="text-sm text-fg-3">Loading</p>}
       {data && (
         <div className="grid gap-5">
@@ -88,7 +88,7 @@ export function Profile({ target, onClose }) {
           {data.score && <ScoreSection score={data.score} />}
           {(data.exploits || []).length > 0 && (
             <div className="grid gap-1 rounded-lg border border-critical/40 bg-critical/[0.05] p-4 text-xs">
-              <div className="font-medium text-[#ff8b8b]">In recorded incidents</div>
+              <div className="font-medium text-bad">In recorded incidents</div>
               {data.exploits.map((x) => <div key={`${x.id}:${x.role}`} className="text-fg-2">{x.name} ({x.occurred_on ? x.occurred_on.slice(0, 10) : 'undated'}) as {x.role.replace('_', ' ')}</div>)}
             </div>
           )}
@@ -271,7 +271,7 @@ export default function IntelWallets({ chains, wallets, tracked, recent, onChang
             <input aria-label="Reason for tracking" placeholder="Reason" value={reason} onChange={(e) => setReason(e.target.value)} className={`${inputCls} col-span-2 sm:col-span-1`} />
             <Button size="sm" type="submit" disabled={busy || !isAddress(trackAddr.trim()) || reason.trim().length < 3} className="col-span-2 sm:col-span-1">Track</Button>
           </div>
-          {error && <p className="text-xs text-[#ff8b8b]">{error}</p>}
+          {error && <p className="text-xs text-bad">{error}</p>}
         </form>
       </div>
 

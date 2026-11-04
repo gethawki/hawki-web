@@ -82,7 +82,7 @@ function ExploitForm({ exploit, onSaved, onCancel }) {
       {area('links', 'Links, one a line', 'https://…')}
       <label className="flex items-center gap-2 text-xs text-fg-2"><input type="checkbox" checked={f.hidden} onChange={set('hidden')} aria-label="Hidden" /> Hidden (left out of scores and lists)</label>
       <div className="flex justify-end gap-2 sm:col-span-2">
-        {error && <span className="mr-auto self-center text-xs text-[#ff8b8b]">{error}</span>}
+        {error && <span className="mr-auto self-center text-xs text-bad">{error}</span>}
         <Button size="sm" variant="ghost" type="button" onClick={onCancel}>Cancel</Button>
         <Button size="sm" type="submit" disabled={busy || f.name.trim() === ''}>{busy ? 'Saving' : 'Save incident'}</Button>
       </div>
@@ -106,7 +106,7 @@ function ExploitDetail({ id, creating, onClose, onOpenAddress, onChanged }) {
   return (
     <Modal open onClose={onClose} width="max-w-3xl" title={creating ? 'Add an incident' : e?.name || 'Incident'}
       description={e ? `${e.source === 'staff' ? 'Added by staff' : 'From DeFiHackLabs (Apache-2.0)'}${e.edited ? ' · edited by staff, sync leaves it alone' : ''}` : ''}>
-      {error && <p className="text-sm text-[#ff8b8b]">{error}</p>}
+      {error && <p className="text-sm text-bad">{error}</p>}
       {editing && <ExploitForm exploit={creating ? null : e} onSaved={(saved) => { setData(saved); setEditing(false); onChanged() }} onCancel={() => (creating ? onClose() : setEditing(false))} />}
       {!editing && !e && !error && <p className="text-sm text-fg-3">Loading</p>}
       {!editing && e && (
@@ -176,7 +176,7 @@ export default function IntelRisk({ stats, events, exploitStats, exploits, onCha
         description="Risk events per severity; unpublished ones are still waiting for the outbox to put them on the queue as intel.events.<kind>" flush>
         <DataTable rows={stats} rowKey={(s) => s.chain} dense empty={<EmptyState compact title="No risk event in the last 24 hours" />} columns={[
           { key: 'chain', header: 'Chain (24h)', cell: (s) => <span className="capitalize text-fg">{s.chain}</span> },
-          { key: 'c', header: 'Critical', align: 'right', cell: (s) => <span className={`tnum ${s.critical ? 'text-[#ff8b8b]' : ''}`}>{num(s.critical)}</span> },
+          { key: 'c', header: 'Critical', align: 'right', cell: (s) => <span className={`tnum ${s.critical ? 'text-bad' : ''}`}>{num(s.critical)}</span> },
           { key: 'h', header: 'High', align: 'right', cell: (s) => <span className="tnum">{num(s.high)}</span> },
           { key: 'm', header: 'Medium', align: 'right', cell: (s) => <span className="tnum">{num(s.medium)}</span> },
           { key: 'l', header: 'Low and info', align: 'right', hide: 'sm', cell: (s) => <span className="tnum">{num(s.low + s.info)}</span> },

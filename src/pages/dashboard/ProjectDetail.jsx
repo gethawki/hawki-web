@@ -363,7 +363,7 @@ export default function ProjectDetail() {
       columns={[
         { key: 'status', header: 'Status', className: 'w-32', cell: (s) => <ScanStatusBadge status={s.status} /> },
         { key: 'type', header: 'Scan', cell: (s) => <Link to={`/dashboard/scans/${s.id}`} className="font-medium capitalize text-fg hover:underline">{s.type} scan{s.requested_by === 'schedule' ? <span className="font-normal normal-case text-fg-3"> · scheduled</span> : null}</Link> },
-        { key: 'result', header: 'Result', hide: 'md', cell: (s) => s.status === 'completed' ? <SeverityCounts summary={s.summary} /> : s.status === 'failed' ? <span className="block max-w-xs truncate text-xs text-[#ff8b8b]">{s.error || 'Failed'}</span> : <span className="text-xs text-fg-3">In progress</span> },
+        { key: 'result', header: 'Result', hide: 'md', cell: (s) => s.status === 'completed' ? <SeverityCounts summary={s.summary} /> : s.status === 'failed' ? <span className="block max-w-xs truncate text-xs text-bad">{s.error || 'Failed'}</span> : <span className="text-xs text-fg-3">In progress</span> },
         { key: 'duration', header: 'Duration', hide: 'lg', align: 'right', cell: (s) => <span className="text-fg-2">{scanDuration(s)}</span> },
         { key: 'when', header: 'Started', align: 'right', cell: (s) => <span className="text-fg-3">{ago(s.created_at)}</span> },
       ]} />

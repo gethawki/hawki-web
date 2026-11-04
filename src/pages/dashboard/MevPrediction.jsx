@@ -112,7 +112,7 @@ export default function MevPrediction() {
                   <ul className="grid gap-1 text-xs">
                     {Object.entries(sim.net).flatMap(([acct, toks]) => Object.entries(toks).map(([tok, d]) => (
                       <li key={acct + tok} className="flex flex-wrap items-center gap-2">
-                        <AddressLink chain={p.chain} address={acct} /><span className={`tnum ${d.startsWith('-') ? 'text-[#ff8b8b]' : 'text-[#5fd35f]'}`}>{d}</span>
+                        <AddressLink chain={p.chain} address={acct} /><span className={`tnum ${d.startsWith('-') ? 'text-bad' : 'text-ok'}`}>{d}</span>
                         <span className="text-fg-3">of</span><AddressLink chain={p.chain} address={tok} />
                       </li>
                     )))}

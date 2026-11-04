@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom'
 
 const VARIANTS = {
-  primary: 'bg-accent text-[#0b0d10] font-medium hover:bg-[#a7bdd4] shadow-sm',
+  primary: 'bg-accent text-on-accent font-medium hover:bg-accent-strong shadow-sm',
   ghost: 'border border-line-strong bg-surface text-fg hover:bg-surface-2 hover:border-[#3d3d44]',
   subtle: 'text-fg-2 hover:bg-surface-2 hover:text-fg',
-  danger: 'border border-critical/50 text-[#ff8b8b] hover:bg-critical hover:text-white hover:border-critical',
+  danger: 'border border-critical/50 text-bad hover:bg-critical hover:text-white hover:border-critical',
 }
 
 const SIZES = {

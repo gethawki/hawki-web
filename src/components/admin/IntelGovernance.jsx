@@ -57,7 +57,7 @@ function ProposalDetail({ target, onClose }) {
   const p = data
   return (
     <Modal open onClose={onClose} width="max-w-3xl" title={p?.title || `Proposal ${shortId(target.id)}`} description={`Governor ${target.governor} on ${target.chain}`}>
-      {error && <p className="text-sm text-[#ff8b8b]">{error}</p>}
+      {error && <p className="text-sm text-bad">{error}</p>}
       {!p && !error && <p className="text-sm text-fg-3">Loading</p>}
       {p && (
         <div className="grid gap-5">

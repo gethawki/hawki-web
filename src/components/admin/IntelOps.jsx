@@ -1,5 +1,6 @@
-import { Suspense, useEffect, useState } from 'react'
-import { Link, NavLink, Outlet } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import EngineLayout from '../dashboard/EngineLayout.jsx'
 import { Activity, Boxes, FileCode2, Gauge, GitBranch, History, Inbox, Landmark, Lightbulb, Network, Plug, Search, ShieldAlert, Coins, Skull } from 'lucide-react'
 import { api } from '../../lib/api.js'
 import { useApi } from '../../lib/useApi.js'
@@ -7,7 +8,7 @@ import { useDetailCrumb } from '../../lib/crumbs.jsx'
 import { ago, dateTime, num } from '../../lib/format.js'
 import Badge from '../ui/Badge.jsx'
 import DataTable from '../ui/DataTable.jsx'
-import { EmptyState, PageSkeleton } from '../ui/Feedback.jsx'
+import { EmptyState } from '../ui/Feedback.jsx'
 import Button from '../common/Button.jsx'
 import { errorMessage } from '../common/Alert.jsx'
 import { ReasonForm } from './bits.jsx'
@@ -48,30 +49,10 @@ const SECTIONS = [
   },
 ]
 
-// IntelLayout puts the section navigation beside the page: a column on wide
-// screens, a scrolling row on phones.
+// IntelLayout frames every Intel page in the engine layout: the section
+// strip under the engine bar and the full list in a panel on demand.
 export function IntelLayout() {
-  const link = ({ isActive }) => `flex shrink-0 items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm transition ${isActive ? 'bg-surface-3 text-fg' : 'text-fg-3 hover:bg-surface-2 hover:text-fg'}`
-  return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[12.5rem_minmax(0,1fr)]">
-      <nav aria-label="Intel Engine" className="min-w-0 lg:sticky lg:top-20 lg:self-start">
-        <div className="mb-3 hidden items-center gap-2 px-2.5 text-xs font-medium uppercase tracking-wide text-fg-3 lg:flex"><Activity size={13} aria-hidden />Intel Engine</div>
-        <div className="-mx-4 flex gap-1 overflow-x-auto px-4 pb-1 scrollbar-thin lg:mx-0 lg:grid lg:gap-4 lg:overflow-visible lg:px-0">
-          {SECTIONS.map((s) => (
-            <div key={s.title} className="flex shrink-0 gap-1 lg:grid lg:gap-0.5">
-              <div className="hidden px-2.5 pb-1 text-[0.7rem] text-fg-3 lg:block">{s.title}</div>
-              {s.links.map((l) => (
-                <NavLink key={l.to} to={l.to} end={l.end} className={link}>
-                  <l.icon size={14} aria-hidden className="shrink-0" />{l.label}
-                </NavLink>
-              ))}
-            </div>
-          ))}
-        </div>
-      </nav>
-      <div className="min-w-0"><Suspense fallback={<PageSkeleton cards={4} />}><Outlet /></Suspense></div>
-    </div>
-  )
+  return <EngineLayout name="Intel Engine" icon={Activity} sections={SECTIONS} />
 }
 
 // useIntelStatus loads the parts of the Intel status a page shows and
@@ -151,7 +132,7 @@ export function PauseControl({ c, query, onChanged }) {
       {c.paused
         ? <div className="flex flex-wrap items-center gap-3"><Button size="sm" onClick={() => set(false)}>Resume ingestion</Button><span className="text-xs text-fg-3">Paused: {c.paused_reason}</span></div>
         : <ReasonForm label="Pause ingestion" danger placeholder="Why (kept in the Intel and platform audit)" onSubmit={(reason) => set(true, reason)} />}
-      {error && <p className="text-xs text-[#ff8b8b]">{error}</p>}
+      {error && <p className="text-xs text-bad">{error}</p>}
     </div>
   )
 }
@@ -190,7 +171,7 @@ export function ReprocessForm({ c, query, onChanged }) {
         <input aria-label={`${c.name} reprocess reason`} placeholder="Reason" value={reason} onChange={(e) => setReason(e.target.value)} className={`${inputCls} col-span-2 sm:col-span-1`} />
         <Button size="sm" type="submit" disabled={busy || !valid} className="col-span-2 sm:col-span-1">{busy ? 'Queueing' : 'Reprocess'}</Button>
       </div>
-      {error && <p className="text-xs text-[#ff8b8b]">{error}</p>}
+      {error && <p className="text-xs text-bad">{error}</p>}
     </form>
   )
 }
@@ -253,7 +234,7 @@ export function IndexersTable({ rows, showChain = true }) {
         { key: 'name', header: 'Indexer', cell: (x) => <span className="font-mono text-xs text-fg">{x.indexer}</span> },
         showChain && { key: 'chain', header: 'Chain', cell: (x) => x.chain ? <Link to={`/admin/intel/chains/${x.chain}`} className="capitalize text-fg-2 hover:underline">{x.chain}</Link> : '-' },
         { key: 'num', header: 'Indexed', align: 'right', cell: (x) => <span className="tnum">{height(x.number)}</span> },
-        { key: 'lag', header: 'Behind', align: 'right', cell: (x) => <span className={`whitespace-nowrap tnum ${x.lag > 100 ? 'text-[#f5dfae]' : ''}`}>{x.lag != null ? `${height(x.lag)} blocks` : '-'}</span> },
+        { key: 'lag', header: 'Behind', align: 'right', cell: (x) => <span className={`whitespace-nowrap tnum ${x.lag > 100 ? 'text-warn' : ''}`}>{x.lag != null ? `${height(x.lag)} blocks` : '-'}</span> },
         { key: 'dl', header: 'Dead letters', align: 'right', cell: (x) => x.dead_letters > 0 ? <Badge tone="danger">{num(x.dead_letters)}</Badge> : <span className="text-fg-3">0</span> },
         { key: 'at', header: 'Updated', align: 'right', hide: 'sm', cell: (x) => <span className="whitespace-nowrap text-fg-3">{x.updated_at ? ago(x.updated_at) : '-'}</span> },
       ].filter(Boolean)} />
@@ -275,7 +256,7 @@ export function RepairsTable({ rows, showChain = true }) {
         return <span className="flex items-center gap-2"><Badge tone={tone} dot>{label}</Badge>{r.status === 'pending' && <span className="text-xs text-fg-3 tnum">{Math.floor(((r.next - r.from) / total) * 100)}%</span>}</span>
       } },
       { key: 'fix', header: 'Fixed', align: 'right', hide: 'sm', cell: (r) => <span className="whitespace-nowrap text-fg-2">{r.filled} filled · {r.replaced} replaced</span> },
-      { key: 'reason', header: 'Reason', hide: 'md', cell: (r) => <span className="text-fg-2">{r.error ? <span className="text-[#ff8b8b]">{r.error}</span> : r.reason}</span> },
+      { key: 'reason', header: 'Reason', hide: 'md', cell: (r) => <span className="text-fg-2">{r.error ? <span className="text-bad">{r.error}</span> : r.reason}</span> },
     ].filter(Boolean)} />
   )
 }

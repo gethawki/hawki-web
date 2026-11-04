@@ -25,6 +25,7 @@
 
   /* Signed-in app surfaces and ink (dashboards and admin console). */
   --color-app: #09090a;
+  --color-sidebar: #0c0c0d;
   --color-surface: #111112;
   --color-surface-2: #18181a;
   --color-surface-3: #202023;
@@ -34,6 +35,9 @@
   --color-fg-2: #a3a3a8;
   --color-fg-3: #6f6f76;
   --color-accent: #8fa8c2;
+  --color-accent-strong: #a7bdd4;
+  --color-accent-soft: #8fa8c2;
+  --color-on-accent: #0b0d10;
   --color-staff: #e0a458;
 
   /* Severity is ordinal: one red hue, brightest = most severe (validated on
@@ -45,7 +49,7 @@
   --color-sev-info: #6f6f76;
 
   /* Chart series in fixed order (validated: CVD and normal-vision separation
-     on the dark surface), and reserved status colors. */
+     on the dark surface), and reserved status colors with their text tints. */
   --color-series-1: #3987e5;
   --color-series-2: #199e70;
   --color-series-3: #d95926;
@@ -53,9 +57,18 @@
   --color-warning: #fab219;
   --color-serious: #ec835a;
   --color-critical: #d03b3b;
+  --color-ok: #5fd35f;
+  --color-warn: #f5dfae;
+  --color-bad: #ff8b8b;
 }
 
 /* ---------- signed-in app ---------- */
+
+/* Cards: the surface with a soft shadow to lift them off the page. */
+.app-card {
+  background: var(--color-surface);
+  box-shadow: 0 8px 24px -14px rgb(0 0 0 / 0.7);
+}
 
 .app-root {
   background: var(--color-app);

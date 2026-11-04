@@ -13,7 +13,7 @@ export function Stat({ label, value, note, tone }) {
   return (
     <div className="min-w-0 rounded-xl border border-line bg-surface px-4 py-3.5">
       <div className="text-xs text-fg-3 truncate">{label}</div>
-      <div className={`mt-1.5 text-xl font-semibold tracking-tight truncate ${tone === 'bad' ? 'text-[#ff8b8b]' : 'text-fg'}`}>{value}</div>
+      <div className={`mt-1.5 text-xl font-semibold tracking-tight truncate ${tone === 'bad' ? 'text-bad' : 'text-fg'}`}>{value}</div>
       {note && <div className="mt-0.5 text-xs text-fg-3 truncate">{note}</div>}
     </div>
   )
@@ -77,7 +77,7 @@ export function ReasonForm({ label, placeholder, onSubmit, danger, busyLabel }) 
         <input aria-label={`Reason: ${label}`} value={reason} onChange={(e) => setReason(e.target.value)} placeholder={placeholder || 'Reason (kept in the audit log)'}
           className="h-9 flex-1 min-w-0 rounded-lg bg-surface border border-line-strong px-3 text-sm text-fg placeholder:text-fg-3 outline-none focus:border-accent/70" />
         <button type="submit" disabled={busy || reason.trim().length < 3}
-          className={`h-9 rounded-lg px-3.5 text-sm whitespace-nowrap transition disabled:opacity-50 ${danger ? 'border border-critical/50 text-[#ff8b8b] hover:bg-critical hover:text-fg' : 'bg-accent font-medium text-[#0b0d10] hover:bg-[#a7bdd4]'}`}>
+          className={`h-9 rounded-lg px-3.5 text-sm whitespace-nowrap transition disabled:opacity-50 ${danger ? 'border border-critical/50 text-bad hover:bg-critical hover:text-fg' : 'bg-accent font-medium text-on-accent hover:bg-accent-strong'}`}>
           {busy ? busyLabel || 'Working' : label}
         </button>
       </div>

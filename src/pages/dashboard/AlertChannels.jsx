@@ -75,7 +75,7 @@ function NewChannel({ orgId, members, onCreated }) {
                 </label>
               ))}
             </div>
-            {errors.recipients && <span className="block mt-1.5 text-xs text-[#ff8b8b]">{errors.recipients}</span>}
+            {errors.recipients && <span className="block mt-1.5 text-xs text-bad">{errors.recipients}</span>}
           </fieldset>
         )}
         {(form.kind === 'slack' || form.kind === 'discord' || form.kind === 'webhook') && (
@@ -158,10 +158,10 @@ function ChannelRow({ orgId, channel, canWrite, onChanged }) {
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
         <span className="text-fg">{channel.name}</span>
         <span className="text-xs text-fg-3">{kind} · {channel.display}</span>
-        {!channel.enabled && <span className="text-xs text-[#ff8b8b]">off</span>}
+        {!channel.enabled && <span className="text-xs text-bad">off</span>}
       </div>
       <div className="text-xs text-fg-3">
-        {channel.last_error ? <span className="text-[#ff8b8b]">Last attempt failed: {channel.last_error}</span>
+        {channel.last_error ? <span className="text-bad">Last attempt failed: {channel.last_error}</span>
           : channel.last_delivery_at ? `Last delivered ${formatDateTime(channel.last_delivery_at)}` : 'Nothing delivered yet.'}
       </div>
       {canWrite ? (

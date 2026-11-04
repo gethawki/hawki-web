@@ -22,7 +22,7 @@ function CodeCard({ title, code, tone }) {
         {copied ? <Check size={13} /> : <Copy size={13} />} {copied ? 'Copied' : 'Copy'}
       </button>
     }>
-      <pre className={`overflow-x-auto border-t border-line bg-[#0c0c0d] px-5 py-4 font-mono text-[0.78rem] leading-relaxed text-fg-2 whitespace-pre rounded-b-xl ${tone === 'fix' ? 'border-l-2 border-l-good/60' : tone === 'bad' ? 'border-l-2 border-l-critical/60' : ''}`}>{code}</pre>
+      <pre className={`overflow-x-auto border-t border-line bg-sidebar px-5 py-4 font-mono text-[0.78rem] leading-relaxed text-fg-2 whitespace-pre rounded-b-xl ${tone === 'fix' ? 'border-l-2 border-l-good/60' : tone === 'bad' ? 'border-l-2 border-l-critical/60' : ''}`}>{code}</pre>
     </Card>
   )
 }

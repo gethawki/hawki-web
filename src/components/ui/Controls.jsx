@@ -4,10 +4,10 @@ import { Search } from 'lucide-react'
 // Segmented is a compact single choice, for time ranges and views.
 export function Segmented({ options, value, onChange, label }) {
   return (
-    <div role="radiogroup" aria-label={label} className="inline-flex rounded-lg border border-line bg-surface p-0.5">
+    <div role="radiogroup" aria-label={label} className="inline-flex rounded-lg border border-line bg-surface-2/70 p-0.5">
       {options.map((o) => (
         <button key={o.value} type="button" role="radio" aria-checked={value === o.value} onClick={() => onChange(o.value)}
-          className={`rounded-md px-2.5 py-1 text-xs transition ${value === o.value ? 'bg-surface-3 text-fg shadow-sm' : 'text-fg-3 hover:text-fg'}`}>
+          className={`rounded-md px-2.5 py-1 text-xs font-medium transition ${value === o.value ? 'bg-surface-3 text-fg shadow-sm' : 'text-fg-3 hover:text-fg'}`}>
           {o.label}
         </button>
       ))}
@@ -27,7 +27,7 @@ export function Tabs({ tabs }) {
     <nav className="-mb-px flex gap-5 overflow-x-auto border-b border-line scrollbar-thin" aria-label="Sections">
       {tabs.map((t) => (
         <NavLink key={t.to} to={t.to} end={t.end} replace={t.replace}
-          className={({ isActive }) => `whitespace-nowrap border-b-2 pb-2.5 text-sm transition ${isActive ? 'border-accent text-fg' : 'border-transparent text-fg-3 hover:text-fg'}`}>
+          className={({ isActive }) => `whitespace-nowrap border-b-2 pb-2.5 text-sm font-medium transition ${isActive ? 'border-accent text-fg' : 'border-transparent text-fg-3 hover:text-fg'}`}>
           {t.label}{t.count != null && <span className="ml-1.5 rounded bg-surface-3 px-1.5 py-px text-[0.65rem] text-fg-2 tnum">{t.count}</span>}
         </NavLink>
       ))}
@@ -41,10 +41,30 @@ export function ButtonTabs({ tabs, value, onChange }) {
     <div className="-mb-px flex gap-5 overflow-x-auto border-b border-line scrollbar-thin" role="tablist">
       {tabs.map((t) => (
         <button key={t.value} type="button" role="tab" aria-selected={value === t.value} onClick={() => onChange(t.value)}
-          className={`whitespace-nowrap border-b-2 pb-2.5 text-sm transition ${value === t.value ? 'border-accent text-fg' : 'border-transparent text-fg-3 hover:text-fg'}`}>
+          className={`whitespace-nowrap border-b-2 pb-2.5 text-sm font-medium transition ${value === t.value ? 'border-accent text-fg' : 'border-transparent text-fg-3 hover:text-fg'}`}>
           {t.label}{t.count != null && <span className="ml-1.5 rounded bg-surface-3 px-1.5 py-px text-[0.65rem] text-fg-2 tnum">{t.count}</span>}
         </button>
       ))}
+    </div>
+  )
+}
+
+// PillFilter is a row of filter chips with counts ("All 23", "High 6"),
+// each with an optional colored dot. options: [{ value, label, count, color }].
+export function PillFilter({ options, value, onChange, label }) {
+  return (
+    <div role="radiogroup" aria-label={label} className="flex flex-wrap gap-1.5">
+      {options.map((o) => {
+        const on = value === o.value
+        return (
+          <button key={o.value} type="button" role="radio" aria-checked={on} onClick={() => onChange(o.value)}
+            className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium transition ${on ? 'border-accent/60 bg-accent/15 text-fg' : 'border-line bg-surface-2/60 text-fg-2 hover:border-line-strong hover:text-fg'}`}>
+            {o.color && <span className="h-2 w-2 rounded-full" style={{ background: o.color }} />}
+            {o.label}
+            {o.count != null && <span className="tnum text-fg-3">({o.count})</span>}
+          </button>
+        )
+      })}
     </div>
   )
 }

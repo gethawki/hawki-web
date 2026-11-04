@@ -53,7 +53,7 @@ function Usage({ label, used, max, exempt }) {
     <div className="grid gap-2 rounded-lg border border-line px-4 py-3 text-sm">
       <div className="flex justify-between gap-4">
         <span className="text-fg-2">{label}</span>
-        <span className={`tnum ${full ? 'text-[#ff8b8b]' : 'text-fg'}`}>
+        <span className={`tnum ${full ? 'text-bad' : 'text-fg'}`}>
           {used} of {limited ? max : 'unlimited'}{full ? ', plan limit reached' : ''}
         </span>
       </div>
@@ -92,7 +92,7 @@ function Ledger({ orgId }) {
         { key: 'when', header: 'When', cell: (e) => <span className="whitespace-nowrap text-fg-3">{formatDateTime(e.occurred_at)}</span> },
         { key: 'kind', header: 'Type', cell: (e) => <Badge tone={e.kind === 'charge' ? 'neutral' : e.kind === 'refund' || e.kind === 'grant' || e.kind === 'purchase' ? 'good' : 'accent'}>{LEDGER_LABELS[e.kind] || e.kind}</Badge> },
         { key: 'reason', header: 'Details', hide: 'sm', cell: (e) => <span className="text-fg-2">{e.reason}</span> },
-        { key: 'amount', header: 'Credits', align: 'right', cell: (e) => <span className={e.amount_mc > 0 ? 'text-[#5fd35f]' : 'text-fg'}>{e.amount_mc >= 0 ? '+' : '-'}{formatCredits(Math.abs(e.amount_mc))}</span> },
+        { key: 'amount', header: 'Credits', align: 'right', cell: (e) => <span className={e.amount_mc > 0 ? 'text-ok' : 'text-fg'}>{e.amount_mc >= 0 ? '+' : '-'}{formatCredits(Math.abs(e.amount_mc))}</span> },
       ]} />
       {more && (
         <div className="border-t border-line px-5 py-3">
@@ -161,7 +161,7 @@ export default function Billing() {
       <PageHeader title="Billing" description="Your plan, credit balance and every credit your organization has received or spent." />
       <div className="grid gap-4">
         {exempt && (
-          <div className="flex items-start gap-3 rounded-xl border border-good/30 bg-good/[0.06] px-4 py-3 text-sm text-[#bfe8bf]">
+          <div className="flex items-start gap-3 rounded-xl border border-good/30 bg-good/[0.06] px-4 py-3 text-sm text-ok">
             <BadgeCheck size={18} className="mt-0.5 shrink-0" />
             <span>This organization is exempt from billing. Scans are never charged and plan limits on credits, members and projects do not apply.</span>
           </div>

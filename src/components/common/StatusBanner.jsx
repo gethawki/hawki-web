@@ -17,7 +17,7 @@ export default function StatusBanner() {
   return (
     <div className="no-print grid">
       {status.maintenance && (
-        <div role="status" className="border-b border-warning/30 bg-warning/[0.08] px-4 py-2 text-sm text-[#f5dfae] sm:px-6">
+        <div role="status" className="border-b border-warning/30 bg-warning/[0.08] px-4 py-2 text-sm text-warn sm:px-6">
           {isPlatformAdmin ? 'Maintenance mode is on: only platform admins can make changes. ' : ''}
           {status.maintenance_message || 'Hawk-i Cloud is in maintenance. You can look around, but changes are paused for a short while.'}
         </div>

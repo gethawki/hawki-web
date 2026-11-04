@@ -46,7 +46,7 @@ function ContractDetail({ target, onClose }) {
   const c = data?.contract
   return (
     <Modal open={!!target} onClose={onClose} width="max-w-2xl" title={c?.name || (c?.labels?.[0]) || 'Contract'} description={target ? `${target.address} on ${target.chain}` : ''}>
-      {error && <p className="text-sm text-[#ff8b8b]">{error}</p>}
+      {error && <p className="text-sm text-bad">{error}</p>}
       {!c && !error && <p className="text-sm text-fg-3">Loading</p>}
       {c && (
         <div className="grid gap-5">
@@ -103,7 +103,7 @@ export default function IntelContracts({ stats, recent }) {
         { key: 'u', header: 'Unverified', align: 'right', hide: 'sm', cell: (s) => <span className="tnum">{num(s.unverified)}</span> },
         { key: 'd', header: 'Deployers funded', align: 'right', hide: 'lg', cell: (s) => <span className="tnum">{num(s.funded)} / {num(s.deployers)}</span> },
         { key: 'l', header: 'Labeled', align: 'right', hide: 'lg', cell: (s) => <span className="tnum">{num(s.labeled)}</span> },
-        { key: 'q', header: 'Code queue', align: 'right', hide: 'md', cell: (s) => <span className={`tnum ${s.code_pending > 500 ? 'text-[#f5dfae]' : 'text-fg-3'}`}>{num(s.code_pending)}</span> },
+        { key: 'q', header: 'Code queue', align: 'right', hide: 'md', cell: (s) => <span className={`tnum ${s.code_pending > 500 ? 'text-warn' : 'text-fg-3'}`}>{num(s.code_pending)}</span> },
       ]} />
     </Card>
     <Card title="Newest contracts" description="Open one for its creation, proxy facts, verified source and clones" flush>

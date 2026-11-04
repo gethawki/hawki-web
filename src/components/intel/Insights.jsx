@@ -119,7 +119,7 @@ export function ScoreHistory({ path }) {
               <li key={`${h.computed_at}:${i}`} className="flex items-center gap-3 text-xs">
                 <span className="w-8 text-right text-sm font-medium text-fg tnum">{h.value}</span>
                 <span className="w-16 text-fg-2">{h.band}</span>
-                {delta != null && delta !== 0 && <span className={`tnum ${delta > 0 ? 'text-[#ff8b8b]' : 'text-[#8fd6a5]'}`}>{delta > 0 ? `+${delta}` : delta}</span>}
+                {delta != null && delta !== 0 && <span className={`tnum ${delta > 0 ? 'text-bad' : 'text-ok'}`}>{delta > 0 ? `+${delta}` : delta}</span>}
                 <span className="ml-auto text-fg-3" title={dateTime(h.computed_at)}>{h.current ? 'now' : `until ${ago(h.replaced_at)}`}</span>
               </li>
             )

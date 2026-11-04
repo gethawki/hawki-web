@@ -66,7 +66,7 @@ export default function IntelDeadLetters({ open, resolved, query = '', onChanged
             value={reason} onChange={(e) => setReason(e.target.value)} className={inputCls} />
           <Button size="sm" disabled={!ready} onClick={() => act('replay')}>Replay {chosen.length || ''}</Button>
           <Button size="sm" variant="ghost" disabled={!ready} onClick={() => act('dismiss')}>Dismiss</Button>
-          {error && <p className="text-xs text-[#ff8b8b] sm:col-span-3">{error}</p>}
+          {error && <p className="text-xs text-bad sm:col-span-3">{error}</p>}
         </div>
       )}
       <DataTable rows={open} rowKey={(d) => d.id} dense empty={<EmptyState compact title="No dead letters">Every indexer is keeping up.</EmptyState>} columns={[
@@ -122,7 +122,7 @@ export function IntelSources({ sources }) {
         { key: 's', header: 'Status', cell: (s) => s.error ? <Badge tone="danger" dot>Failing</Badge> : <Badge tone="good" dot>OK</Badge> },
         { key: 'i', header: 'Items', align: 'right', cell: (s) => <span className="tnum">{num(s.items)}</span> },
         { key: 'ok', header: 'Last success', align: 'right', hide: 'sm', cell: (s) => <span className="whitespace-nowrap text-fg-3">{s.last_ok_at ? ago(s.last_ok_at) : 'never'}</span> },
-        { key: 'e', header: 'Last error', hide: 'md', cell: (s) => <span className="block max-w-xs truncate text-xs text-[#ff8b8b]" title={s.error}>{s.error || ''}</span> },
+        { key: 'e', header: 'Last error', hide: 'md', cell: (s) => <span className="block max-w-xs truncate text-xs text-bad" title={s.error}>{s.error || ''}</span> },
         { key: 'r', header: 'Last run', align: 'right', cell: (s) => <span className="whitespace-nowrap text-fg-3" title={dateTime(s.last_run_at)}>{ago(s.last_run_at)}</span> },
       ]} />
     </Card>

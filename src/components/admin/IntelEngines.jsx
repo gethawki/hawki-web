@@ -76,7 +76,7 @@ function Operations({ requests, kinds, configured, onDone }) {
             {configured && !open.has(k.kind) && <ReasonForm label={OP[k.kind]} danger onSubmit={(reason) => ask(k.kind, reason)} busyLabel="Queuing" />}
           </div>
         ))}
-        {error && <p role="alert" className="text-xs text-[#ff8b8b]">{error}</p>}
+        {error && <p role="alert" className="text-xs text-bad">{error}</p>}
       </div>
       <DataTable rows={requests} dense rowKey={(q) => q.id} empty={<EmptyState compact title="No operation asked for yet" />} columns={[
         { key: 'k', header: 'Operation', cell: (q) => <span className="text-fg">{OP[q.kind] || q.kind}</span> },
@@ -219,7 +219,7 @@ export function AdminIntelSearch() {
           <DataTable rows={last?.result?.findings || []} dense rowKey={(f) => f.type} empty={<EmptyState compact title="No check yet" />} columns={[
             { key: 't', header: 'Type', cell: (f) => <span className="text-fg">{f.type.replace('_', ' ')}</span> },
             { key: 'e', header: 'In Postgres', align: 'right', cell: (f) => <span className="tnum">{num(f.expected)}</span> },
-            { key: 'i', header: 'Indexed', align: 'right', cell: (f) => <span className={`tnum ${f.indexed !== f.expected ? 'text-[#ffcf70]' : ''}`}>{num(f.indexed)}</span> },
+            { key: 'i', header: 'Indexed', align: 'right', cell: (f) => <span className={`tnum ${f.indexed !== f.expected ? 'text-warn' : ''}`}>{num(f.indexed)}</span> },
           ]} />
         </Card>
         <Operations requests={d.requests} configured={d.configured} onDone={r.reload} kinds={[
@@ -262,7 +262,7 @@ function StatusDialog({ insight, status, onClose, onSaved }) {
         )}
         <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3} maxLength={1000} placeholder="Note for the record (optional)" aria-label="Note"
           className="rounded-lg border border-line-strong bg-surface px-3 py-2 text-sm text-fg placeholder:text-fg-3 outline-none focus:border-accent/70" />
-        {error && <p role="alert" className="text-xs text-[#ff8b8b]">{error}</p>}
+        {error && <p role="alert" className="text-xs text-bad">{error}</p>}
         <div className="flex justify-end gap-2">
           <Button type="button" variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
           <Button type="submit" size="sm" disabled={busy}>{busy ? 'Saving' : ACTION[status]}</Button>

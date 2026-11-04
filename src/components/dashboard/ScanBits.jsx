@@ -46,7 +46,7 @@ export function ScanRow({ scan, showProject }) {
         </div>
         <div className="mt-1">
           {scan.status === 'completed' ? <SeverityCounts summary={scan.summary} />
-            : scan.status === 'failed' ? <span className="block truncate text-xs text-[#ff8b8b]">{scan.error || 'Failed'}</span>
+            : scan.status === 'failed' ? <span className="block truncate text-xs text-bad">{scan.error || 'Failed'}</span>
               : <span className="text-xs text-fg-3">{scan.status === 'running' ? 'Scanning now' : 'Waiting for a worker'}</span>}
         </div>
       </div>
