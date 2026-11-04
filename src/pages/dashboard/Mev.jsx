@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2, Zap } from 'lucide-react'
 import { useAuth } from '../../lib/auth.jsx'
 import { ago, dateTime, num, pct } from '../../lib/format.js'
 import PageHeader from '../../components/dashboard/PageHeader.jsx'
+import EngineLayout from '../../components/dashboard/EngineLayout.jsx'
+import { MEV_SECTIONS } from '../../data/engineNav.js'
 import Card from '../../components/ui/Card.jsx'
 import Badge from '../../components/ui/Badge.jsx'
 import StatCard from '../../components/ui/Stat.jsx'
 import DataTable from '../../components/ui/DataTable.jsx'
-import { ButtonTabs, FilterSelect, Toolbar } from '../../components/ui/Controls.jsx'
+import { FilterSelect, Toolbar } from '../../components/ui/Controls.jsx'
 import { EmptyState, PageSkeleton } from '../../components/ui/Feedback.jsx'
 import Button from '../../components/common/Button.jsx'
 import Field, { SelectField } from '../../components/common/Field.jsx'
@@ -282,17 +284,14 @@ function Settings() {
 }
 
 export default function Mev() {
-  const [params, setParams] = useSearchParams()
+  const [params] = useSearchParams()
   const { access, on, error, status, reload } = useMevAccess()
   const tab = TABS.some((t) => t.value === params.get('tab')) ? params.get('tab') : 'overview'
   if (error && !access) return <div><PageHeader title="MEV Intelligence" /><Card><MevError status={status} error={error} onRetry={reload} /></Card></div>
   if (!access) return <PageSkeleton cards={3} />
   return (
-    <div>
-      <PageHeader title="MEV Intelligence" description="What attack is about to happen: pending transactions on your contracts are decoded, matched against attack patterns, priced and simulated before they are mined, and mined blocks show what really happened."
-        meta={<MevAccessBadge access={access} />}>
-        {on && <ButtonTabs value={tab} onChange={(v) => setParams(v === 'overview' ? {} : { tab: v }, { replace: true })} tabs={TABS} />}
-      </PageHeader>
+    <EngineLayout name="MEV Intelligence" icon={Zap} sections={MEV_SECTIONS} status={<MevAccessBadge access={access} />}
+      description="What attack is about to happen: pending transactions on your contracts are decoded, matched against attack patterns, priced and simulated before they are mined, and mined blocks show what really happened.">
       {!on ? <Card><MevLocked what="MEV Intelligence" /></Card> : (
         <div className="grid gap-4">
           {tab === 'overview' && <Live />}
@@ -304,6 +303,6 @@ export default function Mev() {
           {tab === 'settings' && <Settings />}
         </div>
       )}
-    </div>
+    </EngineLayout>
   )
 }

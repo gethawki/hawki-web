@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { Download, Plus, Trash2 } from 'lucide-react'
+import { Crosshair, Download, Plus, Trash2 } from 'lucide-react'
 import { api, download } from '../../lib/api.js'
 import { useAuth } from '../../lib/auth.jsx'
 import { ago, dateTime } from '../../lib/format.js'
 import PageHeader from '../../components/dashboard/PageHeader.jsx'
+import EngineLayout from '../../components/dashboard/EngineLayout.jsx'
+import { HUNT_SECTIONS } from '../../data/engineNav.js'
 import Card from '../../components/ui/Card.jsx'
 import Badge from '../../components/ui/Badge.jsx'
 import DataTable from '../../components/ui/DataTable.jsx'
-import { ButtonTabs, FilterSelect, SearchInput, Toolbar } from '../../components/ui/Controls.jsx'
+import { FilterSelect, SearchInput, Toolbar } from '../../components/ui/Controls.jsx'
 import { EmptyState, PageSkeleton } from '../../components/ui/Feedback.jsx'
 import Button from '../../components/common/Button.jsx'
 import Field, { SelectField } from '../../components/common/Field.jsx'
@@ -356,7 +358,7 @@ function SettingsTab({ access }) {
 }
 
 export default function Hunt() {
-  const [params, setParams] = useSearchParams()
+  const [params] = useSearchParams()
   const { access, lite, error, status, reload } = useHuntAccess()
   const tab = TABS.some((t) => t.value === params.get('tab')) ? params.get('tab') : 'clusters'
   const [jump, setJump] = useState({ chain: 'base', address: '' })
@@ -364,11 +366,8 @@ export default function Hunt() {
   if (error) return <div><PageHeader title="Hunt" /><Card><HuntError status={status} error={error} onRetry={reload} /></Card></div>
   if (!access) return <PageSkeleton cards={3} />
   return (
-    <div>
-      <PageHeader title="Hunt" description="Who is behind a contract, how it was funded and where else they are active: funding clusters, genesis traces and Digital Immune Scores, with transaction hashes for every claim."
-        meta={<HuntAccessBadge access={access} />}>
-        {lite && <ButtonTabs value={tab} onChange={(v) => setParams(v === 'clusters' ? {} : { tab: v }, { replace: true })} tabs={TABS} />}
-      </PageHeader>
+    <EngineLayout name="Hunt" icon={Crosshair} sections={HUNT_SECTIONS} status={<HuntAccessBadge access={access} />}
+      description="Who is behind a contract, how it was funded and where else they are active: funding clusters, genesis traces and Digital Immune Scores, with transaction hashes for every claim.">
       {!lite ? <Card><HuntLocked what="Hunt" /></Card> : (
         <div className="grid gap-4">
           <form className="flex flex-wrap items-end gap-2" onSubmit={(e) => { e.preventDefault(); if (isAddress(jump.address.trim())) navigate(huntAddressPath(jump.chain, jump.address.trim())) }}>
@@ -385,6 +384,6 @@ export default function Hunt() {
         </div>
       )}
       <p className="mt-6 text-xs text-fg-3">Hunt's Digital Immune Score is Hunt's own, shown next to Intel's risk score where both appear. <Link to="/docs" className="hover:underline">How Hunt works</Link></p>
-    </div>
+    </EngineLayout>
   )
 }

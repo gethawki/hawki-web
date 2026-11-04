@@ -1,14 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { Lock, Telescope } from 'lucide-react'
+import { Telescope } from 'lucide-react'
 import { api } from '../../lib/api.js'
 import { useAuth } from '../../lib/auth.jsx'
 import { ago, dateTime, num } from '../../lib/format.js'
-import PageHeader from '../../components/dashboard/PageHeader.jsx'
 import Card from '../../components/ui/Card.jsx'
 import Badge from '../../components/ui/Badge.jsx'
 import DataTable from '../../components/ui/DataTable.jsx'
-import { ButtonTabs, FilterSelect, SearchInput, Toolbar } from '../../components/ui/Controls.jsx'
+import { FilterSelect, SearchInput, Toolbar } from '../../components/ui/Controls.jsx'
 import { EmptyState, PageSkeleton } from '../../components/ui/Feedback.jsx'
 import Button from '../../components/common/Button.jsx'
 import { errorMessage } from '../../components/common/Alert.jsx'
@@ -303,7 +302,7 @@ function Lookup() {
 // chains it follows and what is known about any address or protocol.
 export default function Intel() {
   const { access, full, basic, error, status, reload } = useIntelAccess()
-  const [params, setParams] = useSearchParams()
+  const [params] = useSearchParams()
   if (error) return <IntelError status={status} error={error} onRetry={reload} />
   if (!access) return <PageSkeleton cards={2} />
 
@@ -312,13 +311,9 @@ export default function Intel() {
   const tab = asked || TABS.find(open) || TABS[0]
   const chains = access.chains || []
   const header = (
-    <PageHeader title="Intel" description="Live intelligence on the chains Hawk-i follows: risk events, upgrades and admin changes, new deployments, governance, past exploits and protocols."
-      meta={<><AccessBadge access={access} />{chains.length > 0 && <span className="capitalize">{chains.join(', ')}</span>}</>}>
-      {basic && (
-        <ButtonTabs value={tab.value} onChange={(v) => setParams({ tab: v }, { replace: true })}
-          tabs={TABS.map((t) => ({ value: t.value, label: open(t) ? t.label : <span className="inline-flex items-center gap-1.5">{t.label}<Lock size={12} aria-label="not in your plan" /></span> }))} />
-      )}
-    </PageHeader>
+    <div className="flex flex-wrap items-center gap-3 text-xs text-fg-3">
+      <AccessBadge access={access} />{chains.length > 0 && <span className="capitalize">Chains: {chains.join(', ')}</span>}
+    </div>
   )
   if (!basic) {
     return (

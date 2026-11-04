@@ -39,8 +39,9 @@ function best(sections, loc) {
   const all = sections.flatMap((s) => s.links.map((l) => ({ ...l, group: s.title })))
   const hits = all.filter((l) => isActive(l, loc))
   if (!hits.length) {
-    const def = all.find((l) => l.default)
-    return def || all[0]
+    // A page that picks its own default section (no ?tab yet) marks it;
+    // detail pages under the engine mark none.
+    return all.find((l) => l.default && loc.pathname === l.to.split('?')[0]) || null
   }
   return hits.sort((a, b) => b.to.length - a.to.length)[0]
 }
@@ -71,7 +72,7 @@ function SectionLinks({ sections, current, onPick }) {
   )
 }
 
-export default function EngineLayout({ name, icon: Icon, sections, status, children }) {
+export default function EngineLayout({ name, icon: Icon, sections, status, description, children }) {
   const loc = useLocation()
   const [open, setOpen] = useState(false)
   const [pinned, setPinned] = useState(readPinned)
@@ -101,7 +102,7 @@ export default function EngineLayout({ name, icon: Icon, sections, status, child
         {Icon && <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-surface-3 text-accent ring-1 ring-inset ring-accent/30"><Icon size={18} /></span>}
         <div className="min-w-0 flex-1">
           <div className="text-sm font-semibold text-fg">{name}</div>
-          <div className="truncate text-xs text-fg-3">{multi ? `${group.title} · ${current?.label}` : current?.label}</div>
+          <div className="truncate text-xs text-fg-3">{current ? (multi ? `${group.title} · ${current.label}` : current.label) : 'Details'}</div>
         </div>
         {status}
         {!pinned && (
@@ -128,6 +129,7 @@ export default function EngineLayout({ name, icon: Icon, sections, status, child
         ))}
         {pinned && <span className="px-2 py-1.5 text-xs text-fg-3">Sections are pinned on the left.</span>}
       </div>
+      {description && <p className="border-t border-line px-4 py-2.5 text-xs text-fg-3">{description}</p>}
     </div>
   )
 

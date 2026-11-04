@@ -1,15 +1,17 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { Download, Plus } from 'lucide-react'
+import { Download, Plus, Radar } from 'lucide-react'
 import { api, download } from '../../lib/api.js'
 import { useAuth } from '../../lib/auth.jsx'
 import { ago, dateTime, num } from '../../lib/format.js'
 import PageHeader from '../../components/dashboard/PageHeader.jsx'
+import EngineLayout from '../../components/dashboard/EngineLayout.jsx'
+import { WATCH_SECTIONS } from '../../data/engineNav.js'
 import Card from '../../components/ui/Card.jsx'
 import Badge from '../../components/ui/Badge.jsx'
 import StatCard from '../../components/ui/Stat.jsx'
 import DataTable from '../../components/ui/DataTable.jsx'
-import { ButtonTabs, FilterSelect, Segmented, Toolbar } from '../../components/ui/Controls.jsx'
+import { FilterSelect, Segmented, Toolbar } from '../../components/ui/Controls.jsx'
 import { EmptyState, PageSkeleton } from '../../components/ui/Feedback.jsx'
 import Button from '../../components/common/Button.jsx'
 import Field, { SelectField } from '../../components/common/Field.jsx'
@@ -477,17 +479,14 @@ function useAlerts(orgId) {
 }
 
 export default function Watch() {
-  const [params, setParams] = useSearchParams()
+  const [params] = useSearchParams()
   const { access, lite, pro, enterprise, error, status, reload } = useWatchAccess()
   const tab = TABS.some((t) => t.value === params.get('tab')) ? params.get('tab') : 'overview'
   if (error && !access) return <div><PageHeader title="Watch" /><Card><WatchError status={status} error={error} onRetry={reload} /></Card></div>
   if (!access) return <PageSkeleton cards={3} />
   return (
-    <div>
-      <PageHeader title="Watch" description="Live protocols checked at every block: the state that matters is read, every invariant verified, and a break raises an alert with the state before and after, the diff and the transaction behind it."
-        meta={<WatchAccessBadge access={access} />}>
-        {lite && <ButtonTabs value={tab} onChange={(v) => setParams(v === 'overview' ? {} : { tab: v }, { replace: true })} tabs={TABS} />}
-      </PageHeader>
+    <EngineLayout name="Watch" icon={Radar} sections={WATCH_SECTIONS} status={<WatchAccessBadge access={access} />}
+      description="Live protocols checked at every block: the state that matters is read, every invariant verified, and a break raises an alert with the state before and after, the diff and the transaction behind it.">
       {!lite ? <Card><WatchLocked what="Watch" /></Card> : (
         <div className="grid gap-4">
           {tab === 'overview' && <Overview access={access} />}
@@ -499,6 +498,6 @@ export default function Watch() {
           {tab === 'settings' && <Settings />}
         </div>
       )}
-    </div>
+    </EngineLayout>
   )
 }

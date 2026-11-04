@@ -6,6 +6,9 @@ import Spinner from './components/common/Spinner.jsx'
 import { AuthProvider } from './lib/auth.jsx'
 import { GuestOnly, RequireAccess, RequireAuth } from './components/auth/RouteGuards.jsx'
 import { accessFor } from './data/dashboardNav.js'
+import { INTEL_SECTIONS } from './data/engineNav.js'
+import EngineLayout from './components/dashboard/EngineLayout.jsx'
+import { Telescope } from 'lucide-react'
 
 // Public site
 const Home = lazy(() => import('./pages/Home.jsx'))
@@ -98,6 +101,14 @@ const IntelGovernance = intelPage('IntelGovernancePage')
 const IntelProtocols = intelPage('IntelProtocolsPage')
 const IntelRisk = intelPage('IntelRiskPage')
 
+// IntelFrame puts the workspace Intel pages in the engine layout.
+const IntelFrame = ({ children }) => (
+  <EngineLayout name="Intel" icon={Telescope} sections={INTEL_SECTIONS}
+    description="Live intelligence on the chains Hawk-i follows: risk events, upgrades and admin changes, new deployments, governance, past exploits and protocols.">
+    {children}
+  </EngineLayout>
+)
+
 const guarded = (path, element) => <RequireAccess access={accessFor(path)}>{element}</RequireAccess>
 
 export default function App() {
@@ -135,14 +146,14 @@ export default function App() {
             <Route path="/dashboard/alerts" element={guarded('/dashboard/alerts', <Alerts />)} />
             <Route path="/dashboard/alerts/channels" element={guarded('/dashboard/settings', <AlertChannels />)} />
             <Route path="/dashboard/alerts/:alertId" element={guarded('/dashboard/alerts', <AlertDetail />)} />
-            <Route path="/dashboard/intel" element={guarded('/dashboard/intel', <Intel />)} />
+            <Route path="/dashboard/intel" element={guarded('/dashboard/intel', <IntelFrame><Intel /></IntelFrame>)} />
             <Route path="/dashboard/intel/address/:chain/:address" element={guarded('/dashboard/intel', <IntelAddress />)} />
             <Route path="/dashboard/intel/exploits/:id" element={guarded('/dashboard/intel', <IntelExploit />)} />
             <Route path="/dashboard/intel/protocols/:slug" element={guarded('/dashboard/intel', <IntelProtocol />)} />
             <Route path="/dashboard/intel/proposals/:chain/:governor/:id" element={guarded('/dashboard/intel', <IntelProposal />)} />
-            <Route path="/dashboard/intel/search" element={guarded('/dashboard/intel', <IntelSearch />)} />
+            <Route path="/dashboard/intel/search" element={guarded('/dashboard/intel', <IntelFrame><IntelSearch /></IntelFrame>)} />
             <Route path="/dashboard/intel/insights/:id" element={guarded('/dashboard/intel', <IntelInsight />)} />
-            <Route path="/dashboard/intel/graph" element={guarded('/dashboard/intel', <IntelGraph />)} />
+            <Route path="/dashboard/intel/graph" element={guarded('/dashboard/intel', <IntelFrame><IntelGraph /></IntelFrame>)} />
             <Route path="/dashboard/hunt" element={guarded('/dashboard/hunt', <Hunt />)} />
             <Route path="/dashboard/hunt/clusters/:code" element={guarded('/dashboard/hunt', <HuntCluster />)} />
             <Route path="/dashboard/hunt/address/:chain/:address" element={guarded('/dashboard/hunt', <HuntAddressPage />)} />
