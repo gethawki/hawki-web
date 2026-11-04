@@ -402,7 +402,7 @@ export default function ProjectDetail() {
 
       {tab === 'overview' && (
         <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-3">
-          <div className="grid gap-4 lg:col-span-2">
+          <div className="grid min-w-0 gap-4 lg:col-span-2">
             {can('findings:read') && <OpenFindings orgId={currentOrg.id} projectId={project.id} />}
             <Card title="Recent scans" actions={<button type="button" onClick={() => setParams({ tab: 'scans' }, { replace: true })} className="text-xs text-fg-2 hover:text-fg">View all</button>} flush>
               {!scans ? <div className="h-32" /> : scanTable(scans.slice(0, 5))}

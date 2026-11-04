@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { Check, Download, FileText, Loader2 } from 'lucide-react'
+import { AlertTriangle, Check, Download, FileText, Loader2, ShieldAlert } from 'lucide-react'
 import { api, download } from '../../lib/api.js'
 import { useAuth } from '../../lib/auth.jsx'
 import { useApi } from '../../lib/useApi.js'
@@ -10,19 +10,19 @@ import { scanDuration, scoreBand } from '../../lib/dashboard.js'
 import { SEVERITIES } from '../../data/dashboardNav.js'
 import { errorMessage } from '../../components/common/Alert.jsx'
 import Button from '../../components/common/Button.jsx'
-import PageHeader from '../../components/dashboard/PageHeader.jsx'
+import PageHeader, { KpiStrip } from '../../components/dashboard/PageHeader.jsx'
 import { isActive } from '../../components/dashboard/ScanBits.jsx'
 import Card, { DefinitionList } from '../../components/ui/Card.jsx'
-import StatCard from '../../components/ui/Stat.jsx'
 import Badge, { FindingStatusBadge, ScanStatusBadge, SeverityBadge } from '../../components/ui/Badge.jsx'
-import DataTable, { Pager } from '../../components/ui/DataTable.jsx'
-import { Segmented } from '../../components/ui/Controls.jsx'
+import { Pager } from '../../components/ui/DataTable.jsx'
+import { PillFilter } from '../../components/ui/Controls.jsx'
+import { Expandable, ScoreRing, SummaryList, Timeline } from '../../components/ui/Viz.jsx'
 import { EmptyState, ErrorState, PageSkeleton } from '../../components/ui/Feedback.jsx'
-import { SeverityBar } from '../../components/charts/Small.jsx'
 
 const EVIDENCE_LABELS = { export: 'Structured export', report: 'Full scanner report', log: 'Scanner log' }
 const FILE_NAMES = { export: 'export.json', report: 'report.json', log: 'scan.log' }
-const PAGE = 25
+const PAGE = 10
+const time = (iso) => (iso ? new Date(iso).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 'pending')
 
 // Progress shows where a scan is: requested, picked up by a worker, done.
 function Progress({ scan }) {
@@ -50,29 +50,60 @@ function Progress({ scan }) {
   )
 }
 
-function ScanFindings({ orgId, scanId }) {
+function Code({ label, code, tone }) {
+  if (!code) return null
+  return (
+    <div className="min-w-0">
+      <div className={`mb-1 text-[0.7rem] font-semibold uppercase tracking-wider ${tone === 'fix' ? 'text-ok' : 'text-bad'}`}>{label}</div>
+      <pre className="max-h-64 overflow-auto rounded-lg border border-line bg-app p-3 font-mono text-[0.72rem] leading-relaxed text-fg-2 scrollbar-thin"><code>{code}</code></pre>
+    </div>
+  )
+}
+
+// ScanFindings is the reference's vulnerability list: severity pills with
+// counts, then one row per finding that opens to its explanation, impact,
+// the vulnerable code and the fix.
+function ScanFindings({ orgId, scanId, by }) {
   const [sev, setSev] = useState('')
   const [offset, setOffset] = useState(0)
-  const { data, loading, stale } = useApi(`/api/v1/orgs/${orgId}/findings?scan=${scanId}&limit=${PAGE}&offset=${offset}${sev ? `&severity=${sev}` : ''}`)
+  const { data, stale } = useApi(`/api/v1/orgs/${orgId}/findings?scan=${scanId}&limit=${PAGE}&offset=${offset}${sev ? `&severity=${sev}` : ''}`)
+  const total = SEVERITIES.reduce((a, s) => a + (by[s] || 0), 0)
   return (
-    <Card title="Findings in this scan" flush
-      actions={<Segmented label="Severity" value={sev} onChange={(v) => { setSev(v); setOffset(0) }}
-        options={[{ value: '', label: 'All' }, ...SEVERITIES.filter((s) => s !== 'Info').map((s) => ({ value: s, label: s }))]} />}>
-      <DataTable rows={data?.findings} loading={loading} stale={stale} rowHref={(f) => `/dashboard/findings/${f.id}`} dense
-        empty={<EmptyState compact title="Nothing found">No findings at this severity.</EmptyState>}
-        columns={[
-          { key: 'sev', header: 'Severity', className: 'w-28', cell: (f) => <SeverityBadge value={f.severity} /> },
-          {
-            key: 'title', header: 'Finding', cell: (f) => (
-              <div className="min-w-0 max-w-[30rem]">
-                <Link to={`/dashboard/findings/${f.id}`} className="block truncate text-fg hover:underline">{f.title}</Link>
-                <div className="truncate font-mono text-xs text-fg-3">{f.file}{f.line ? `:${f.line}` : ''}</div>
-              </div>
-            ),
-          },
-          { key: 'status', header: 'Status', hide: 'md', cell: (f) => <FindingStatusBadge status={f.status} /> },
-        ]}
-        footer={data && data.total > PAGE && <Pager offset={offset} limit={PAGE} total={data.total} count={data.findings.length} onChange={setOffset} />} />
+    <Card title="Vulnerabilities" description="Open a row for the explanation, the code and the fix" icon={ShieldAlert}>
+      <div className="mb-3">
+        <PillFilter label="Severity" value={sev} onChange={(v) => { setSev(v); setOffset(0) }}
+          options={[{ value: '', label: 'All', count: total }, ...SEVERITIES.filter((s) => by[s]).map((s) => ({ value: s, label: s, count: by[s], color: `var(--color-sev-${s.toLowerCase()})` }))]} />
+      </div>
+      <div className={`transition-opacity ${stale ? 'opacity-60' : ''}`}>
+        {!data ? <div className="h-40" /> : (
+          <Expandable empty={<EmptyState compact title="Nothing found">No findings at this severity.</EmptyState>}
+            items={data.findings.map((f) => ({
+              key: f.id,
+              icon: <AlertTriangle size={16} style={{ color: `var(--color-sev-${(f.severity || 'info').toLowerCase()})` }} />,
+              title: <Link to={`/dashboard/findings/${f.id}`} className="hover:underline">{f.title}</Link>,
+              badge: <><SeverityBadge value={f.severity} /><FindingStatusBadge status={f.status} /></>,
+              sub: f.explanation || `${f.file}${f.line ? `:${f.line}` : ''}`,
+              meta: f.line ? `Line ${f.line}` : f.file ? f.file.split('/').pop() : null,
+              body: (
+                <div className="grid gap-3">
+                  <div className="font-mono text-xs text-fg-3">{f.file}{f.line ? `:${f.line}` : ''}</div>
+                  {f.explanation && <p>{f.explanation}</p>}
+                  {f.impact && <p><span className="font-medium text-fg">Impact. </span>{f.impact}</p>}
+                  <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+                    <Code label="Vulnerable code" code={f.vulnerable_snippet} />
+                    <Code label="Suggested fix" code={f.fix_snippet} tone="fix" />
+                  </div>
+                  <Link to={`/dashboard/findings/${f.id}`} className="w-fit text-xs text-accent hover:underline">Open the finding to triage it</Link>
+                </div>
+              ),
+            }))} />
+        )}
+      </div>
+      {data && data.total > PAGE && (
+        <div className="mt-4 flex items-center gap-3 border-t border-line pt-3 text-xs text-fg-3">
+          <Pager offset={offset} limit={PAGE} total={data.total} count={data.findings.length} onChange={setOffset} />
+        </div>
+      )}
     </Card>
   )
 }
@@ -142,23 +173,48 @@ export default function ScanDetail() {
         )}
       />
       {error && <div className="mb-4"><ErrorState>{error}</ErrorState></div>}
+      {scan.status === 'completed' && (
+        <div className="mb-4 grid gap-4">
+          <KpiStrip items={[
+            { label: 'Findings', value: num(sum.total), note: `${num(sum.new)} new in this scan` },
+            { label: 'Critical', value: num(counts.critical), tone: counts.critical ? 'bad' : undefined },
+            { label: 'High', value: num(counts.high), tone: counts.high ? 'bad' : undefined },
+            { label: 'Scanner score', value: sum.score != null ? `${sum.score} / 100` : '-', note: sum.score != null ? scoreBand(sum.score)[0] : 'not reported' },
+            { label: 'Duration', value: scanDuration(scan), note: scan.scanner || 'hawki' },
+          ]} />
+          <section className="app-card grid grid-cols-1 divide-y divide-line rounded-2xl border border-line md:grid-cols-2 md:divide-y-0 xl:grid-cols-[1.3fr_auto_1fr_1fr] xl:divide-x">
+            <div className="grid content-start gap-2 p-5">
+              <div className="flex flex-wrap items-center gap-2"><span className="truncate text-lg font-semibold text-fg">{scan.project_name}</span><ScanStatusBadge status={scan.status} /></div>
+              <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1.5 text-sm">
+                <dt className="text-fg-3">Target</dt><dd className="truncate text-fg" title={target}>{target}</dd>
+                {scan.target.ref && <><dt className="text-fg-3">Ref</dt><dd className="text-fg">{scan.target.ref}</dd></>}
+                <dt className="text-fg-3">Type</dt><dd className="capitalize text-fg">{scan.type}</dd>
+                <dt className="text-fg-3">Scanner</dt><dd className="text-fg">{scan.scanner || 'hawki'}</dd>
+              </dl>
+            </div>
+            <div className="grid place-items-center p-5"><ScoreRing value={sum.score ?? null} label="Scanner score" /></div>
+            <div className="p-5">
+              <h3 className="mb-3 text-sm font-semibold text-fg">Risk summary</h3>
+              <SummaryList items={[['critical', 'Critical'], ['high', 'High'], ['medium', 'Medium'], ['low', 'Low']].map(([k, l]) => ({ label: `${l} risk`, value: num(counts[k]), color: `var(--color-sev-${k})` }))
+                .concat([{ label: 'Informational', value: num(by.Info || 0), color: 'var(--color-sev-info)' }])} />
+            </div>
+            <div className="p-5">
+              <h3 className="mb-3 text-sm font-semibold text-fg">Scan timeline</h3>
+              <Timeline items={[
+                { key: 'r', title: 'Requested', at: time(scan.created_at), done: true },
+                { key: 's', title: 'Analysis started', at: time(scan.started_at), done: Boolean(scan.started_at) },
+                { key: 'f', title: 'Results imported', at: time(scan.finished_at), done: Boolean(scan.finished_at), tone: 'good' },
+              ]} />
+            </div>
+          </section>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-3">
-        <div className="grid gap-4 lg:col-span-2">
+        <div className="grid min-w-0 gap-4 lg:col-span-2">
           {isActive(scan) && <Progress scan={scan} />}
           {scan.status === 'failed' && <ErrorState>{scan.error || 'The scan failed.'} Failed scans are refunded.</ErrorState>}
-          {scan.status === 'completed' && (
-            <>
-              <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-                <StatCard label="Findings" value={num(sum.total)} sub={`${num(sum.new)} new in this scan`} />
-                <StatCard label="Critical and high" value={num(counts.critical + counts.high)} tone={counts.critical ? 'danger' : undefined} sub={`${num(counts.critical)} critical`} />
-                <StatCard label="Scanner score" value={sum.score ?? '-'} sub={sum.score != null ? scoreBand(sum.score)[0] : 'Not reported'} />
-                <StatCard label="Duration" value={scanDuration(scan)} sub={scan.scanner || 'hawki'} />
-              </div>
-              <Card title="Severity distribution"><SeverityBar counts={counts} height={10} /></Card>
-              <ScanFindings orgId={currentOrg.id} scanId={scanId} />
-            </>
-          )}
+          {scan.status === 'completed' && <ScanFindings orgId={currentOrg.id} scanId={scanId} by={by} />}
         </div>
 
         <div className="grid gap-4">

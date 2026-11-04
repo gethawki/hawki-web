@@ -42,9 +42,10 @@ export function ScoreRing({ value, max = 100, size = 132, stroke = 10, label, su
 export function Radar({ axes, size = 260, label = 'Score', compareLabel }) {
   const n = axes.length
   if (n < 3) return null
-  const cx = size / 2
+  const padX = 70
+  const cx = size / 2 + padX
   const cy = size / 2
-  const R = size / 2 - 42
+  const R = size / 2 - 40
   const pt = (i, v) => {
     const a = -Math.PI / 2 + (i * 2 * Math.PI) / n
     return [cx + Math.cos(a) * R * (v / 100), cy + Math.sin(a) * R * (v / 100)]
@@ -53,7 +54,7 @@ export function Radar({ axes, size = 260, label = 'Score', compareLabel }) {
   const hasCompare = axes.some((a) => a.compare != null)
   return (
     <figure className="grid justify-items-center gap-2">
-      <svg viewBox={`0 0 ${size} ${size}`} className="w-full max-w-[18rem]" role="img" aria-label={axes.map((a) => `${a.label} ${Math.round(a.value)}`).join(', ')}>
+      <svg viewBox={`0 0 ${size + padX * 2} ${size}`} className="w-full max-w-[24rem]" role="img" aria-label={axes.map((a) => `${a.label} ${Math.round(a.value)}`).join(', ')}>
         {[25, 50, 75, 100].map((g) => (
           <polygon key={g} points={axes.map((_, i) => pt(i, g).join(',')).join(' ')} fill="none" stroke="var(--color-line)" strokeWidth="1" />
         ))}
@@ -170,11 +171,11 @@ export function Expandable({ items, empty }) {
   const [open, setOpen] = useState(null)
   if (!items.length) return empty || null
   return (
-    <ul className="grid gap-2">
+    <ul className="grid min-w-0 grid-cols-1 gap-2">
       {items.map((it) => {
         const isOpen = open === it.key
         return (
-          <li key={it.key} className={`rounded-xl border transition ${isOpen ? 'border-accent/40 bg-surface-2' : 'border-line bg-surface-2/50 hover:border-line-strong'}`}>
+          <li key={it.key} className={`min-w-0 rounded-xl border transition ${isOpen ? 'border-accent/40 bg-surface-2' : 'border-line bg-surface-2/50 hover:border-line-strong'}`}>
             <div className="flex items-start gap-3 px-3.5 py-3">
               {it.icon && <span className="mt-0.5 shrink-0">{it.icon}</span>}
               <div className="min-w-0 flex-1">
