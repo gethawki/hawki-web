@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useState } from 'react'
+import { Fragment, Suspense, useEffect, useRef, useState } from 'react'
 import { Link, Outlet, useLocation } from 'react-router-dom'
 import { LayoutList, PanelLeftClose, Pin, PinOff, X } from 'lucide-react'
 import { PageSkeleton } from '../ui/Feedback.jsx'
@@ -84,8 +84,12 @@ export default function EngineLayout({ name, icon: Icon, sections, status, descr
     return () => window.removeEventListener('keydown', onKey)
   }, [open])
   const current = best(sections, loc)
-  const group = sections.find((s) => s.title === current?.group) || sections[0]
   const multi = sections.length > 1
+  const strip = useRef(null)
+  // Keep the active tab in view when the row scrolls.
+  useEffect(() => {
+    strip.current?.querySelector('[data-on]')?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+  }, [current?.to])
   const pin = (v) => {
     setPinned(v)
     setOpen(false)
@@ -102,7 +106,7 @@ export default function EngineLayout({ name, icon: Icon, sections, status, descr
         {Icon && <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-surface-3 text-accent ring-1 ring-inset ring-accent/30"><Icon size={18} /></span>}
         <div className="min-w-0 flex-1">
           <div className="text-sm font-semibold text-fg">{name}</div>
-          <div className="truncate text-xs text-fg-3">{current ? (multi ? `${group.title} · ${current.label}` : current.label) : 'Details'}</div>
+          <div className="truncate text-xs text-fg-3">{current ? current.label : 'Details'}</div>
         </div>
         {status}
         {!pinned && (
@@ -112,23 +116,24 @@ export default function EngineLayout({ name, icon: Icon, sections, status, descr
           </button>
         )}
       </div>
-      <div className="flex gap-1 overflow-x-auto border-t border-line px-3 py-2 scrollbar-thin" role="tablist" aria-label={`${name} sections`}>
-        {(pinned ? [] : group.links).map((l) => {
-          const on = current?.to === l.to
-          return (
-            <Link key={l.to} to={l.to} role="tab" aria-selected={on}
-              className={`inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition ${on ? 'bg-accent/15 text-fg ring-1 ring-inset ring-accent/40' : 'text-fg-3 hover:bg-surface-2 hover:text-fg'}`}>
-              {l.icon && <l.icon size={13} aria-hidden />}{l.label}
-            </Link>
-          )
-        })}
-        {multi && !pinned && sections.filter((s) => s !== group).map((s) => (
-          <Link key={s.title} to={s.links[0].to} className="ml-1 inline-flex shrink-0 items-center rounded-lg border border-dashed border-line px-2.5 py-1.5 text-xs text-fg-3 hover:border-line-strong hover:text-fg">
-            {s.title}
-          </Link>
-        ))}
-        {pinned && <span className="px-2 py-1.5 text-xs text-fg-3">Sections are pinned on the left.</span>}
-      </div>
+      {!pinned && (
+        <div ref={strip} className="flex items-center gap-1 overflow-x-auto border-t border-line px-3 py-2 scrollbar-thin lg:flex-wrap lg:gap-y-1.5 lg:overflow-visible" role="tablist" aria-label={`${name} sections`}>
+          {sections.map((sec, gi) => (
+            <Fragment key={sec.title}>
+              {gi > 0 && <span className="mx-1.5 h-5 w-px shrink-0 bg-line-strong" aria-hidden="true" />}
+              {sec.links.map((l) => {
+                const on = current?.to === l.to
+                return (
+                  <Link key={l.to} to={l.to} role="tab" aria-selected={on} data-on={on || undefined} title={multi ? `${sec.title}: ${l.label}` : l.label}
+                    className={`inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition ${on ? 'bg-accent/15 text-fg ring-1 ring-inset ring-accent/40' : 'text-fg-3 hover:bg-surface-2 hover:text-fg'}`}>
+                    {l.icon && <l.icon size={13} aria-hidden />}{l.label}
+                  </Link>
+                )
+              })}
+            </Fragment>
+          ))}
+        </div>
+      )}
       {description && <p className="border-t border-line px-4 py-2.5 text-xs text-fg-3">{description}</p>}
     </div>
   )
