@@ -108,7 +108,7 @@ export function Donut({ parts, size = 140, stroke = 18, center, centerLabel }) {
           })}
         </svg>
         <div className="absolute inset-0 grid place-content-center text-center">
-          <span className="text-xl font-semibold text-fg tnum">{center ?? total.toLocaleString()}</span>
+          <span className="text-xl font-semibold text-fg tnum" title={total.toLocaleString()}>{center ?? (total >= 100000 ? new Intl.NumberFormat(undefined, { notation: 'compact', maximumFractionDigits: 1 }).format(total) : total.toLocaleString())}</span>
           {centerLabel && <span className="text-[0.68rem] text-fg-3">{centerLabel}</span>}
         </div>
       </div>
