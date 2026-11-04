@@ -60,7 +60,7 @@ export default function AdminWatch() {
   }
   const status = <Badge tone={live.length ? 'good' : 'danger'} dot>{live.length ? `${live.length} running` : 'Not running'}</Badge>
   return frame(
-    <div className="grid gap-4">
+    <div className="grid grid-cols-1 gap-4">
       {msg && <Alert tone={msg.tone}>{msg.text}</Alert>}
       {tab === 'overview' && (
         <>

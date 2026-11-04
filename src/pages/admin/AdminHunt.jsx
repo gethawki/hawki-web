@@ -84,7 +84,7 @@ export default function AdminHunt() {
   const scored = Object.values(scores).reduce((a, m) => a + Object.values(m).reduce((x, y) => x + y, 0), 0)
   const status = <Badge tone={s.instances.length ? 'good' : 'danger'} dot>{s.instances.length ? `${s.instances.length} running` : 'Not running'}</Badge>
   return frame(
-    <div className="grid gap-4">
+    <div className="grid grid-cols-1 gap-4">
       {tab === 'overview' && (
         <>
           <KpiStrip items={[

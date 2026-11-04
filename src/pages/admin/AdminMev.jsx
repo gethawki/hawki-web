@@ -61,7 +61,7 @@ export default function AdminMev() {
   const status = <Badge tone={live.length ? 'good' : 'danger'} dot>{live.length ? `${live.length} running` : 'Not running'}</Badge>
   const acc = (s.accuracy || []).map((a) => ({ ...a, decided: (a.confirmed || 0) + (a.false_positive || 0) + (a.missed || 0) }))
   return frame(
-    <div className="grid gap-4">
+    <div className="grid grid-cols-1 gap-4">
       {msg && <Alert tone={msg.tone}>{msg.text}</Alert>}
       {tab === 'overview' && (
         <>

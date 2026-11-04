@@ -27,9 +27,9 @@ export function BarList({ items, format = num, color = 'var(--color-series-1)', 
   if (!items.length) return <p className="text-sm text-fg-3">{empty}</p>
   const max = Math.max(1, ...items.map((i) => i.value))
   return (
-    <ul className="grid gap-3">
+    <ul className="grid min-w-0 grid-cols-1 gap-3">
       {items.map((it) => (
-        <li key={it.key || it.label} className="grid gap-1.5">
+        <li key={it.key || it.label} className="grid min-w-0 grid-cols-1 gap-1.5">
           <div className="flex items-baseline gap-3 text-sm">
             <span className="flex-1 min-w-0 truncate text-fg">{it.href ? <Link to={it.href} className="hover:underline">{it.label}</Link> : it.label}</span>
             {it.note && <span className="hidden sm:inline text-xs text-fg-3 truncate">{it.note}</span>}
