@@ -13,7 +13,7 @@
 // greyed out to users who will be able to open them.
 import {
   Bell, Building2, CreditCard, Crosshair, FileText, History, Network, Power, Receipt, TrendingUp, UserCog, FolderGit2, KeyRound, LayoutDashboard, Radar, ScanLine, ScrollText,
-  Settings, ShieldAlert, Telescope, User, Users,
+  Settings, ShieldAlert, Telescope, User, Users, Zap,
 } from 'lucide-react'
 
 export const DASHBOARD_NAV = [
@@ -29,6 +29,7 @@ export const DASHBOARD_NAV = [
       { to: '/dashboard/intel', label: 'Intel', icon: Telescope, access: { permission: 'intel:read' } },
       { to: '/dashboard/hunt', label: 'Hunt', icon: Crosshair, access: { permission: 'hunt:read' } },
       { to: '/dashboard/watch', label: 'Watch', icon: Radar, access: { permission: 'watch:read' } },
+      { to: '/dashboard/mev', label: 'MEV', icon: Zap, access: { permission: 'mev:read' } },
     ],
   },
   {
@@ -64,6 +65,7 @@ export const ADMIN_NAV = [
       { to: '/admin/intel', label: 'Intel', icon: Network, access: { platformAdmin: true } },
       { to: '/admin/hunt', label: 'Hunt', icon: Crosshair, access: { platformAdmin: true } },
       { to: '/admin/watch', label: 'Watch', icon: Radar, access: { platformAdmin: true } },
+      { to: '/admin/mev', label: 'MEV', icon: Zap, access: { platformAdmin: true } },
     ],
   },
   {

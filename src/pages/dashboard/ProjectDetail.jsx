@@ -24,6 +24,7 @@ import ProjectHistory from '../../components/reports/ProjectHistory.jsx'
 import ProjectIntel from '../../components/intel/ProjectIntel.jsx'
 import ProjectHunt from '../../components/hunt/ProjectHunt.jsx'
 import ProjectWatch from '../../components/watch/ProjectWatch.jsx'
+import ProjectMev from '../../components/mev/ProjectMev.jsx'
 
 function RunScan({ orgId, project, onStarted }) {
   const { can } = useAuth()
@@ -305,6 +306,7 @@ const TABS = [
   { value: 'intel', label: 'Intel' },
   { value: 'hunt', label: 'Hunt' },
   { value: 'watch', label: 'Watch' },
+  { value: 'mev', label: 'MEV' },
   { value: 'settings', label: 'Settings' },
 ]
 
@@ -316,7 +318,8 @@ export default function ProjectDetail() {
   const [project, setProject] = useState(null)
   // Intel needs a deployed contract to look at.
   const tabs = TABS.filter((t) => (t.value !== 'intel' || (project?.contract_address && can('intel:read'))) && (t.value !== 'hunt' || (project?.contract_address && can('hunt:read')))
-    && (t.value !== 'watch' || (project?.contract_address && project?.chain && can('watch:read'))))
+    && (t.value !== 'watch' || (project?.contract_address && project?.chain && can('watch:read')))
+    && (t.value !== 'mev' || (project?.contract_address && project?.chain && can('mev:read'))))
   const tab = tabs.some((t) => t.value === params.get('tab')) ? params.get('tab') : 'overview'
   const [scans, setScans] = useState(null)
   const [error, setError] = useState(null)
@@ -415,6 +418,7 @@ export default function ProjectDetail() {
       {tab === 'intel' && <ProjectIntel chain={project.chain} address={project.contract_address} />}
       {tab === 'hunt' && <ProjectHunt projectId={project.id} />}
       {tab === 'watch' && <ProjectWatch project={project} />}
+      {tab === 'mev' && <ProjectMev project={project} />}
       {tab === 'settings' && settings}
     </div>
   )
