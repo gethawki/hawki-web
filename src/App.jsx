@@ -76,6 +76,9 @@ const AdminWatch = lazy(() => import('./pages/admin/AdminWatch.jsx'))
 const AdminMev = lazy(() => import('./pages/admin/AdminMev.jsx'))
 const AdminAudit = lazy(() => import('./pages/admin/AdminAudit.jsx'))
 const AdminSwitches = lazy(() => import('./pages/admin/AdminSwitches.jsx'))
+const AdminHealth = lazy(() => import('./pages/admin/AdminHealth.jsx'))
+const AdminAlerts = lazy(() => import('./pages/admin/AdminAlerts.jsx'))
+const AdminBusiness = lazy(() => import('./pages/admin/AdminBusiness.jsx'))
 const IntelLayout = lazy(() => import('./components/admin/IntelOps.jsx').then((m) => ({ default: m.IntelLayout })))
 const intelPage = (name) => lazy(() => import('./pages/admin/AdminIntel.jsx').then((m) => ({ default: m[name] })))
 const enginePage = (name) => lazy(() => import('./components/admin/IntelEngines.jsx').then((m) => ({ default: m[name] })))
@@ -167,6 +170,9 @@ export default function App() {
             <Route path="/admin/revenue" element={guarded('/admin/revenue', <AdminRevenue />)} />
             <Route path="/admin/audit" element={guarded('/admin/audit', <AdminAudit />)} />
             <Route path="/admin/switches" element={guarded('/admin/switches', <AdminSwitches />)} />
+            <Route path="/admin/health" element={guarded('/admin/health', <AdminHealth />)} />
+            <Route path="/admin/alerts" element={guarded('/admin/alerts', <AdminAlerts />)} />
+            <Route path="/admin/business" element={guarded('/admin/business', <AdminBusiness />)} />
             <Route path="/admin/hunt" element={guarded('/admin/hunt', <AdminHunt />)} />
             <Route path="/admin/watch" element={guarded('/admin/watch', <AdminWatch />)} />
             <Route path="/admin/mev" element={guarded('/admin/mev', <AdminMev />)} />

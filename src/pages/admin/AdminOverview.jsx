@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Activity, AlertTriangle, Building2, CreditCard, DollarSign, ScanLine, UserPlus, Users } from 'lucide-react'
+import { Activity, AlertTriangle, BarChart3, Bell, Building2, CreditCard, DollarSign, HeartPulse, History, Power, ScanLine, UserPlus, Users } from 'lucide-react'
 import { useApi } from '../../lib/useApi.js'
 import { ago, change, day, num, pct, usd } from '../../lib/format.js'
 import { formatCredits } from '../../lib/credits.js'
@@ -70,11 +70,90 @@ function IntelSummary({ i }) {
   )
 }
 
+function Figures({ title, to, items }) {
+  return (
+    <div className="min-w-0">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <span className="text-sm font-medium text-fg">{title}</span>
+        {to && <Link to={to} className="text-xs text-fg-3 hover:text-fg">Open</Link>}
+      </div>
+      <dl className="grid grid-cols-2 gap-x-3 gap-y-2.5">
+        {items.map(([label, value, sub, bad]) => (
+          <div key={label} className="min-w-0">
+            <dt className="truncate text-[0.7rem] text-fg-3">{label}</dt>
+            <dd className={`text-base font-semibold tnum ${bad ? 'text-[#f5dfae]' : 'text-fg'}`}>{value}</dd>
+            {sub && <dd className="truncate text-[0.68rem] text-fg-3">{sub}</dd>}
+          </div>
+        ))}
+      </dl>
+    </div>
+  )
+}
+
+// Engines is Hunt, Watch and MEV at a glance, with the findings scans
+// produce.
+function Engines({ e }) {
+  const s = e.summary
+  const unhealthy = (s.watch.monitors || 0) - (s.watch.by_health?.healthy || 0)
+  return (
+    <Card title="Engines" description="What scans, Hunt, Watch and MEV found">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
+        <Figures title="Findings" items={[
+          ['Recorded', num(s.findings.total), `${num(s.findings.last_7d)} this week`],
+          ['Last 24 hours', num(s.findings.last_24h)],
+          ['Critical', num(s.findings.by_severity?.critical || 0), null, (s.findings.by_severity?.critical || 0) > 0],
+          ['High', num(s.findings.by_severity?.high || 0)],
+        ]} />
+        <Figures title="Hunt" to="/admin/hunt" items={[
+          ['Active clusters', num(s.hunt.clusters), `${num(s.hunt.formed_7d)} formed this week`],
+          ['Formed 24h', num(s.hunt.formed_24h)],
+          ['Genesis traces', num(s.hunt.traces), `${num(s.hunt.traces_24h)} in 24h`],
+          ['Watchlist', num(s.hunt.watchlist), `${num(s.hunt.requests_7d)} requests this week`],
+        ]} />
+        <Figures title="Watch" to="/admin/watch" items={[
+          ['Monitors', num(s.watch.monitors), `${num(s.watch.organizations)} organizations`],
+          ['Not healthy', num(unhealthy), null, unhealthy > 0],
+          ['Open violations', num(s.watch.open_violations), null, s.watch.open_violations > 0],
+          ['Violations 24h', num(s.watch.violations_24h), `${num(s.watch.violations_7d)} this week`],
+        ]} />
+        <Figures title="MEV" to="/admin/mev" items={[
+          ['Predictions 24h', num(s.mev.predictions_24h), `${num(s.mev.predictions_7d)} this week`],
+          ['Pending now', num(s.mev.pending)],
+          ['Mined attacks 24h', num(s.mev.detections_24h)],
+          ['Confirmed this week', num(s.mev.confirmed_7d), `${num(s.mev.targets)} targets watched`],
+        ]} />
+      </div>
+    </Card>
+  )
+}
+
+const QUICK_ACTIONS = [
+  { to: '/admin/users', label: 'Invite an admin or find a user', icon: UserPlus },
+  { to: '/admin/health', label: 'System health', icon: HeartPulse },
+  { to: '/admin/alerts', label: 'Platform alerts', icon: Bell },
+  { to: '/admin/business', label: 'Business metrics', icon: BarChart3 },
+  { to: '/admin/audit', label: 'Audit and export', icon: History },
+  { to: '/admin/switches', label: 'Emergency switches', icon: Power },
+]
+
+function QuickActions() {
+  return (
+    <Card title="Quick actions">
+      <ul className="grid gap-1">
+        {QUICK_ACTIONS.map(({ to, label, icon: Icon }) => (
+          <li key={to}><Link to={to} className="flex items-center gap-2.5 rounded-lg px-2 py-2 text-sm text-fg-2 transition hover:bg-surface-2 hover:text-fg"><Icon size={15} className="shrink-0 text-fg-3" />{label}</Link></li>
+        ))}
+      </ul>
+    </Card>
+  )
+}
+
 export default function AdminOverview() {
   const [days, setDays] = useState(30)
   const { data: o, error } = useApi('/api/v1/admin/overview')
   const { data: a, stale } = useApi(`/api/v1/admin/analytics?days=${days}`)
   const { data: act } = useApi('/api/v1/admin/activity')
+  const { data: eng } = useApi(`/api/v1/admin/engines?days=${days}`)
   if (error) return <ErrorState>{error}</ErrorState>
   if (!o || !a) return <PageSkeleton cards={8} />
 
@@ -136,10 +215,34 @@ export default function AdminOverview() {
             <TimeChart kind="stacked" data={revenue} series={[{ key: 'paid', label: 'Received', color: 'var(--color-series-1)' }]} height={200}
               format={(v) => usd(v)} caption="Payments received per day" stale={stale} />
           </Card>
-          <Health o={o} />
+          <div className="grid gap-4">
+            <Health o={o} />
+            <QuickActions />
+          </div>
         </div>
 
         {o.intel && <IntelSummary i={o.intel} />}
+
+        {eng && <Engines e={eng} />}
+        {eng && (
+          <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+            <Card title="Findings and Hunt" description="Findings recorded and Hunt clusters formed, per day">
+              <TimeChart data={eng.daily.map((d) => ({ label: day(d.date), findings: d.findings, clusters: d.clusters }))}
+                series={[{ key: 'findings', label: 'Findings', color: 'var(--color-series-1)' }, { key: 'clusters', label: 'Clusters', color: 'var(--color-series-2)' }]}
+                height={220} caption="Findings and Hunt clusters per day" />
+            </Card>
+            <Card title="Watch" description="Violations opened and monitors leaving healthy, per day">
+              <TimeChart kind="stacked" data={eng.daily.map((d) => ({ label: day(d.date), violations: d.violations, health: d.health_changes }))}
+                series={[{ key: 'violations', label: 'Violations', color: 'var(--color-critical)' }, { key: 'health', label: 'Health changes', color: 'var(--color-series-2)' }]}
+                height={220} caption="Watch violations and health changes per day" />
+            </Card>
+            <Card title="MEV" description="Predictions made and attacks found in mined blocks, per day">
+              <TimeChart data={eng.daily.map((d) => ({ label: day(d.date), predictions: d.predictions, detections: d.detections }))}
+                series={[{ key: 'predictions', label: 'Predictions', color: 'var(--color-series-1)' }, { key: 'detections', label: 'Mined attacks', color: 'var(--color-series-3)' }]}
+                height={220} caption="MEV predictions and mined attacks per day" />
+            </Card>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-5">
           <Card className="xl:col-span-3" title="Most active organizations" description={`By scans in the last ${days} days`} actions={<CardLink to="/admin/customers" />} flush>

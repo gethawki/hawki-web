@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Users } from 'lucide-react'
+import { UserPlus, Users } from 'lucide-react'
 import { ago, initials, num } from '../../lib/format.js'
 import { useApi } from '../../lib/useApi.js'
 import PageHeader from '../../components/dashboard/PageHeader.jsx'
@@ -9,8 +9,45 @@ import Badge from '../../components/ui/Badge.jsx'
 import DataTable, { Pager } from '../../components/ui/DataTable.jsx'
 import { FilterSelect, SearchInput, Toolbar } from '../../components/ui/Controls.jsx'
 import { EmptyState, ErrorState } from '../../components/ui/Feedback.jsx'
+import Button from '../../components/common/Button.jsx'
+import Field from '../../components/common/Field.jsx'
+import Alert, { errorMessage } from '../../components/common/Alert.jsx'
+import { api } from '../../lib/api.js'
 
 const PAGE = 50
+
+// InviteStaff creates a platform admin who chooses a password from the
+// emailed link.
+function InviteStaff({ onDone }) {
+  const [email, setEmail] = useState('')
+  const [name, setName] = useState('')
+  const [msg, setMsg] = useState(null)
+  const [busy, setBusy] = useState(false)
+  return (
+    <Card title="Invite a platform admin" description="They get full access to this console and an email to choose their password. Ask them to turn on two-factor.">
+      <form className="grid grid-cols-1 items-end gap-3 sm:grid-cols-[1fr_1fr_auto]" onSubmit={async (e) => {
+        e.preventDefault()
+        setBusy(true)
+        setMsg(null)
+        try {
+          await api('/api/v1/admin/staff', { method: 'POST', body: { email: email.trim(), name: name.trim() } })
+          setMsg({ tone: 'info', text: `Invitation sent to ${email.trim()}.` })
+          setEmail('')
+          setName('')
+          onDone()
+        } catch (err) {
+          setMsg({ tone: 'error', text: err.code === 'email_taken' ? 'That email already has an account; open it and make it a platform admin.' : errorMessage(err) })
+        }
+        setBusy(false)
+      }}>
+        <Field id="staff-email" label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        <Field id="staff-name" label="Name" value={name} onChange={(e) => setName(e.target.value)} />
+        <Button type="submit" disabled={busy || !email.includes('@')}>Send invitation</Button>
+      </form>
+      {msg && <div className="mt-3"><Alert tone={msg.tone}>{msg.text}</Alert></div>}
+    </Card>
+  )
+}
 
 export default function AdminUsers() {
   const [params, setParams] = useSearchParams()
@@ -19,7 +56,8 @@ export default function AdminUsers() {
   const role = params.get('role') || ''
   const offset = Number(params.get('offset') || 0)
   const query = new URLSearchParams({ q: params.get('q') || '', status, role, limit: PAGE, offset }).toString()
-  const { data, error, loading, stale } = useApi(`/api/v1/admin/users?${query}`)
+  const { data, error, loading, stale, reload } = useApi(`/api/v1/admin/users?${query}`)
+  const [inviting, setInviting] = useState(false)
 
   function set(key, value) {
     const p = new URLSearchParams(params)
@@ -32,7 +70,9 @@ export default function AdminUsers() {
   return (
     <div className="grid gap-4">
       <PageHeader title="Users" description="Every account on the platform. Open one to suspend it, reset its sign-in or see what it did."
-        meta={data && <span className="tnum">{num(data.total)} {data.total === 1 ? 'user' : 'users'}</span>} />
+        meta={data && <span className="tnum">{num(data.total)} {data.total === 1 ? 'user' : 'users'}</span>}
+        actions={<Button variant="ghost" size="sm" onClick={() => setInviting((v) => !v)}><UserPlus size={15} /> Invite admin</Button>} />
+      {inviting && <InviteStaff onDone={() => reload?.()} />}
       <Toolbar>
         <SearchInput id="user-q" className="w-full sm:w-80" value={q} onChange={setQ} onSubmit={() => set('q', q.trim())} placeholder="Email, name or ID" label="Search users" />
         <FilterSelect id="user-status" label="Status" value={status} onChange={(v) => set('status', v)}

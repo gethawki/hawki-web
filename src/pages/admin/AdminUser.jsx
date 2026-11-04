@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../../lib/api.js'
 import { useAuth } from '../../lib/auth.jsx'
 import Alert, { errorMessage } from '../../components/common/Alert.jsx'
@@ -11,17 +11,24 @@ import DataTable from '../../components/ui/DataTable.jsx'
 import { EmptyState } from '../../components/ui/Feedback.jsx'
 import { device } from '../../lib/format.js'
 import { Badge, ReasonForm, useAdmin, when } from '../../components/admin/bits.jsx'
+import { ConfirmDelete, EngineUsage } from '../../components/admin/platformBits.jsx'
 
 const ERRORS = {
   last_platform_admin: 'The platform must keep at least one active admin.',
+  owner_protected: "The platform owner's account cannot be deleted.",
+  sole_org_admin: 'They are the only admin of an organization with other members. Make someone else an admin there first.',
+  cannot_impersonate: 'Platform admins cannot be viewed as.',
+  account_suspended: 'Restore the account before viewing as it.',
   two_factor_off: 'This user does not have two-factor sign-in on.',
 }
 
 export default function AdminUser() {
   const { userId } = useParams()
-  const { user: me } = useAuth()
+  const { user: me, startImpersonation } = useAuth()
+  const navigate = useNavigate()
   const { data, error, reload } = useAdmin(`/api/v1/admin/users/${userId}`)
   const sessions = useAdmin(`/api/v1/admin/users/${userId}/sessions`)
+  const usage = useAdmin(`/api/v1/admin/users/${userId}/usage`)
   const [msg, setMsg] = useState(null)
 
   async function act(path, method, body, done) {
@@ -31,6 +38,26 @@ export default function AdminUser() {
       setMsg({ tone: 'info', text: done })
       reload()
       sessions.reload()
+    } catch (err) {
+      setMsg({ tone: 'error', text: ERRORS[err.code] || errorMessage(err) })
+    }
+  }
+
+  async function viewAs(reason) {
+    setMsg(null)
+    try {
+      await startImpersonation(userId, reason)
+      navigate('/dashboard')
+    } catch (err) {
+      setMsg({ tone: 'error', text: ERRORS[err.code] || errorMessage(err) })
+    }
+  }
+
+  async function remove(confirm, reason) {
+    setMsg(null)
+    try {
+      await api(`/api/v1/admin/users/${userId}/delete`, { method: 'POST', body: { confirm, reason } })
+      navigate('/admin/users', { replace: true })
     } catch (err) {
       setMsg({ tone: 'error', text: ERRORS[err.code] || errorMessage(err) })
     }
@@ -65,6 +92,9 @@ export default function AdminUser() {
               { key: 'plan', header: 'Plan', hide: 'sm', cell: (o) => <span className="capitalize text-fg-2">{o.plan}{o.exempt ? ' (exempt)' : ''}</span> },
               { key: 'status', header: 'Status', align: 'right', cell: (o) => <Badge tone={o.status === 'active' ? 'good' : 'bad'}>{o.status}</Badge> },
             ]} />
+          </Card>
+          <Card title="Engine usage" description="Across every organization they belong to">
+            {usage.error ? <Alert>{usage.error}</Alert> : !usage.data ? <Spinner /> : <EngineUsage u={usage.data} showOrg />}
           </Card>
           <Card title="Activity" description="Most recent first" flush>
             <DataTable rows={data.activity} dense empty={<EmptyState compact title="Nothing recorded" />} columns={[
@@ -105,6 +135,12 @@ export default function AdminUser() {
         </div>
       </Panel>
 
+          {!self && u.role !== 'admin' && u.status === 'active' && (
+            <Panel title="View as this user" description="See the app as they do for 30 minutes, read only. Starting and stopping are audited and the view is listed among their sessions.">
+              <ReasonForm label="View as user" placeholder="Why, e.g. a support ticket" onSubmit={viewAs} />
+            </Panel>
+          )}
+
           <Panel title="Signed in on">
             {!sessions.data ? <Spinner /> : sessions.data.sessions.length === 0 ? <p className="text-sm text-fg-3">No active sessions.</p> : (
               <ul className="divide-y divide-line text-sm">
@@ -117,6 +153,11 @@ export default function AdminUser() {
               </ul>
             )}
           </Panel>
+          {!self && (
+            <Panel title="Delete account" description="Removes the account and the organizations only they belong to. This cannot be undone; they are told by email.">
+              <ConfirmDelete what="account" confirmText={u.email} idPrefix="del-user" onSubmit={remove} />
+            </Panel>
+          )}
         </div>
       </div>
     </div>

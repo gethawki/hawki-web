@@ -12,7 +12,7 @@
 // `soon` marks sections that are planned but not built yet; they are shown
 // greyed out to users who will be able to open them.
 import {
-  Bell, Building2, CreditCard, Crosshair, FileText, History, Network, Power, Receipt, TrendingUp, UserCog, FolderGit2, KeyRound, LayoutDashboard, Radar, ScanLine, ScrollText,
+  BarChart3, Bell, Building2, CreditCard, HeartPulse, Siren, Crosshair, FileText, History, Network, Power, Receipt, TrendingUp, UserCog, FolderGit2, KeyRound, LayoutDashboard, Radar, ScanLine, ScrollText,
   Settings, ShieldAlert, Telescope, User, Users, Zap,
 } from 'lucide-react'
 
@@ -57,6 +57,8 @@ export const ADMIN_NAV = [
       { to: '/admin', label: 'Overview', icon: LayoutDashboard, end: true, access: { platformAdmin: true } },
       { to: '/admin/users', label: 'Users', icon: UserCog, access: { platformAdmin: true } },
       { to: '/admin/customers', label: 'Customers', icon: Building2, access: { platformAdmin: true } },
+      { to: '/admin/health', label: 'System health', icon: HeartPulse, access: { platformAdmin: true } },
+      { to: '/admin/alerts', label: 'Platform alerts', icon: Siren, access: { platformAdmin: true } },
     ],
   },
   {
@@ -72,6 +74,7 @@ export const ADMIN_NAV = [
     title: 'Revenue',
     links: [
       { to: '/admin/revenue', label: 'Revenue', icon: TrendingUp, access: { platformAdmin: true } },
+      { to: '/admin/business', label: 'Business metrics', icon: BarChart3, access: { platformAdmin: true } },
       { to: '/admin/payments', label: 'Payments', icon: Receipt, access: { platformAdmin: true } },
     ],
   },

@@ -14,6 +14,7 @@ import { hasAccess } from '../../lib/access.js'
 import { AlertBell } from './AlertBits.jsx'
 import CommandPalette from './CommandPalette.jsx'
 import StatusBanner from '../common/StatusBanner.jsx'
+import ImpersonationBanner from '../admin/ImpersonationBanner.jsx'
 import Menu, { MenuDivider, MenuLabel, menuItem } from '../ui/Menu.jsx'
 import Badge, { Kbd } from '../ui/Badge.jsx'
 import { Meter } from '../charts/Small.jsx'
@@ -323,6 +324,7 @@ export default function DashboardLayout() {
                 <UserMenu />
               </div>
             </header>
+            <ImpersonationBanner />
             <StatusBanner />
             <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
               {/* keyed by org so every page starts fresh after switching organization */}

@@ -11,6 +11,12 @@ export const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8080')
 
 let accessToken = null
 let inflightRefresh = null
+// A platform admin viewing the app as a user holds a short read-only token
+// for that user. It replaces the staff token on every call, is never
+// refreshed, and lives in this tab's session storage only.
+let impersonation = null
+const IMP_KEY = 'hawki.impersonation'
+const impListeners = new Set()
 
 export class ApiError extends Error {
   constructor(status, code, message, field) {
@@ -25,10 +31,46 @@ export function setAccessToken(token) {
   accessToken = token
 }
 
+function saveImpersonation() {
+  try {
+    if (impersonation) sessionStorage.setItem(IMP_KEY, JSON.stringify(impersonation))
+    else sessionStorage.removeItem(IMP_KEY)
+  } catch {
+    // without session storage the view ends on reload
+  }
+  impListeners.forEach((fn) => fn(impersonation))
+}
+
+// setImpersonation starts ({ token, expires_at, user }) or ends (null) a
+// read-only view as a user.
+export function setImpersonation(imp) {
+  impersonation = imp
+  saveImpersonation()
+}
+
+export function getImpersonation() {
+  if (impersonation) return impersonation
+  try {
+    const saved = JSON.parse(sessionStorage.getItem(IMP_KEY) || 'null')
+    if (saved && new Date(saved.expires_at) > new Date()) impersonation = saved
+    else sessionStorage.removeItem(IMP_KEY)
+  } catch {
+    impersonation = null
+  }
+  return impersonation
+}
+
+export function onImpersonation(fn) {
+  impListeners.add(fn)
+  return () => impListeners.delete(fn)
+}
+
+const bearer = () => impersonation?.token || accessToken
+
 async function send(path, { method = 'GET', body, auth = true, headers: extra } = {}) {
   const headers = { ...extra }
   if (body !== undefined) headers['Content-Type'] = 'application/json'
-  if (auth && accessToken) headers.Authorization = `Bearer ${accessToken}`
+  if (auth && bearer()) headers.Authorization = `Bearer ${bearer()}`
 
   const init = { method, headers, credentials: 'include' }
   if (body !== undefined) init.body = JSON.stringify(body)
@@ -76,6 +118,11 @@ export async function api(path, opts = {}) {
   try {
     return await send(path, opts)
   } catch (err) {
+    if (err.status === 401 && impersonation) {
+      // The view expired or was ended elsewhere: back to the staff session.
+      setImpersonation(null)
+      throw new ApiError(401, 'impersonation_ended', 'The view as this user has ended.')
+    }
     if (err.status === 401 && opts.auth !== false && accessToken) {
       await refresh()
       return send(path, opts)
@@ -87,9 +134,9 @@ export async function api(path, opts = {}) {
 // download fetches an authenticated file (evidence) and saves it in the
 // browser. Files are behind authorization, so a plain link cannot be used.
 export async function download(path, filename) {
-  const get = () => fetch(API_URL + path, { headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {}, credentials: 'include' })
+  const get = () => fetch(API_URL + path, { headers: bearer() ? { Authorization: `Bearer ${bearer()}` } : {}, credentials: 'include' })
   let res = await get()
-  if (res.status === 401 && accessToken) {
+  if (res.status === 401 && accessToken && !impersonation) {
     await refresh()
     res = await get()
   }
@@ -104,18 +151,38 @@ export async function download(path, filename) {
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 
+// openFile shows an authenticated page (a print-ready report) in a new
+// tab. The tab opens at once, inside the click, so it is not blocked.
+export async function openFile(path) {
+  const tab = window.open('', '_blank')
+  const get = () => fetch(API_URL + path, { headers: bearer() ? { Authorization: `Bearer ${bearer()}` } : {}, credentials: 'include' })
+  let res = await get()
+  if (res.status === 401 && accessToken && !impersonation) {
+    await refresh()
+    res = await get()
+  }
+  if (!res.ok) {
+    tab?.close()
+    throw new ApiError(res.status, 'download_failed', 'The report could not be opened.')
+  }
+  const url = URL.createObjectURL(new Blob([await res.text()], { type: 'text/html' }))
+  if (tab) tab.location.href = url
+  else window.location.href = url
+  setTimeout(() => URL.revokeObjectURL(url), 60000)
+}
+
 // openStream opens a long-lived authenticated response (server-sent events)
 // and returns it, refreshing the access token once on 401. The token goes in
 // a header, never in the URL.
 export async function openStream(path, signal) {
   const get = () =>
     fetch(API_URL + path, {
-      headers: { Accept: 'text/event-stream', ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}) },
+      headers: { Accept: 'text/event-stream', ...(bearer() ? { Authorization: `Bearer ${bearer()}` } : {}) },
       credentials: 'include',
       signal,
     })
   let res = await get()
-  if (res.status === 401 && accessToken) {
+  if (res.status === 401 && accessToken && !impersonation) {
     await refresh()
     res = await get()
   }

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { api } from '../../lib/api.js'
 import { formatCredits } from '../../lib/credits.js'
 import { PLAN_LABELS, ROLE_LABELS } from '../../data/dashboardNav.js'
@@ -13,6 +13,8 @@ import { EmptyState, ErrorState, PageSkeleton } from '../../components/ui/Feedba
 import PageHeader, { Panel } from '../../components/dashboard/PageHeader.jsx'
 import { Badge, ReasonForm, Stat, day, money, useAdmin, when } from '../../components/admin/bits.jsx'
 import PaymentForm, { STATUSES } from '../../components/admin/PaymentForm.jsx'
+import { ConfirmDelete, EngineUsage } from '../../components/admin/platformBits.jsx'
+import Spinner from '../../components/common/Spinner.jsx'
 
 const PLAN_OPTIONS = Object.entries(PLAN_LABELS).map(([value, label]) => ({ value, label }))
 
@@ -47,6 +49,18 @@ function PlanAndCredits({ c, billing, act }) {
   )
 }
 
+const DELETE_ERRORS = {
+  org_has_payments: 'This organization has payments on record, so it is kept for the revenue records. Suspend it instead.',
+  owner_protected: "The platform owner's organizations cannot be deleted.",
+}
+
+function Usage({ orgId }) {
+  const u = useAdmin(`/api/v1/admin/customers/${orgId}/usage`)
+  if (u.error) return <Alert>{u.error}</Alert>
+  if (!u.data) return <Spinner />
+  return <EngineUsage u={u.data} />
+}
+
 function Tags({ c, act }) {
   const [text, setText] = useState(c.tags.join(', '))
   return (
@@ -60,6 +74,7 @@ function Tags({ c, act }) {
 export default function AdminCustomer() {
   const { orgId } = useParams()
   const { data, error, reload } = useAdmin(`/api/v1/admin/customers/${orgId}`)
+  const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
   const [msg, setMsg] = useState(null)
   const [note, setNote] = useState('')
@@ -81,6 +96,7 @@ export default function AdminCustomer() {
   const base = `/api/v1/admin/customers/${c.org_id}`
   const tabs = [
     { value: 'overview', label: 'Overview' },
+    { value: 'engines', label: 'Engines' },
     { value: 'payments', label: 'Payments', count: data.payments.length },
     { value: 'notes', label: 'Notes', count: data.notes.length },
     { value: 'members', label: 'Members', count: data.members.length },
@@ -136,8 +152,23 @@ export default function AdminCustomer() {
                   <Tags key={c.tags.join()} c={c} act={act} />
                 </div>
               </Panel>
+              <Panel title="Delete organization" description="Removes it with its projects, scans, monitors and members' access. Kept if it ever paid. This cannot be undone.">
+                <ConfirmDelete what="organization" confirmText={c.slug} idPrefix="del-org" onSubmit={async (confirm, reason) => {
+                  setMsg(null)
+                  try {
+                    await api(`${base}/delete`, { method: 'POST', body: { confirm, reason } })
+                    navigate('/admin/customers', { replace: true })
+                  } catch (err) {
+                    setMsg({ tone: 'error', text: DELETE_ERRORS[err.code] || errorMessage(err) })
+                  }
+                }} />
+              </Panel>
             </div>
           </>
+        )}
+
+        {tab === 'engines' && (
+          <Panel title="Engine usage" description="Hunt, Watch, MEV and scans for this organization"><Usage orgId={c.org_id} /></Panel>
         )}
 
         {tab === 'notes' && (
