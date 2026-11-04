@@ -10,7 +10,7 @@ const TIP_MS = 2500
 //
 // data:   [{ label, ...values }]
 // series: [{ key, label, color }]
-export default function TimeChart({ data, series, kind = 'line', area, height = 220, yMax, format = (v) => v, caption, stale }) {
+export default function TimeChart({ data, series, kind = 'line', area, height = 220, yMax, floor, format = (v) => v, caption, stale }) {
   const [ref, width] = useWidth()
   const [hover, setHover] = useState(null)
   // The readout shows for a moment each time the hovered day changes, then
@@ -27,13 +27,15 @@ export default function TimeChart({ data, series, kind = 'line', area, height = 
   const innerH = height - PAD.top - PAD.bottom
   const stackTotal = (d) => series.reduce((a, s) => a + (d[s.key] || 0), 0)
   const peak = yMax ?? Math.max(0, ...data.map((d) => (kind === 'stacked' ? stackTotal(d) : Math.max(...series.map((s) => d[s.key] || 0)))))
-  const { top, step } = niceScale(peak)
-  const y = (v) => PAD.top + innerH - (v / top) * innerH
+  // A line chart of values far from zero can start at a floor (the lowest
+  // value), so small moves stay visible.
+  const { base, top, step } = floorScale(peak, kind === 'line' ? floor : undefined)
+  const y = (v) => PAD.top + innerH - ((v - base) / (top - base)) * innerH
   const band = n ? innerW / n : 0
   const cx = (i) => (kind === 'line' ? PAD.left + (n === 1 ? innerW / 2 : (i * innerW) / (n - 1)) : PAD.left + band * i + band / 2)
   const barW = Math.min(24, Math.max(2, band * 0.62))
   const ticks = []
-  for (let v = 0; v <= top + 1e-9; v += step) ticks.push(v)
+  for (let i = 0; base + i * step <= top + step * 1e-6; i++) ticks.push(base + i * step)
   const labels = xTicks(n, Math.max(2, Math.floor(innerW / 64)))
 
   function pick(evt) {
@@ -58,7 +60,7 @@ export default function TimeChart({ data, series, kind = 'line', area, height = 
             className="block outline-none focus-visible:ring-1 focus-visible:ring-accent/60 rounded">
             {ticks.map((t) => (
               <g key={t}>
-                <line x1={PAD.left} x2={width - PAD.right} y1={y(t)} y2={y(t)} stroke={t === 0 ? CHART.axis : CHART.grid} strokeWidth="1" />
+                <line x1={PAD.left} x2={width - PAD.right} y1={y(t)} y2={y(t)} stroke={t === base ? CHART.axis : CHART.grid} strokeWidth="1" />
                 <text x={PAD.left - 8} y={y(t)} dy="0.32em" textAnchor="end" fontSize="10" fill={CHART.label} className="tnum">{format(t)}</text>
               </g>
             ))}
@@ -94,7 +96,7 @@ export default function TimeChart({ data, series, kind = 'line', area, height = 
               const line = pts.map(([px, py], i) => `${i ? 'L' : 'M'}${px},${py}`).join('')
               return (
                 <g key={s.key}>
-                  {area && <path d={`${line}L${pts[pts.length - 1][0]},${y(0)}L${pts[0][0]},${y(0)}Z`} fill={s.color} opacity="0.1" />}
+                  {area && <path d={`${line}L${pts[pts.length - 1][0]},${y(base)}L${pts[0][0]},${y(base)}Z`} fill={s.color} opacity="0.1" />}
                   <path d={line} fill="none" stroke={s.color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
                   {n > 0 && <circle cx={pts[n - 1][0]} cy={pts[n - 1][1]} r="4" fill={s.color} stroke={CHART.surface} strokeWidth="2" />}
                 </g>
@@ -118,4 +120,16 @@ export default function TimeChart({ data, series, kind = 'line', area, height = 
         rows={data.map((d) => [d.title || d.label, ...series.map((s) => format(d[s.key] || 0))])} />
     </div>
   )
+}
+
+// floorScale is niceScale from zero, or from a floor rounded down to a
+// step when one is given.
+function floorScale(peak, floor) {
+  if (floor == null) return { base: 0, ...niceScale(peak) }
+  let range = peak - floor
+  if (!(range > 0)) range = Math.abs(peak) * 0.01 || 1
+  const { step } = niceScale(range)
+  const base = Math.floor(floor / step) * step
+  const top = base + step * Math.max(1, Math.ceil((peak - base) / step))
+  return { base, top, step }
 }

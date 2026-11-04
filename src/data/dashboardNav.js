@@ -28,7 +28,7 @@ export const DASHBOARD_NAV = [
       { to: '/dashboard/alerts', label: 'Alerts', icon: Bell, access: { permission: 'alerts:read' } },
       { to: '/dashboard/intel', label: 'Intel', icon: Telescope, access: { permission: 'intel:read' } },
       { to: '/dashboard/hunt', label: 'Hunt', icon: Crosshair, access: { permission: 'hunt:read' } },
-      { label: 'Watch', icon: Radar, soon: true, access: { permission: 'watch:read' } },
+      { to: '/dashboard/watch', label: 'Watch', icon: Radar, access: { permission: 'watch:read' } },
     ],
   },
   {
@@ -63,6 +63,7 @@ export const ADMIN_NAV = [
     links: [
       { to: '/admin/intel', label: 'Intel', icon: Network, access: { platformAdmin: true } },
       { to: '/admin/hunt', label: 'Hunt', icon: Crosshair, access: { platformAdmin: true } },
+      { to: '/admin/watch', label: 'Watch', icon: Radar, access: { platformAdmin: true } },
     ],
   },
   {
@@ -127,6 +128,7 @@ export const CHANNEL_KINDS = [
   { value: 'discord', label: 'Discord', hint: 'A webhook URL from your Discord channel settings.' },
   { value: 'telegram', label: 'Telegram', hint: 'A bot token from BotFather and the chat to post in.' },
   { value: 'webhook', label: 'Webhook', hint: 'A signed JSON POST to your own https endpoint.' },
+  { value: 'pagerduty', label: 'PagerDuty', hint: 'An Events API v2 integration key (Enterprise): Watch pages your on-call for critical and high episodes.' },
 ]
 
 export const ROLE_LABELS = { org_admin: 'Admin', member: 'Member', viewer: 'Viewer' }

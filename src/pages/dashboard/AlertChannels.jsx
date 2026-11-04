@@ -14,7 +14,7 @@ const MODES = [
   { value: 'daily_digest', label: 'Daily digest (08:00 UTC)' },
 ]
 const SEVERITY_OPTIONS = ALERT_SEVERITIES.map((s) => ({ value: s.value, label: `${s.label} and above` }))
-const EMPTY = { kind: 'slack', name: '', min_severity: 'high', mode: 'immediate', url: '', bot_token: '', chat_id: '', recipients: [] }
+const EMPTY = { kind: 'slack', name: '', min_severity: 'high', mode: 'immediate', url: '', bot_token: '', chat_id: '', routing_key: '', recipients: [] }
 
 function NewChannel({ orgId, members, onCreated }) {
   const [form, setForm] = useState(EMPTY)
@@ -38,6 +38,7 @@ function NewChannel({ orgId, members, onCreated }) {
     setSecret(null)
     const config = form.kind === 'email' ? { recipients: form.recipients }
       : form.kind === 'telegram' ? { bot_token: form.bot_token, chat_id: form.chat_id }
+      : form.kind === 'pagerduty' ? { routing_key: form.routing_key }
       : { url: form.url }
     try {
       const d = await api(`/api/v1/orgs/${orgId}/alert-channels`, {
@@ -81,6 +82,10 @@ function NewChannel({ orgId, members, onCreated }) {
           <Field id="channel-url" label={form.kind === 'webhook' ? 'Endpoint URL' : 'Webhook URL'} type="url" autoComplete="off"
             placeholder={form.kind === 'slack' ? 'https://hooks.slack.com/services/...' : form.kind === 'discord' ? 'https://discord.com/api/webhooks/...' : 'https://example.com/hawki'}
             value={form.url} onChange={set('url')} error={errors.url} />
+        )}
+        {form.kind === 'pagerduty' && (
+          <Field id="channel-routing" label="Integration key" autoComplete="off" placeholder="32 characters from the PagerDuty service integration"
+            value={form.routing_key} onChange={set('routing_key')} error={errors.routing_key} />
         )}
         {form.kind === 'telegram' && (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

@@ -50,6 +50,10 @@ const Hunt = lazy(() => import('./pages/dashboard/Hunt.jsx'))
 const HuntCluster = lazy(() => import('./pages/dashboard/HuntCluster.jsx'))
 const HuntAddressPage = lazy(() => import('./pages/dashboard/HuntAddressPage.jsx'))
 const HuntRequest = lazy(() => import('./pages/dashboard/HuntRequest.jsx'))
+const Watch = lazy(() => import('./pages/dashboard/Watch.jsx'))
+const WatchMonitor = lazy(() => import('./pages/dashboard/WatchMonitor.jsx'))
+const WatchViolation = lazy(() => import('./pages/dashboard/WatchViolation.jsx'))
+const WatchRequest = lazy(() => import('./pages/dashboard/WatchRequest.jsx'))
 const IntelAddress = lazy(() => import('./pages/dashboard/IntelAddress.jsx'))
 const IntelExploit = lazy(() => import('./pages/dashboard/IntelExploit.jsx'))
 const IntelProtocol = lazy(() => import('./pages/dashboard/IntelProtocol.jsx'))
@@ -65,6 +69,7 @@ const AdminCustomer = lazy(() => import('./pages/admin/AdminCustomer.jsx'))
 const AdminPayments = lazy(() => import('./pages/admin/AdminPayments.jsx'))
 const AdminRevenue = lazy(() => import('./pages/admin/AdminRevenue.jsx'))
 const AdminHunt = lazy(() => import('./pages/admin/AdminHunt.jsx'))
+const AdminWatch = lazy(() => import('./pages/admin/AdminWatch.jsx'))
 const AdminAudit = lazy(() => import('./pages/admin/AdminAudit.jsx'))
 const AdminSwitches = lazy(() => import('./pages/admin/AdminSwitches.jsx'))
 const IntelLayout = lazy(() => import('./components/admin/IntelOps.jsx').then((m) => ({ default: m.IntelLayout })))
@@ -135,6 +140,10 @@ export default function App() {
             <Route path="/dashboard/hunt/clusters/:code" element={guarded('/dashboard/hunt', <HuntCluster />)} />
             <Route path="/dashboard/hunt/address/:chain/:address" element={guarded('/dashboard/hunt', <HuntAddressPage />)} />
             <Route path="/dashboard/hunt/requests/:id" element={guarded('/dashboard/hunt', <HuntRequest />)} />
+            <Route path="/dashboard/watch" element={guarded('/dashboard/watch', <Watch />)} />
+            <Route path="/dashboard/watch/monitors/:monitorId" element={guarded('/dashboard/watch', <WatchMonitor />)} />
+            <Route path="/dashboard/watch/violations/:violationId" element={guarded('/dashboard/watch', <WatchViolation />)} />
+            <Route path="/dashboard/watch/requests/:requestId" element={guarded('/dashboard/watch', <WatchRequest />)} />
             <Route path="/dashboard/members" element={guarded('/dashboard/members', <Members />)} />
             <Route path="/dashboard/api-keys" element={guarded('/dashboard/api-keys', <ApiKeys />)} />
             <Route path="/dashboard/billing" element={guarded('/dashboard/billing', <Billing />)} />
@@ -152,6 +161,7 @@ export default function App() {
             <Route path="/admin/audit" element={guarded('/admin/audit', <AdminAudit />)} />
             <Route path="/admin/switches" element={guarded('/admin/switches', <AdminSwitches />)} />
             <Route path="/admin/hunt" element={guarded('/admin/hunt', <AdminHunt />)} />
+            <Route path="/admin/watch" element={guarded('/admin/watch', <AdminWatch />)} />
             <Route path="/admin/intel" element={guarded('/admin/intel', <IntelLayout />)}>
               <Route index element={<IntelOverview />} />
               <Route path="chains" element={<IntelChains />} />
