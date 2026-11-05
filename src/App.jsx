@@ -5,6 +5,7 @@ import { Helmet } from './components/common/Helmet.jsx'
 import Spinner from './components/common/Spinner.jsx'
 import { AuthProvider } from './lib/auth.jsx'
 import { GuestOnly, RequireAccess, RequireAuth } from './components/auth/RouteGuards.jsx'
+import ApiGate from './components/common/ApiGate.jsx'
 import { accessFor } from './data/dashboardNav.js'
 import { INTEL_SECTIONS } from './data/engineNav.js'
 import EngineLayout from './components/dashboard/EngineLayout.jsx'
@@ -124,6 +125,7 @@ export default function App() {
           <Route path="/changelog" element={<Changelog />} />
           <Route path="/changelog/:slug" element={<Changelog />} />
 
+          <Route element={<ApiGate />}>
           <Route path="/login" element={<GuestOnly><Login /></GuestOnly>} />
           <Route path="/signup" element={<GuestOnly><Signup /></GuestOnly>} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -205,7 +207,7 @@ export default function App() {
               <Route path="insights" element={<IntelInsightsAdmin />} />
             </Route>
           </Route>
-
+          </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
